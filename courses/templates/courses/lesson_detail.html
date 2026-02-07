@@ -1,31 +1,63 @@
-<h1>{{ lesson.title }}</h1>
+<div style="display: flex; gap: 40px;">
 
-{% if lesson.video_url %}
-    <div>
-        <iframe width="800" height="450"
-                src="{{ lesson.video_url }}"
-                frameborder="0"
-                allowfullscreen>
-        </iframe>
+    <!-- Sidebar -->
+    <div style="width: 300px;">
+        <h3>{{ course.title }}</h3>
+
+        {% for module in course.modules.all %}
+            <strong>{{ module.order }}. {{ module.title }}</strong>
+
+            <ul>
+                {% for item in module.lessons.all %}
+                    <li>
+                        {% if item.id == lesson.id %}
+                            <b>▶ {{ item.order }}. {{ item.title }}</b>
+                        {% else %}
+                            <a href="{% url 'lesson_detail' item.id %}">
+                                {{ item.order }}. {{ item.title }}
+                            </a>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endfor %}
     </div>
-{% endif %}
 
-<hr>
+    <!-- Lesson Content -->
+    <div style="flex: 1;">
+        <h1>{{ lesson.title }}</h1>
 
-<div>
-    {% if previous_lesson %}
-        <a href="{% url 'lesson_detail' previous_lesson.id %}">
-            ← Previous
-        </a>
-    {% endif %}
+        {% if lesson.video_url %}
+            <div>
+                <iframe width="800" height="450"
+                        src="{{ lesson.video_url }}"
+                        frameborder="0"
+                        allowfullscreen>
+                </iframe>
+            </div>
+        {% endif %}
 
-    {% if next_lesson %}
-        <a href="{% url 'lesson_detail' next_lesson.id %}">
-            Next →
-        </a>
-    {% endif %}
-</div>
+        <hr>
 
-<div>
-    {{ content|safe }}
+        <div>
+            {{ content|safe }}
+        </div>
+
+        <hr>
+
+        <div>
+            {% if previous_lesson %}
+                <a href="{% url 'lesson_detail' previous_lesson.id %}">
+                    ← Previous
+                </a>
+            {% endif %}
+
+            {% if next_lesson %}
+                <a href="{% url 'lesson_detail' next_lesson.id %}">
+                    Next →
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
 </div>

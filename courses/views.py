@@ -30,6 +30,8 @@ def lesson_detail(request, lesson_id):
         order__gt=lesson.order
     ).order_by("order").first()
 
+    course = lesson.module.course
+
     return render(
         request,
         "courses/lesson_detail.html",
@@ -38,5 +40,6 @@ def lesson_detail(request, lesson_id):
             "content": html_content,
             "previous_lesson": previous_lesson,
             "next_lesson": next_lesson,
+            "course": course,
         },
     )

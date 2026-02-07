@@ -1,0 +1,22 @@
+<h1>{{ course.title }}</h1>
+
+<p>{{ course.description }}</p>
+
+<h2>Modules</h2>
+
+{% for module in course.modules.all %}
+    <h3>{{ module.order }}. {{ module.title }}</h3>
+
+    <ul>
+        {% for lesson in module.lessons.all %}
+            <li>
+                {{ lesson.order }}. {{ lesson.title }}
+            </li>
+        {% empty %}
+            <li>No lessons yet.</li>
+        {% endfor %}
+    </ul>
+
+{% empty %}
+    <p>No modules yet.</p>
+{% endfor %}

@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404
-from .models import Course
+from .models import Course, Lesson
+import markdown
 
 
 def course_list(request):
@@ -10,3 +11,32 @@ def course_list(request):
 def course_detail(request, course_id):
     course = get_object_or_404(Course, id=course_id, is_published=True)
     return render(request, "courses/course_detail.html", {"course": course})
+
+
+def lesson_detail(request, lesson_id):
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+
+    html_content = markdown.markdown(lesson.content)
+
+    # previous lesson
+    previous_lesson = Lesson.objects.filter(
+        module=lesson.module,
+        order__lt=lesson.order
+    ).order_by("-order").first()
+
+    # next lesson
+    next_lesson = Lesson.objects.filter(
+        module=lesson.module,
+        order__gt=lesson.order
+    ).order_by("order").first()
+
+    return render(
+        request,
+        "courses/lesson_detail.html",
+        {
+            "lesson": lesson,
+            "content": html_content,
+            "previous_lesson": previous_lesson,
+            "next_lesson": next_lesson,
+        },
+    )

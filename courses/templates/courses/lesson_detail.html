@@ -1,0 +1,31 @@
+<h1>{{ lesson.title }}</h1>
+
+{% if lesson.video_url %}
+    <div>
+        <iframe width="800" height="450"
+                src="{{ lesson.video_url }}"
+                frameborder="0"
+                allowfullscreen>
+        </iframe>
+    </div>
+{% endif %}
+
+<hr>
+
+<div>
+    {% if previous_lesson %}
+        <a href="{% url 'lesson_detail' previous_lesson.id %}">
+            ← Previous
+        </a>
+    {% endif %}
+
+    {% if next_lesson %}
+        <a href="{% url 'lesson_detail' next_lesson.id %}">
+            Next →
+        </a>
+    {% endif %}
+</div>
+
+<div>
+    {{ content|safe }}
+</div>

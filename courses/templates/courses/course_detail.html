@@ -10,7 +10,9 @@
     <ul>
         {% for lesson in module.lessons.all %}
             <li>
-                {{ lesson.order }}. {{ lesson.title }}
+                <a href="{% url 'lesson_detail' lesson.id %}">
+                    {{ lesson.order }}. {{ lesson.title }}
+                </a>
             </li>
         {% empty %}
             <li>No lessons yet.</li>

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Course, Module, Lesson
+from .models import Course, Module, Lesson, Enrollment
 
 
 class LessonInline(admin.TabularInline):
@@ -27,3 +27,9 @@ class CourseAdmin(admin.ModelAdmin):
     list_filter = ("is_published",)
     search_fields = ("title",)
     inlines = [ModuleInline]
+
+@admin.register(Enrollment)
+class EnrollmentAdmin(admin.ModelAdmin):
+    list_display = ("user", "course", "enrolled_at")
+    list_filter = ("course",)
+    search_fields = ("user__email",)

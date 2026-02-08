@@ -1,8 +1,17 @@
 <h1>My Courses</h1>
 
 {% for item in data %}
-    <div style="margin-bottom: 30px;">
-        <h3>{{ item.course.title }}</h3>
+    <div style="
+        margin-bottom: 30px;
+        padding: 15px;
+        border: 2px solid {% if item.completed %}gold{% else %}#ccc{% endif %};">
+
+        <h3>
+            {{ item.course.title }}
+            {% if item.completed %}
+                🏆 Completed
+            {% endif %}
+        </h3>
 
         <p>
             Progress: {{ item.progress_percentage }}%

@@ -121,11 +121,14 @@ def dashboard(request):
         if total_lessons > 0:
             progress_percentage = int((completed_count / total_lessons) * 100)
 
+        is_completed = completed_count == total_lessons and total_lessons > 0
+
         data.append({
             "course": course,
             "total_lessons": total_lessons,
             "completed_count": completed_count,
             "progress_percentage": progress_percentage,
+            "completed": is_completed,
         })
 
     return render(request, "courses/dashboard.html", {"data": data})

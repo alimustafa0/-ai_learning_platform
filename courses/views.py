@@ -43,6 +43,13 @@ def lesson_detail(request, lesson_id):
 
     completed_lessons = LessonCompletion.objects.filter(user=request.user, lesson__module__course=course).values_list("lesson_id", flat=True)
 
+    total_lessons = Lesson.objects.filter(module__course=course).count()
+    completed_count = len(completed_lessons)
+
+    progress_percentage = 0
+    if total_lessons > 0:
+        progress_percentage = int((completed_count / total_lessons) * 100)
+
     return render(
         request,
         "courses/lesson_detail.html",
@@ -54,6 +61,9 @@ def lesson_detail(request, lesson_id):
             "course": course,
             "is_completed": is_completed,
             "completed_lessons": completed_lessons,
+            "total_lessons": total_lessons,
+            "completed_count": completed_count,
+            "progress_percentage": progress_percentage,
         },
     )
 

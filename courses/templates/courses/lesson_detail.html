@@ -31,6 +31,27 @@
 
     <!-- Lesson Content -->
     <div style="flex: 1;">
+
+        <div style="margin-bottom: 20px;">
+            <strong>
+                Progress: {{ progress_percentage }}%
+                ({{ completed_count }} / {{ total_lessons }} lessons)
+            </strong>
+
+            <div style="
+                width: 100%;
+                background-color: #ddd;
+                height: 20px;
+                margin-top: 5px;
+            ">
+                <div style="
+                    width: {{ progress_percentage }}%;
+                    background-color: #4CAF50;
+                    height: 100%;">
+                </div>
+            </div>
+        </div>
+
         <h1>{{ lesson.title }}</h1>
 
         {% if lesson.video_url %}

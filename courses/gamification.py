@@ -8,13 +8,16 @@ LEVELS = [
     (7, "Master", 1500),
 ]
 
-def get_level_from_xp(total_xp):
+def get_level_progress(total_xp):
     current_level = LEVELS[0]
+    next_level = None
 
-    for level in LEVELS:
+    for i, level in enumerate(LEVELS):
         if total_xp >= level[2]:
             current_level = level
+            if i + 1 < len(LEVELS):
+                next_level = LEVELS[i + 1]
         else:
             break
 
-    return current_level
+    return current_level, next_level

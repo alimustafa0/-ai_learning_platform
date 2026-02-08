@@ -4,6 +4,17 @@
     <h2>{{ request.user.email }}</h2>
     <p>⭐ Total XP: {{ data.0.total_xp }} | 
         Level: {{ data.0.level_number }} - {{ data.0.level_title }}</p>
+    <div style="background:#eee; height:10px; border-radius:5px;">
+        <div style="width: {{ data.0.level_progress_percent }}%;
+                    background:gold;
+                    height:10px;
+                    border-radius:5px;">
+        </div>
+    </div>
+
+    <p style="font-size:12px;">
+        Progress to {{ data.0.next_level_title }}
+    </p>
 </div>
 
 {% for item in data %}

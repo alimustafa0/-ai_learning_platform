@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from .models import Course, Lesson, LessonCompletion, XPEvent
-from .gamification import get_level_from_xp
+from .gamification import get_level_progress
 import markdown
 
 
@@ -140,7 +140,22 @@ def dashboard(request):
 
         total_xp = XPEvent.objects.filter(user=request.user).aggregate(total=Sum('points'))['total'] or 0
 
-        level_number, level_title, level_xp = get_level_from_xp(total_xp)
+        current_level, next_level = get_level_progress(total_xp)
+
+        level_number, level_title, level_xp = current_level
+
+        if next_level:
+            next_level_number, next_level_title, next_level_xp = next_level
+
+            xp_into_level = total_xp - level_xp
+            xp_range = next_level_xp - level_xp
+            level_progress_percent = int((xp_into_level / xp_range) * 100)
+        else:
+            # user is MAX level
+            next_level_number = None
+            next_level_title = "MAX"
+            level_progress_percent = 100
+
 
         data.append({
             "course": course,
@@ -151,6 +166,8 @@ def dashboard(request):
             "total_xp": total_xp,
             "level_number": level_number,
             "level_title": level_title,
+            "level_progress_percent": level_progress_percent,
+            "next_level_title": next_level_title,
         })
 
     return render(request, "courses/dashboard.html", {"data": data})

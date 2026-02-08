@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
 from .models import Course, Lesson, LessonCompletion, XPEvent
 import markdown
 
@@ -136,12 +137,15 @@ def dashboard(request):
 
         is_completed = completed_count == total_lessons and total_lessons > 0
 
+        total_xp = XPEvent.objects.filter(user=request.user).aggregate(total=Sum('points'))['total'] or 0
+
         data.append({
             "course": course,
             "total_lessons": total_lessons,
             "completed_count": completed_count,
             "progress_percentage": progress_percentage,
             "completed": is_completed,
+            "total_xp": total_xp,
         })
 
     return render(request, "courses/dashboard.html", {"data": data})

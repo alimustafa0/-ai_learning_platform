@@ -1,5 +1,10 @@
 <h1>My Courses</h1>
 
+<div class="profile-header">
+    <h2>{{ request.user.email }}</h2>
+    <p>⭐ Total XP: {{ data.1.total_xp }}</p>
+</div>
+
 {% for item in data %}
     <div style="
         margin-bottom: 30px;

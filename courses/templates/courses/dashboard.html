@@ -2,7 +2,8 @@
 
 <div class="profile-header">
     <h2>{{ request.user.email }}</h2>
-    <p>⭐ Total XP: {{ data.1.total_xp }}</p>
+    <p>⭐ Total XP: {{ data.0.total_xp }} | 
+        Level: {{ data.0.level_number }} - {{ data.0.level_title }}</p>
 </div>
 
 {% for item in data %}

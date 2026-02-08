@@ -1,0 +1,9 @@
+<h1>You are not enrolled in "{{ course.title }}"</h1>
+
+<p>
+    To access the lessons, you need to enroll first.
+</p>
+
+<a href="{% url 'course_detail' course.id %}">
+    Back to course page
+</a>

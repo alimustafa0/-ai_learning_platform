@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from .models import Course, Lesson
 import markdown
 
@@ -13,6 +14,7 @@ def course_detail(request, course_id):
     return render(request, "courses/course_detail.html", {"course": course})
 
 
+@login_required
 def lesson_detail(request, lesson_id):
     lesson = get_object_or_404(Lesson, id=lesson_id)
 
@@ -31,6 +33,11 @@ def lesson_detail(request, lesson_id):
     ).order_by("order").first()
 
     course = lesson.module.course
+
+    is_enrolled = course.enrollments.filter(user=request.user).exists()
+
+    if not is_enrolled:
+        return render(request, "courses/not_enrolled.html", {"course": course})
 
     return render(
         request,

@@ -83,6 +83,20 @@ def mark_lesson_complete(request, lesson_id):
         lesson=lesson,
     )
 
+    # find next lesson in order
+    next_lesson = Lesson.objects.filter(
+        module__course=course,
+        module__order__gte=lesson.module.order,
+    ).order_by("module__order", "order")
+
+    found_current = False
+    for item in next_lesson:
+        if found_current:
+            return redirect("lesson_detail", lesson_id=item.id)
+        if item.id == lesson.id:
+            found_current = True
+
+    # if no next → stay here
     return redirect("lesson_detail", lesson_id=lesson.id)
 
 @login_required

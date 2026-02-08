@@ -115,3 +115,33 @@ def dashboard(request):
         })
 
     return render(request, "courses/dashboard.html", {"data": data})
+
+@login_required
+def resume_course(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+
+    # must be enrolled
+    is_enrolled = course.enrollments.filter(user=request.user).exists()
+    if not is_enrolled:
+        return render(request, "courses/not_enrolled.html", {"course": course})
+
+    lessons = Lesson.objects.filter(
+        module__course=course
+    ).order_by("module__order", "order")
+
+    completed_ids = set(
+        LessonCompletion.objects.filter(
+            user=request.user,
+            lesson__module__course=course
+        ).values_list("lesson_id", flat=True)
+    )
+
+    for lesson in lessons:
+        if lesson.id not in completed_ids:
+            return redirect("lesson_detail", lesson_id=lesson.id)
+
+    # if all completed → go to last lesson
+    if lessons.exists():
+        return redirect("lesson_detail", lesson_id=lessons.last().id)
+
+    return redirect("dashboard")

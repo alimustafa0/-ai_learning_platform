@@ -90,3 +90,16 @@ class LessonCompletion(models.Model):
 
     def __str__(self):
         return f"{self.user.email} completed {self.lesson.title}"
+
+class XPEvent(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="xp_events",
+    )
+    points = models.IntegerField()
+    reason = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.email} +{self.points} XP for {self.reason}"

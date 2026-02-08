@@ -12,6 +12,12 @@
                     <li>
                         {% if item.id == lesson.id %}
                             <b>▶ {{ item.order }}. {{ item.title }}</b>
+
+                        {% elif item.id in completed_lessons %}
+                            <a href="{% url 'lesson_detail' item.id %}">
+                                ✓ {{ item.order }}. {{ item.title }}
+                            </a>
+
                         {% else %}
                             <a href="{% url 'lesson_detail' item.id %}">
                                 {{ item.order }}. {{ item.title }}

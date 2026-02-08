@@ -41,6 +41,8 @@ def lesson_detail(request, lesson_id):
     
     is_completed = LessonCompletion.objects.filter(user=request.user, lesson=lesson).exists()
 
+    completed_lessons = LessonCompletion.objects.filter(user=request.user, lesson__module__course=course).values_list("lesson_id", flat=True)
+
     return render(
         request,
         "courses/lesson_detail.html",
@@ -51,6 +53,7 @@ def lesson_detail(request, lesson_id):
             "next_lesson": next_lesson,
             "course": course,
             "is_completed": is_completed,
+            "completed_lessons": completed_lessons,
         },
     )
 

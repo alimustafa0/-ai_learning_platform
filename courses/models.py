@@ -71,3 +71,22 @@ class Enrollment(models.Model):
 
     def __str__(self):
         return f"{self.user.email} enrolled in {self.course.title}"
+
+class LessonCompletion(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="completed_lessons",
+    )
+    lesson = models.ForeignKey(
+        Lesson,
+        on_delete=models.CASCADE,
+        related_name="completions",
+    )
+    completed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "lesson")
+
+    def __str__(self):
+        return f"{self.user.email} completed {self.lesson.title}"

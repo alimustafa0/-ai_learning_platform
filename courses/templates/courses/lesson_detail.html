@@ -46,6 +46,21 @@
         <hr>
 
         <div>
+            {% if is_completed %}
+                <p><strong>Completed ✅</strong></p>
+            {% else %}
+                <form method="post" action="{% url 'mark_lesson_complete' lesson.id %}">
+                    {% csrf_token %}
+                    <button type="submit">
+                        Mark as Complete
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+
+        <hr>
+
+        <div>
             {% if previous_lesson %}
                 <a href="{% url 'lesson_detail' previous_lesson.id %}">
                     ← Previous

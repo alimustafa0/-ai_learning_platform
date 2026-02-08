@@ -1,6 +1,6 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Course, Lesson
+from .models import Course, Lesson, LessonCompletion
 import markdown
 
 
@@ -38,6 +38,8 @@ def lesson_detail(request, lesson_id):
 
     if not is_enrolled:
         return render(request, "courses/not_enrolled.html", {"course": course})
+    
+    is_completed = LessonCompletion.objects.filter(user=request.user, lesson=lesson).exists()
 
     return render(
         request,
@@ -48,5 +50,24 @@ def lesson_detail(request, lesson_id):
             "previous_lesson": previous_lesson,
             "next_lesson": next_lesson,
             "course": course,
+            "is_completed": is_completed,
         },
     )
+
+@login_required
+def mark_lesson_complete(request, lesson_id):
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    course = lesson.module.course
+
+    # security gate again
+    is_enrolled = course.enrollments.filter(user=request.user).exists()
+    if not is_enrolled:
+        return render(request, "courses/not_enrolled.html", {"course": course})
+
+    # create completion if not exists
+    LessonCompletion.objects.get_or_create(
+        user=request.user,
+        lesson=lesson,
+    )
+
+    return redirect("lesson_detail", lesson_id=lesson.id)

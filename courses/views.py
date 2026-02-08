@@ -96,8 +96,8 @@ def mark_lesson_complete(request, lesson_id):
         if item.id == lesson.id:
             found_current = True
 
-    # if no next → stay here
-    return redirect("lesson_detail", lesson_id=lesson.id)
+    # no next lesson → course finished
+    return redirect("course_completed", course_id=course.id)
 
 @login_required
 def dashboard(request):
@@ -159,3 +159,14 @@ def resume_course(request, course_id):
         return redirect("lesson_detail", lesson_id=lessons.last().id)
 
     return redirect("dashboard")
+
+@login_required
+def course_completed(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+
+    # security
+    is_enrolled = course.enrollments.filter(user=request.user).exists()
+    if not is_enrolled:
+        return render(request, "courses/not_enrolled.html", {"course": course})
+
+    return render(request, "courses/course_completed.html", {"course": course})

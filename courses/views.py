@@ -84,3 +84,34 @@ def mark_lesson_complete(request, lesson_id):
     )
 
     return redirect("lesson_detail", lesson_id=lesson.id)
+
+@login_required
+def dashboard(request):
+    enrollments = request.user.enrollments.select_related("course")
+
+    data = []
+
+    for enrollment in enrollments:
+        course = enrollment.course
+
+        total_lessons = Lesson.objects.filter(
+            module__course=course
+        ).count()
+
+        completed_count = LessonCompletion.objects.filter(
+            user=request.user,
+            lesson__module__course=course
+        ).count()
+
+        progress_percentage = 0
+        if total_lessons > 0:
+            progress_percentage = int((completed_count / total_lessons) * 100)
+
+        data.append({
+            "course": course,
+            "total_lessons": total_lessons,
+            "completed_count": completed_count,
+            "progress_percentage": progress_percentage,
+        })
+
+    return render(request, "courses/dashboard.html", {"data": data})

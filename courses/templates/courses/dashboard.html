@@ -1,0 +1,33 @@
+<h1>My Courses</h1>
+
+{% for item in data %}
+    <div style="margin-bottom: 30px;">
+        <h3>{{ item.course.title }}</h3>
+
+        <p>
+            Progress: {{ item.progress_percentage }}%
+            ({{ item.completed_count }} / {{ item.total_lessons }})
+        </p>
+
+        <div style="
+            width: 400px;
+            background-color: #ddd;
+            height: 20px;
+            margin-top: 5px;
+        ">
+            <div style="
+                width: {{ item.progress_percentage }}%;
+                background-color: #4CAF50;
+                height: 100%;
+            "></div>
+        </div>
+
+        <br>
+
+        <a href="{% url 'course_detail' item.course.id %}">
+            View Course
+        </a>
+    </div>
+{% empty %}
+    <p>You are not enrolled in any courses yet.</p>
+{% endfor %}

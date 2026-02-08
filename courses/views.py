@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Course, Lesson, LessonCompletion
+from .models import Course, Lesson, LessonCompletion, XPEvent
 import markdown
 
 
@@ -82,6 +82,19 @@ def mark_lesson_complete(request, lesson_id):
         user=request.user,
         lesson=lesson,
     )
+
+    # grant XP (avoid duplicates)
+    already_rewarded = XPEvent.objects.filter(
+        user=request.user,
+        reason=f"Completed lesson {lesson.id}"
+    ).exists()
+
+    if not already_rewarded:
+        XPEvent.objects.create(
+            user=request.user,
+            points=10,
+            reason=f"Completed lesson {lesson.id}",
+        )
 
     # find next lesson in order
     next_lesson = Lesson.objects.filter(

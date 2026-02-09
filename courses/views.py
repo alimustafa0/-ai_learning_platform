@@ -218,76 +218,68 @@ def mark_lesson_complete(request, lesson_id):
 
 @login_required
 def dashboard(request):
+    # Calculate user stats FIRST (independent of enrollments)
+    total_xp = XPEvent.objects.filter(user=request.user).aggregate(total=Sum('points'))['total'] or 0
+    current_level, next_level = get_level_progress(total_xp)
+    
+    level_number, level_title, level_xp = current_level
+    
+    if next_level:
+        next_level_number, next_level_title, next_level_xp = next_level
+        xp_into_level = total_xp - level_xp
+        xp_range = next_level_xp - level_xp
+        level_progress_percent = int((xp_into_level / xp_range) * 100) if xp_range > 0 else 0
+    else:
+        # user is MAX level
+        next_level_title = "MAX"
+        level_progress_percent = 100
+    
+    # Get all achievements for display
+    all_achievements = Achievement.objects.all()
+    unlocked_ids = UserAchievement.objects.filter(
+        user=request.user
+    ).values_list("achievement_id", flat=True)
+    
+    # Get enrollments and course progress
     enrollments = request.user.enrollments.select_related("course")
-
-    data = []
-
+    course_data = []
+    
     for enrollment in enrollments:
         course = enrollment.course
-
+        
         total_lessons = Lesson.objects.filter(
             module__course=course
         ).count()
-
+        
         completed_count = LessonCompletion.objects.filter(
             user=request.user,
             lesson__module__course=course
         ).count()
-
+        
         progress_percentage = 0
         if total_lessons > 0:
             progress_percentage = int((completed_count / total_lessons) * 100)
-
+        
         is_completed = completed_count == total_lessons and total_lessons > 0
-
-        total_xp = XPEvent.objects.filter(user=request.user).aggregate(total=Sum('points'))['total'] or 0
-
-        current_level, next_level = get_level_progress(total_xp)
-
-        user_level_number = current_level[0]
-
-        # if user_level_number < course.required_level:
-        #     return render(request, "courses/level_locked.html", {
-        #         "course": course,
-        #         "required_level": course.required_level,
-        #     })
-
-        level_number, level_title, level_xp = current_level
-
-        if next_level:
-            next_level_number, next_level_title, next_level_xp = next_level
-
-            xp_into_level = total_xp - level_xp
-            xp_range = next_level_xp - level_xp
-            level_progress_percent = int((xp_into_level / xp_range) * 100)
-        else:
-            # user is MAX level
-            next_level_number = None
-            next_level_title = "MAX"
-            level_progress_percent = 100
-
-        all_achievements = Achievement.objects.all()
-
-        unlocked_ids = UserAchievement.objects.filter(
-            user=request.user
-        ).values_list("achievement_id", flat=True)
-
-        data.append({
+        
+        course_data.append({
             "course": course,
             "total_lessons": total_lessons,
             "completed_count": completed_count,
             "progress_percentage": progress_percentage,
             "completed": is_completed,
-            "total_xp": total_xp,
-            "level_number": level_number,
-            "level_title": level_title,
-            "level_progress_percent": level_progress_percent,
-            "next_level_title": next_level_title,
-            "all_achievements": all_achievements,
-            "unlocked_ids": unlocked_ids,
         })
-
-    return render(request, "courses/dashboard.html", {"data": data})
+    
+    return render(request, "courses/dashboard.html", {
+        "total_xp": total_xp,
+        "level_number": level_number,
+        "level_title": level_title,
+        "level_progress_percent": level_progress_percent,
+        "next_level_title": next_level_title,
+        "all_achievements": all_achievements,
+        "unlocked_ids": unlocked_ids,
+        "course_data": course_data,  # Renamed from 'data' for clarity
+    })
 
 @login_required
 def resume_course(request, course_id):

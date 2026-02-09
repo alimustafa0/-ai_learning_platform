@@ -1,0 +1,107 @@
+<!-- users/templates/users/profile_edit.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2>Edit Your Profile</h2>
+    
+    <!-- Success/Error Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div style="padding: 12px; margin-bottom: 20px; background-color: #d4edda; color: #155724; border-radius: 5px;">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Current Avatar Preview -->
+    {% if request.user.avatar %}
+        <div style="margin-bottom: 20px;">
+            <p>Current Avatar:</p>
+            <img src="{{ request.user.avatar.url }}" alt="Avatar" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+        </div>
+    {% endif %}
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- Form Fields -->
+        <div style="margin-bottom: 15px;">
+            <label for="id_first_name">First Name:</label>
+            {{ form.first_name }}
+            {% if form.first_name.errors %}
+                <div style="color: red; font-size: 0.9em;">{{ form.first_name.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label for="id_last_name">Last Name:</label>
+            {{ form.last_name }}
+            {% if form.last_name.errors %}
+                <div style="color: red; font-size: 0.9em;">{{ form.last_name.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label for="id_bio">Bio:</label>
+            {{ form.bio }}
+            {% if form.bio.errors %}
+                <div style="color: red; font-size: 0.9em;">{{ form.bio.errors }}</div>
+            {% endif %}
+            <small style="color: #666;">{{ form.bio.help_text }}</small>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label for="id_avatar">Avatar Image:</label>
+            {{ form.avatar }}
+            {% if form.avatar.errors %}
+                <div style="color: red; font-size: 0.9em;">{{ form.avatar.errors }}</div>
+            {% endif %}
+            <small style="color: #666;">Upload a profile picture (optional)</small>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label for="id_website">Website:</label>
+            {{ form.website }}
+            {% if form.website.errors %}
+                <div style="color: red; font-size: 0.9em;">{{ form.website.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label for="id_location">Location:</label>
+            {{ form.location }}
+            {% if form.location.errors %}
+                <div style="color: red; font-size: 0.9em;">{{ form.location.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <!-- Submit Button -->
+        <button type="submit" style="
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        ">
+            Update Profile
+        </button>
+        
+        <a href="{% url 'dashboard' %}" style="margin-left: 15px; color: #666;">
+            Cancel
+        </a>
+    </form>
+    
+    <hr style="margin: 30px 0;">
+    
+    <!-- Account Info -->
+    <div style="font-size: 0.9em; color: #666;">
+        <p><strong>Account Information:</strong></p>
+        <p>Email: {{ request.user.email }}</p>
+        <p>Member since: {{ request.user.date_joined|date:"F j, Y" }}</p>
+        <p><a href="{% url 'password_change' %}">Change Password</a></p>
+    </div>
+</div>
+{% endblock %}

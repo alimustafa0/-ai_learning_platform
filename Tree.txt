@@ -1,0 +1,57 @@
+│   .env
+│   .gitignore
+│   db.sqlite3
+│   manage.py
+│   requirements.txt
+│
+├───config
+│   │   asgi.py
+│   │   settings.py
+│   │   urls.py
+│   │   wsgi.py
+│   │   __init__.py
+│   
+├───courses
+│   │   admin.py
+│   │   apps.py
+│   │   context_processors.py
+│   │   gamification.py
+│   │   models.py
+│   │   tests.py
+│   │   urls.py
+│   │   views.py
+│   │   __init__.py
+│   │
+│   ├───migrations
+│   │   │   0001_initial.py
+│   │   │   0002_enrollment.py
+│   │   │   0003_lessoncompletion.py
+│   │   │   0004_xpevent.py
+│   │   │   0005_course_required_level.py
+│   │   │   0006_achievement_userachievement.py
+│   │   │   __init__.py
+│   │
+│   ├───templates
+│   │   │   base.html
+│   │   │
+│   │   └───courses
+│   │           course_completed.html
+│   │           course_detail.html
+│   │           course_list.html
+│   │           dashboard.html
+│   │           lesson_detail.html
+│   │           level_locked.html
+│   │           not_enrolled.html
+│   
+└───users
+    │   admin.py
+    │   apps.py
+    │   models.py
+    │   tests.py
+    │   views.py
+    │   __init__.py
+    │
+    ├───migrations
+    │   │   0001_initial.py
+    │   │   0002_alter_user_managers.py
+    │   │   __init__.py

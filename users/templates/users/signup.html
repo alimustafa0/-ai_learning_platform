@@ -1,0 +1,56 @@
+<!-- users/templates/users/signup.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Sign Up</h2>
+
+<form method="post">
+    {% csrf_token %}
+    
+    <!-- Display form errors if any -->
+    {% if form.errors %}
+        <div style="color: red; margin-bottom: 15px;">
+            Please correct the errors below.
+        </div>
+    {% endif %}
+    
+    <!-- Email field -->
+    <div style="margin-bottom: 15px;">
+        <label for="id_email">Email:</label><br>
+        {{ form.email }}
+        {% if form.email.errors %}
+            <div style="color: red;">{{ form.email.errors }}</div>
+        {% endif %}
+    </div>
+    
+    <!-- Password1 field -->
+    <div style="margin-bottom: 15px;">
+        <label for="id_password1">Password:</label><br>
+        {{ form.password1 }}
+        {% if form.password1.errors %}
+            <div style="color: red;">{{ form.password1.errors }}</div>
+        {% endif %}
+        {% if form.password1.help_text %}
+            <div style="font-size: 0.9em; color: #666;">{{ form.password1.help_text }}</div>
+        {% endif %}
+    </div>
+    
+    <!-- Password2 field -->
+    <div style="margin-bottom: 15px;">
+        <label for="id_password2">Password confirmation:</label><br>
+        {{ form.password2 }}
+        {% if form.password2.errors %}
+            <div style="color: red;">{{ form.password2.errors }}</div>
+        {% endif %}
+        {% if form.password2.help_text %}
+            <div style="font-size: 0.9em; color: #666;">{{ form.password2.help_text }}</div>
+        {% endif %}
+    </div>
+    
+    <button type="submit">Sign Up</button>
+</form>
+
+<p style="margin-top: 20px;">
+    Already have an account? <a href="{% url 'login' %}">Log in</a>
+</p>
+{% endblock %}

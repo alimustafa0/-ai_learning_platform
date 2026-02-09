@@ -26,19 +26,27 @@ def course_list(request):
 def course_detail(request, course_id):
     course = get_object_or_404(Course, id=course_id, is_published=True)
 
-    total_xp = XPEvent.objects.filter(user=request.user).aggregate(total=Sum('points'))['total'] or 0
+    # Check if user is authenticated before calculating XP/level
+    if request.user.is_authenticated:
+        total_xp = XPEvent.objects.filter(user=request.user).aggregate(total=Sum('points'))['total'] or 0
+        current_level, next_level = get_level_progress(total_xp)
+        user_level_number = current_level[0]
+    else:
+        # For anonymous users, set level to 0 (or 1 if you want them to see level-locked courses)
+        user_level_number = 0
 
-    current_level, next_level = get_level_progress(total_xp)
-
-    user_level_number = current_level[0]
-
+    # Level lock check (only if required_level > 1)
     if user_level_number < course.required_level:
         return render(request, "courses/level_locked.html", {
             "course": course,
             "required_level": course.required_level,
+            "user_level_number": user_level_number,
         })
     
-    return render(request, "courses/course_detail.html", {"course": course, "user_level_number": user_level_number})
+    return render(request, "courses/course_detail.html", {
+        "course": course,
+        "user_level_number": user_level_number,
+    })
 
 
 @login_required
@@ -82,6 +90,16 @@ def lesson_detail(request, lesson_id):
         )
 
         messages.success(request, "🏅 Achievement Unlocked: First Lesson!")
+
+    elif completed_count == 2:
+        achievement = Achievement.objects.get(name="Second Lesson")
+
+        UserAchievement.objects.get_or_create(
+            user=request.user,
+            achievement=achievement
+        )
+
+        messages.success(request, "🏅 Achievement Unlocked: Second Lesson!")
 
 
     progress_percentage = 0

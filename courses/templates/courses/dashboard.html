@@ -35,7 +35,7 @@
     <div class="achievements-grid">
         {% for achievement in data.0.all_achievements %}
             <div class="achievement-card 
-                {% if achievement.id not in unlocked_ids %}
+                {% if achievement.id not in data.0.unlocked_ids %}
                     locked
                 {% endif %}
             ">

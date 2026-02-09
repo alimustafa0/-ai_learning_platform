@@ -1,0 +1,35 @@
+<!-- templates/registration/login.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Login</h2>
+
+<form method="post">
+    {% csrf_token %}
+    
+    <!-- Display form errors -->
+    {% if form.errors %}
+        <div style="color: red; margin-bottom: 15px;">
+            Your username (email) and password didn't match. Please try again.
+        </div>
+    {% endif %}
+    
+    <!-- Email field (username field) -->
+    <div style="margin-bottom: 15px;">
+        <label for="id_username">Email:</label><br>
+        <input type="email" name="username" id="id_username" required>
+    </div>
+    
+    <!-- Password field -->
+    <div style="margin-bottom: 15px;">
+        <label for="id_password">Password:</label><br>
+        <input type="password" name="password" id="id_password" required>
+    </div>
+    
+    <button type="submit">Login</button>
+</form>
+
+<p style="margin-top: 20px;">
+    Don't have an account? <a href="{% url 'signup' %}">Sign up</a>
+</p>
+{% endblock %}

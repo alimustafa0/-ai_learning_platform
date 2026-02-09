@@ -26,6 +26,9 @@ ENVIRONMENT = config("ENVIRONMENT", default="development")
 
 AUTH_USER_MODEL = "users.User"
 
+# Add these two lines:
+LOGIN_REDIRECT_URL = "/courses/dashboard"  # Or "/courses/dashboard/" if you prefer
+LOGOUT_REDIRECT_URL = "/courses/"  # Optional: where to go after logout
 
 # Application definition
 
@@ -55,7 +58,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

@@ -33,7 +33,19 @@
         {% if request.user.is_authenticated %}
             <div style="float:right;">
                 {{ request.user.email }} |
-                Level {{ global_level_number }} - {{ global_level_title }}
+                {% if global_level_number and global_level_title %}
+                    Level {{ global_level_number }} - {{ global_level_title }}
+                {% endif %}
+                |   <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" style="background: none; border: none; color: #007bff; cursor: pointer; padding: 0; font: inherit; text-decoration: underline;">
+                            Logout
+                        </button>
+                    </form>
+            </div>
+        {% else %}
+            <div style="float:right;">
+                <a href="{% url 'login' %}">Login</a> | <a href="{% url 'signup' %}">Sign Up</a>
             </div>
         {% endif %}
         <hr>

@@ -1,5 +1,12 @@
 from django.contrib import admin
-from .models import Course, Module, Lesson, Enrollment, LessonCompletion, XPEvent, Achievement, UserAchievement
+from .models import Course, Module, Lesson, Enrollment, LessonCompletion, XPEvent, Achievement, UserAchievement, Category
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug')
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ('name',)
 
 
 class LessonInline(admin.TabularInline):
@@ -24,8 +31,9 @@ class ModuleInline(admin.TabularInline):
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
     list_display = ("title", "is_published", "created_at", "required_level")
-    list_filter = ("is_published",)
-    search_fields = ("title",)
+    list_filter = ("is_published", "categories")
+    search_fields = ("title", "categories__name")
+    filter_horizontal = ("categories",)
     inlines = [ModuleInline]
 
 @admin.register(Enrollment)

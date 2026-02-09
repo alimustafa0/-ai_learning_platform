@@ -6,27 +6,43 @@
 
     <ul>
         {% for course in courses %}
-            <li>
-                <a href="{% url 'course_detail' course.id %}">
-                    {{ course.title }}
-                </a>
-            </li>
-            <div style="
-                margin-bottom:15px;
-                padding:15px;
-                border:1px solid #ccc;
-                border-radius:8px;
-
-                {% if user_level_number < course.required_level %}
-                    opacity:0.5;
-                    filter: grayscale(100%);
+            <!-- Add categories display -->
+            <div style="margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h3>
+                    <a href="{% url 'course_detail' course.id %}">{{ course.title }}</a>
+                </h3>
+                
+                <p>{{ course.description|truncatewords:30 }}</p>
+                
+                <!-- CATEGORIES -->
+                {% if course.categories.all %}
+                    <div style="margin: 10px 0;">
+                        {% for category in course.categories.all %}
+                            <span style="
+                                display: inline-block;
+                                background: #e9ecef;
+                                color: #495057;
+                                padding: 4px 10px;
+                                margin-right: 5px;
+                                margin-bottom: 5px;
+                                border-radius: 20px;
+                                font-size: 0.9em;
+                            ">
+                                {{ category.name }}
+                            </span>
+                        {% endfor %}
+                    </div>
                 {% endif %}
-            ">
-            {% if user_level_number < course.required_level %}
-                🔒 Requires Level {{ course.required_level }}
-            {% endif %}
+                
+                <p>
+                    <small>
+                        Level required: {{ course.required_level }} | 
+                        Published: {{ course.created_at|date:"M d, Y" }}
+                    </small>
+                </p>
+            </div>
         {% empty %}
-            <li>No courses available.</li>
+            <p>No courses available yet.</p>
         {% endfor %}
     </ul>
 

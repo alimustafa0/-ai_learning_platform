@@ -6,6 +6,26 @@
 
     <p>{{ course.description }}</p>
 
+    {% if course.categories.all %}
+        <div style="margin: 15px 0;">
+            <strong>Categories:</strong>
+            {% for category in course.categories.all %}
+                <span style="
+                    display: inline-block;
+                    background: #007bff;
+                    color: white;
+                    padding: 5px 12px;
+                    margin-right: 8px;
+                    margin-bottom: 8px;
+                    border-radius: 20px;
+                    font-size: 0.9em;
+                ">
+                    {{ category.name }}
+                </span>
+            {% endfor %}
+        </div>
+    {% endif %}
+
     <!-- ENROLLMENT SECTION -->
     <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px;">
         {% if request.user.is_authenticated %}

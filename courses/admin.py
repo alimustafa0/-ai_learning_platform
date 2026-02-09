@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Course, Module, Lesson, Enrollment, LessonCompletion, XPEvent
+from .models import Course, Module, Lesson, Enrollment, LessonCompletion, XPEvent, Achievement, UserAchievement
 
 
 class LessonInline(admin.TabularInline):
@@ -45,3 +45,6 @@ class XPEventAdmin(admin.ModelAdmin):
     list_display = ("user", "points", "reason", "created_at")
     list_filter = ("reason",)
     search_fields = ("user__email",)
+
+admin.site.register(Achievement)
+admin.site.register(UserAchievement)

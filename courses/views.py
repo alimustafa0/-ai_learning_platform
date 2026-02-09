@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
-from .models import Course, Lesson, LessonCompletion, XPEvent
+from .models import Course, Lesson, LessonCompletion, XPEvent, Achievement, UserAchievement
 from .gamification import get_level_progress
 import markdown
 
@@ -72,6 +72,17 @@ def lesson_detail(request, lesson_id):
 
     total_lessons = Lesson.objects.filter(module__course=course).count()
     completed_count = len(completed_lessons)
+
+    if completed_count == 1:
+        achievement = Achievement.objects.get(name="First Lesson")
+
+        UserAchievement.objects.get_or_create(
+            user=request.user,
+            achievement=achievement
+        )
+
+        messages.success(request, "🏅 Achievement Unlocked: First Lesson!")
+
 
     progress_percentage = 0
     if total_lessons > 0:

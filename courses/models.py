@@ -104,3 +104,21 @@ class XPEvent(models.Model):
 
     def __str__(self):
         return f"{self.user.email} +{self.points} XP for {self.reason}"
+
+class Achievement(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.name
+
+class UserAchievement(models.Model):
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE)
+    achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE)
+    unlocked_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "achievement")
+
+    def __str__(self):
+        return f"{self.user.email} - {self.achievement.name}"

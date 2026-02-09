@@ -11,6 +11,9 @@
                     {{ course.title }}
                 </a>
             </li>
+            {% if user_level_number < course.required_level %}
+                🔒 Requires Level {{ course.required_level }}
+            {% endif %}
         {% empty %}
             <li>No courses available.</li>
         {% endfor %}

@@ -7,6 +7,7 @@ class Course(models.Model):
     description = models.TextField()
     is_published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    required_level = models.IntegerField(default=1)
 
     def __str__(self):
         return self.title

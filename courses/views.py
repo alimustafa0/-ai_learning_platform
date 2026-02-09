@@ -14,7 +14,20 @@ def course_list(request):
 
 def course_detail(request, course_id):
     course = get_object_or_404(Course, id=course_id, is_published=True)
-    return render(request, "courses/course_detail.html", {"course": course})
+
+    total_xp = XPEvent.objects.filter(user=request.user).aggregate(total=Sum('points'))['total'] or 0
+
+    current_level, next_level = get_level_progress(total_xp)
+
+    user_level_number = current_level[0]
+
+    if user_level_number < course.required_level:
+        return render(request, "courses/level_locked.html", {
+            "course": course,
+            "required_level": course.required_level,
+        })
+    
+    return render(request, "courses/course_detail.html", {"course": course, "user_level_number": user_level_number})
 
 
 @login_required
@@ -157,6 +170,14 @@ def dashboard(request):
         total_xp = XPEvent.objects.filter(user=request.user).aggregate(total=Sum('points'))['total'] or 0
 
         current_level, next_level = get_level_progress(total_xp)
+
+        user_level_number = current_level[0]
+
+        # if user_level_number < course.required_level:
+        #     return render(request, "courses/level_locked.html", {
+        #         "course": course,
+        #         "required_level": course.required_level,
+        #     })
 
         level_number, level_title, level_xp = current_level
 

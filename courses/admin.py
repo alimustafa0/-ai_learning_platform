@@ -23,7 +23,7 @@ class ModuleInline(admin.TabularInline):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ("title", "is_published", "created_at")
+    list_display = ("title", "is_published", "created_at", "required_level")
     list_filter = ("is_published",)
     search_fields = ("title",)
     inlines = [ModuleInline]

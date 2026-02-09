@@ -52,15 +52,19 @@
 
                 <div style="
                     width: 100%;
-                    background-color: #ddd;
-                    height: 20px;
-                    margin-top: 5px;
+                    background-color: #e9ecef;
+                    height: 12px;
+                    margin-top: 10px;
+                    border-radius: 6px;
+                    overflow: hidden;
                 ">
                     <div style="
                         width: {{ progress_percentage }}%;
-                        background-color: #4CAF50;
-                        height: 100%;">
-                    </div>
+                        background: linear-gradient(90deg, #007bff, #6610f2);
+                        height: 100%;
+                        transition: width 0.5s ease;
+                        border-radius: 6px;
+                    "></div>
                 </div>
             </div>
 
@@ -84,15 +88,32 @@
 
             <hr>
 
-            <div>
+            <div style="margin: 30px 0;">
                 {% if is_completed %}
-                    <p><strong>Completed ✅</strong></p>
+                    <div style="padding: 15px; background: #d4edda; color: #155724; border-radius: 5px; display: inline-flex; align-items: center; gap: 10px;">
+                        <span>✅</span>
+                        <strong>Completed on {{ lesson.completions.first.completed_at|date:"F j, Y" }}</strong>
+                    </div>
                 {% else %}
                     <form method="post" action="{% url 'mark_lesson_complete' lesson.id %}">
                         {% csrf_token %}
-                        <button type="submit">
-                            Mark as Complete
+                        <button type="submit" style="
+                            padding: 12px 24px;
+                            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+                            color: white;
+                            border: none;
+                            border-radius: 8px;
+                            font-size: 16px;
+                            font-weight: bold;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                        ">
+                            ✅ Mark as Complete (+10 XP)
                         </button>
+                        <p style="margin-top: 8px; font-size: 14px; color: #666;">
+                            Completing this lesson will award you 10 XP and progress your course completion.
+                        </p>
                     </form>
                 {% endif %}
             </div>

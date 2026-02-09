@@ -3,6 +3,27 @@
 <head>
     <title>AI Learning Platform</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+    .achievements-grid {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+    }
+
+    .achievement-card {
+        padding: 12px 18px;
+        border-radius: 10px;
+        background: #1f2937;
+        color: white;
+        font-weight: bold;
+    }
+
+    .achievement-card.locked {
+        filter: grayscale(100%);
+        opacity: 0.4;
+    }
+    </style>
 </head>
 <body>
 

@@ -30,6 +30,22 @@
         </p>
     </div>
 
+    <h3>🏆 Achievements</h3>
+
+    <div class="achievements-grid">
+        {% for achievement in data.0.all_achievements %}
+            <div class="achievement-card 
+                {% if achievement.id not in unlocked_ids %}
+                    locked
+                {% endif %}
+            ">
+                <p>{{ achievement.name }}</p>
+            </div>
+        {% empty %}
+            <p>No achievements yet.</p>
+        {% endfor %}
+    </div>
+
     {% for item in data %}
         <div style="
             margin-bottom: 30px;

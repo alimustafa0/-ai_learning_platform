@@ -215,6 +215,12 @@ def dashboard(request):
             next_level_title = "MAX"
             level_progress_percent = 100
 
+        all_achievements = Achievement.objects.all()
+
+        unlocked_ids = UserAchievement.objects.filter(
+            user=request.user
+        ).values_list("achievement_id", flat=True)
+
         data.append({
             "course": course,
             "total_lessons": total_lessons,
@@ -226,6 +232,8 @@ def dashboard(request):
             "level_title": level_title,
             "level_progress_percent": level_progress_percent,
             "next_level_title": next_level_title,
+            "all_achievements": all_achievements,
+            "unlocked_ids": unlocked_ids,
         })
 
     return render(request, "courses/dashboard.html", {"data": data})

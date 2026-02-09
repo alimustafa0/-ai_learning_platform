@@ -1,24 +1,30 @@
-<h1>{{ course.title }}</h1>
+{% extends "base.html" %}
 
-<p>{{ course.description }}</p>
+{% block content %}
 
-<h2>Modules</h2>
+    <h1>{{ course.title }}</h1>
 
-{% for module in course.modules.all %}
-    <h3>{{ module.order }}. {{ module.title }}</h3>
+    <p>{{ course.description }}</p>
 
-    <ul>
-        {% for lesson in module.lessons.all %}
-            <li>
-                <a href="{% url 'lesson_detail' lesson.id %}">
-                    {{ lesson.order }}. {{ lesson.title }}
-                </a>
-            </li>
-        {% empty %}
-            <li>No lessons yet.</li>
-        {% endfor %}
-    </ul>
+    <h2>Modules</h2>
 
-{% empty %}
-    <p>No modules yet.</p>
-{% endfor %}
+    {% for module in course.modules.all %}
+        <h3>{{ module.order }}. {{ module.title }}</h3>
+
+        <ul>
+            {% for lesson in module.lessons.all %}
+                <li>
+                    <a href="{% url 'lesson_detail' lesson.id %}">
+                        {{ lesson.order }}. {{ lesson.title }}
+                    </a>
+                </li>
+            {% empty %}
+                <li>No lessons yet.</li>
+            {% endfor %}
+        </ul>
+
+    {% empty %}
+        <p>No modules yet.</p>
+    {% endfor %}
+    
+{% endblock %}

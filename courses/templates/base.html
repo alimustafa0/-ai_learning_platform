@@ -13,7 +13,7 @@
 
 
     <!-- Notifications will appear here -->
-    {% if messages %}
+    <!-- {% if messages %}
         {% for message in messages %}
             <div style="
                 padding:12px;
@@ -24,6 +24,51 @@
                 font-weight:bold;">
                 {{ message }}
             </div>
+        {% endfor %}
+    {% endif %} -->
+
+    {% if messages %}
+        {% for message in messages %}
+
+                <!-- LEVEL UP MODAL -->
+                <div id="levelup-modal" style="
+                    position:fixed;
+                    top:0; left:0;
+                    width:100%; height:100%;
+                    background:rgba(0,0,0,0.6);
+                    display:flex;
+                    justify-content:center;
+                    align-items:center;
+                    z-index:1000;">
+
+                    <div style="
+                        background:white;
+                        padding:40px;
+                        border-radius:10px;
+                        text-align:center;
+                        max-width:400px;">
+                        
+                        <h1>🎉 LEVEL UP!</h1>
+                        <p style="font-weight:bold;">{{ message }}</p>
+
+                        <button onclick="document.getElementById('levelup-modal').style.display='none'"
+                                style="margin-top:15px; padding:10px 20px;">
+                            Continue Learning
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Normal messages -->
+                <div style="
+                    padding:12px;
+                    margin:10px 0;
+                    border-radius:6px;
+                    background:#d4edda;
+                    color:#155724;
+                    font-weight:bold;">
+                    {{ message }}
+                </div>
+
         {% endfor %}
     {% endif %}
 

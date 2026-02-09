@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Learning Platform</title>
+</head>
+<body>
+
+    <header style="margin-bottom:20px;">
+        <a href="/courses/dashboard/">Dashboard</a> |
+        <a href="/courses/">Courses</a>
+        <hr>
+    </header>
+
+
+    <!-- Notifications will appear here -->
+    {% if messages %}
+        {% for message in messages %}
+            <div style="
+                padding:12px;
+                margin:10px 0;
+                border-radius:6px;
+                background:#d4edda;
+                color:#155724;
+                font-weight:bold;">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+
+    <!-- Page content -->
+    {% block content %}{% endblock %}
+
+</body>
+</html>

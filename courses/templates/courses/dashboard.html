@@ -1,59 +1,74 @@
-<h1>My Courses</h1>
+{% extends "base.html" %}
 
-<div class="profile-header">
-    <h2>{{ request.user.email }}</h2>
-    <p>⭐ Total XP: {{ data.0.total_xp }} | 
-        Level: {{ data.0.level_number }} - {{ data.0.level_title }}</p>
-    <div style="background:#eee; height:10px; border-radius:5px;">
-        <div style="width: {{ data.0.level_progress_percent }}%;
-                    background:gold;
-                    height:10px;
-                    border-radius:5px;">
+{% block content %}
+
+    <h1>My Courses</h1>
+
+    <div class="profile-header">
+
+        {% if messages %}
+            {% for message in messages %}
+                <div style="padding:15px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 5px; margin-bottom: 20px;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <h2>{{ request.user.email }}</h2>
+        <p>⭐ Total XP: {{ data.0.total_xp }} | 
+            Level: {{ data.0.level_number }} - {{ data.0.level_title }}</p>
+        <div style="background:#eee; height:10px; border-radius:5px;">
+            <div style="width: {{ data.0.level_progress_percent }}%;
+                        background:gold;
+                        height:10px;
+                        border-radius:5px;">
+            </div>
         </div>
-    </div>
 
-    <p style="font-size:12px;">
-        Progress to {{ data.0.next_level_title }}
-    </p>
-</div>
-
-{% for item in data %}
-    <div style="
-        margin-bottom: 30px;
-        padding: 15px;
-        border: 2px solid {% if item.completed %}gold{% else %}#ccc{% endif %};">
-
-        <h3>
-            {{ item.course.title }}
-            {% if item.completed %}
-                🏆 Completed
-            {% endif %}
-        </h3>
-
-        <p>
-            Progress: {{ item.progress_percentage }}%
-            ({{ item.completed_count }} / {{ item.total_lessons }})
+        <p style="font-size:12px;">
+            Progress to {{ data.0.next_level_title }}
         </p>
-
-        <div style="
-            width: 400px;
-            background-color: #ddd;
-            height: 20px;
-            margin-top: 5px;
-        ">
-            <div style="
-                width: {{ item.progress_percentage }}%;
-                background-color: #4CAF50;
-                height: 100%;
-            "></div>
-        </div>
-
-        <br>
-
-        <a href="{% url 'resume_course' item.course.id %}">
-            ▶ Resume Learning
-        </a>
     </div>
-{% empty %}
-    <p>You are not enrolled in any courses yet.</p>
-{% endfor %}
+
+    {% for item in data %}
+        <div style="
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 2px solid {% if item.completed %}gold{% else %}#ccc{% endif %};">
+
+            <h3>
+                {{ item.course.title }}
+                {% if item.completed %}
+                    🏆 Completed
+                {% endif %}
+            </h3>
+
+            <p>
+                Progress: {{ item.progress_percentage }}%
+                ({{ item.completed_count }} / {{ item.total_lessons }})
+            </p>
+
+            <div style="
+                width: 400px;
+                background-color: #ddd;
+                height: 20px;
+                margin-top: 5px;
+            ">
+                <div style="
+                    width: {{ item.progress_percentage }}%;
+                    background-color: #4CAF50;
+                    height: 100%;
+                "></div>
+            </div>
+
+            <br>
+
+            <a href="{% url 'resume_course' item.course.id %}">
+                ▶ Resume Learning
+            </a>
+        </div>
+    {% empty %}
+        <p>You are not enrolled in any courses yet.</p>
+    {% endfor %}
+
+{% endblock %}

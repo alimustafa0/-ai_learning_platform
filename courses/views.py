@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from .models import Course, Lesson, LessonCompletion, XPEvent
@@ -74,6 +75,10 @@ def mark_lesson_complete(request, lesson_id):
     lesson = get_object_or_404(Lesson, id=lesson_id)
     course = lesson.module.course
 
+    # 1. Check current XP BEFORE adding new points
+    xp_before = XPEvent.objects.filter(user=request.user).aggregate(Sum('points'))['points__sum'] or 0
+    level_before, _ = get_level_progress(xp_before)
+
     # security gate again
     is_enrolled = course.enrollments.filter(user=request.user).exists()
     if not is_enrolled:
@@ -96,6 +101,17 @@ def mark_lesson_complete(request, lesson_id):
             user=request.user,
             points=10,
             reason=f"Completed lesson {lesson.id}",
+        )
+
+    # 4. Check XP AFTER adding points
+    xp_after = XPEvent.objects.filter(user=request.user).aggregate(Sum('points'))['points__sum'] or 0
+    level_after, _ = get_level_progress(xp_after)
+
+    # 5. Compare: Did we Level Up?
+    if level_after[0] > level_before[0]:
+        messages.success(
+            request, 
+            f"🎉 LEVEL UP! You reached Level {level_after[0]} - {level_after[1]}!"
         )
 
     # find next lesson in order
@@ -155,7 +171,6 @@ def dashboard(request):
             next_level_number = None
             next_level_title = "MAX"
             level_progress_percent = 100
-
 
         data.append({
             "course": course,

@@ -6,6 +6,29 @@
 
     <p>{{ course.description }}</p>
 
+    <!-- ENROLLMENT SECTION -->
+    <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+        {% if request.user.is_authenticated %}
+            {% if is_enrolled %}
+                <p>✅ You are enrolled in this course.</p>
+                <a href="{% url 'dashboard' %}">
+                    <button>Go to Dashboard</button>
+                </a>
+                <a href="{% url 'resume_course' course.id %}">
+                    <button>Resume Course</button>
+                </a>
+            {% else %}
+                <form method="post" action="{% url 'enroll_course' course.id %}">
+                    {% csrf_token %}
+                    <button type="submit">Enroll in this Course</button>
+                </form>
+            {% endif %}
+        {% else %}
+            <p>Please <a href="{% url 'login' %}">login</a> to enroll in this course.</p>
+        {% endif %}
+    </div>
+    <!-- END ENROLLMENT SECTION -->
+
     <h2>Modules</h2>
 
     {% for module in course.modules.all %}

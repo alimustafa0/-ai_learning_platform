@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
-from .models import Course, Lesson, LessonCompletion, XPEvent, Achievement, UserAchievement
+from .models import Course, Enrollment, Lesson, LessonCompletion, XPEvent, Achievement, UserAchievement
 from .gamification import get_level_progress
 import markdown
 
@@ -31,9 +31,16 @@ def course_detail(request, course_id):
         total_xp = XPEvent.objects.filter(user=request.user).aggregate(total=Sum('points'))['total'] or 0
         current_level, next_level = get_level_progress(total_xp)
         user_level_number = current_level[0]
+        
+        # Check if user is enrolled in this course
+        is_enrolled = Enrollment.objects.filter(
+            user=request.user, 
+            course=course
+        ).exists()
     else:
-        # For anonymous users, set level to 0 (or 1 if you want them to see level-locked courses)
+        # For anonymous users, set level to 0 and not enrolled
         user_level_number = 0
+        is_enrolled = False
 
     # Level lock check (only if required_level > 1)
     if user_level_number < course.required_level:
@@ -46,8 +53,34 @@ def course_detail(request, course_id):
     return render(request, "courses/course_detail.html", {
         "course": course,
         "user_level_number": user_level_number,
+        "is_enrolled": is_enrolled,  # <-- NEW: pass enrollment status
     })
 
+@login_required
+def enroll_course(request, course_id):
+    """
+    Enroll the current user in a course.
+    """
+    course = get_object_or_404(Course, id=course_id, is_published=True)
+    
+    # Check if user is already enrolled
+    enrollment, created = Enrollment.objects.get_or_create(
+        user=request.user,
+        course=course
+    )
+    
+    if created:
+        messages.success(request, f"You have successfully enrolled in '{course.title}'!")
+        # Award XP for enrollment
+        XPEvent.objects.create(
+            user=request.user,
+            points=25,
+            reason=f"Enrolled in course: {course.title}",
+        )
+    else:
+        messages.info(request, f"You are already enrolled in '{course.title}'.")
+    
+    return redirect('course_detail', course_id=course.id)
 
 @login_required
 def lesson_detail(request, lesson_id):

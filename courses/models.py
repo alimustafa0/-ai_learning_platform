@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from ckeditor.fields import RichTextField
 
 
 class Category(models.Model):
@@ -56,7 +57,8 @@ class Lesson(models.Model):
         related_name="lessons"
     )
     title = models.CharField(max_length=255)
-    content = models.TextField(help_text="Markdown-supported lesson content")
+    # content = models.TextField(help_text="Markdown-supported lesson content")     # old field
+    content = RichTextField(help_text="Rich text lesson content")
     video_url = models.URLField(blank=True, null=True)
     order = models.PositiveIntegerField()
     is_free_preview = models.BooleanField(default=False)

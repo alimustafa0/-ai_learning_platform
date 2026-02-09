@@ -1,5 +1,7 @@
 from django.contrib import admin
+from . import models
 from .models import Course, Module, Lesson, Enrollment, LessonCompletion, XPEvent, Achievement, UserAchievement, Category, Comment
+from ckeditor.widgets import CKEditorWidget
 
 
 @admin.register(Category)
@@ -13,6 +15,9 @@ class LessonInline(admin.TabularInline):
     model = Lesson
     extra = 1
     ordering = ("order",)
+    formfield_overrides = {  # <-- ADD this
+        models.RichTextField: {'widget': CKEditorWidget},
+    }
 
 
 @admin.register(Module)

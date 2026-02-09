@@ -6,7 +6,6 @@ from .models import Course, Enrollment, Lesson, LessonCompletion, XPEvent, Achie
 from .forms import CommentForm
 from .gamification import get_level_progress
 from .achievements import check_lesson_count_achievements, check_course_completion_achievements
-import markdown
 
 
 def course_list(request):
@@ -88,7 +87,7 @@ def enroll_course(request, course_id):
 def lesson_detail(request, lesson_id):
     lesson = get_object_or_404(Lesson, id=lesson_id)
 
-    html_content = markdown.markdown(lesson.content)
+    html_content = lesson.content
 
     # previous lesson
     previous_lesson = Lesson.objects.filter(

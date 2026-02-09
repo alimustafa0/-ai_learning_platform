@@ -11,6 +11,17 @@
                     {{ course.title }}
                 </a>
             </li>
+            <div style="
+                margin-bottom:15px;
+                padding:15px;
+                border:1px solid #ccc;
+                border-radius:8px;
+
+                {% if user_level_number < course.required_level %}
+                    opacity:0.5;
+                    filter: grayscale(100%);
+                {% endif %}
+            ">
             {% if user_level_number < course.required_level %}
                 🔒 Requires Level {{ course.required_level }}
             {% endif %}

@@ -9,7 +9,18 @@ import markdown
 
 def course_list(request):
     courses = Course.objects.filter(is_published=True)
-    return render(request, "courses/course_list.html", {"courses": courses})
+
+    # calculate user level
+    if request.user.is_authenticated:
+        total_xp = XPEvent.objects.filter(user=request.user).aggregate(
+            Sum("points")
+        )["points__sum"] or 0
+
+        current_level, _ = get_level_progress(total_xp)
+        user_level_number = current_level[0]
+    else:
+        user_level_number = 0
+    return render(request, "courses/course_list.html", {"courses": courses, "user_level_number": user_level_number})
 
 
 def course_detail(request, course_id):

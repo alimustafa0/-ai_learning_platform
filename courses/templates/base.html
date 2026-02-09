@@ -9,6 +9,12 @@
     <header style="margin-bottom:20px;">
         <a href="/courses/dashboard/">Dashboard</a> |
         <a href="/courses/">Courses</a>
+        {% if request.user.is_authenticated %}
+            <div style="float:right;">
+                {{ request.user.email }} |
+                Level {{ global_level_number }} - {{ global_level_title }}
+            </div>
+        {% endif %}
         <hr>
     </header>
 

@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from .models import Course, Enrollment, Lesson, LessonCompletion, XPEvent, Achievement, UserAchievement
+from .forms import CommentForm
 from .gamification import get_level_progress
 import markdown
 
@@ -134,11 +135,24 @@ def lesson_detail(request, lesson_id):
 
         messages.success(request, "🏅 Achievement Unlocked: Second Lesson!")
 
-
     progress_percentage = 0
     if total_lessons > 0:
         progress_percentage = int((completed_count / total_lessons) * 100)
 
+    # === HANDLE COMMENTS ===
+    comments = lesson.comments.filter(parent=None).order_by('created_at')  # Top-level comments only
+    comment_form = CommentForm()
+    
+    if request.method == 'POST' and 'comment_submit' in request.POST:
+        comment_form = CommentForm(request.POST)
+        if comment_form.is_valid():
+            comment = comment_form.save(commit=False)
+            comment.lesson = lesson
+            comment.user = request.user
+            comment.save()
+            messages.success(request, "Your comment has been posted!")
+            return redirect('lesson_detail', lesson_id=lesson.id)
+    
     return render(
         request,
         "courses/lesson_detail.html",
@@ -153,6 +167,8 @@ def lesson_detail(request, lesson_id):
             "total_lessons": total_lessons,
             "completed_count": completed_count,
             "progress_percentage": progress_percentage,
+            "comments": comments,  # <-- NEW
+            "comment_form": comment_form,  # <-- NEW
         },
     )
 

@@ -140,3 +140,39 @@ class UserAchievement(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.achievement.name}"
+
+class Comment(models.Model):
+    """
+    User comments on lessons for discussion and Q&A.
+    """
+    lesson = models.ForeignKey(
+        Lesson,
+        on_delete=models.CASCADE,
+        related_name="comments"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="comments"
+    )
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="replies"
+    )
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_edited = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['created_at']
+    
+    def __str__(self):
+        return f"Comment by {self.user.email} on {self.lesson.title}"
+    
+    def is_reply(self):
+        """Check if this comment is a reply to another comment."""
+        return self.parent is not None

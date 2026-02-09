@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Course, Module, Lesson, Enrollment, LessonCompletion, XPEvent, Achievement, UserAchievement, Category
+from .models import Course, Module, Lesson, Enrollment, LessonCompletion, XPEvent, Achievement, UserAchievement, Category, Comment
 
 
 @admin.register(Category)
@@ -56,3 +56,20 @@ class XPEventAdmin(admin.ModelAdmin):
 
 admin.site.register(Achievement)
 admin.site.register(UserAchievement)
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('user', 'lesson', 'truncated_content', 'created_at', 'is_edited', 'is_reply_display')
+    list_filter = ('created_at', 'is_edited', 'lesson')
+    search_fields = ('content', 'user__email', 'lesson__title')
+    readonly_fields = ('created_at', 'updated_at')
+    
+    def truncated_content(self, obj):
+        """Display first 50 chars of comment content."""
+        return obj.content[:50] + "..." if len(obj.content) > 50 else obj.content
+    truncated_content.short_description = 'Content'
+    
+    def is_reply_display(self, obj):
+        """Display ✓ if comment is a reply."""
+        return "✓" if obj.parent else ""
+    is_reply_display.short_description = 'Is Reply'

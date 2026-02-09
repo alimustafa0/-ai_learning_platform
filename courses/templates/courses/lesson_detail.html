@@ -120,6 +120,93 @@
 
             <hr>
 
+            <!-- COMMENTS SECTION -->
+            <div style="margin-top: 50px; padding-top: 30px; border-top: 1px solid #eee;">
+                <h3>💬 Discussion</h3>
+                
+                <!-- Comment Form -->
+                <div style="margin-bottom: 30px;">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="comment_submit" value="1">
+                        
+                        <div style="margin-bottom: 10px;">
+                            <label for="id_content"><strong>Add a comment or question:</strong></label>
+                            {{ comment_form.content }}
+                            {% if comment_form.content.errors %}
+                                <div style="color: red;">{{ comment_form.content.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <button type="submit" style="
+                            padding: 8px 16px;
+                            background-color: #007bff;
+                            color: white;
+                            border: none;
+                            border-radius: 5px;
+                            cursor: pointer;
+                        ">
+                            Post Comment
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Comments List -->
+                <div>
+                    <h4>Comments ({{ comments.count }})</h4>
+                    
+                    {% if comments %}
+                        {% for comment in comments %}
+                            <div style="
+                                margin-bottom: 25px;
+                                padding: 15px;
+                                background-color: #f8f9fa;
+                                border-radius: 8px;
+                                border-left: 4px solid #007bff;
+                            ">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                    <strong>
+                                        {% if comment.user.first_name or comment.user.last_name %}
+                                            {{ comment.user.get_full_name }}
+                                        {% else %}
+                                            {{ comment.user.email }}
+                                        {% endif %}
+                                    </strong>
+                                    <small style="color: #666;">
+                                        {{ comment.created_at|timesince }} ago
+                                        {% if comment.is_edited %}
+                                            (edited)
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                
+                                <p style="margin: 0; white-space: pre-wrap;">{{ comment.content }}</p>
+                                
+                                <!-- Reply button (future feature) -->
+                                <!-- <div style="margin-top: 10px;">
+                                    <button style="
+                                        background: none;
+                                        border: none;
+                                        color: #666;
+                                        cursor: pointer;
+                                        font-size: 0.9em;
+                                        padding: 0;
+                                    ">
+                                        Reply
+                                    </button>
+                                </div> -->
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="color: #666; font-style: italic;">
+                            No comments yet. Be the first to ask a question or share your thoughts!
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- END COMMENTS SECTION -->
+             <hr>
+
             <div>
                 {% if previous_lesson %}
                     <a href="{% url 'lesson_detail' previous_lesson.id %}">

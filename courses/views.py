@@ -5,6 +5,7 @@ from django.db.models import Sum
 from .models import Course, Enrollment, Lesson, LessonCompletion, XPEvent, Achievement, UserAchievement
 from .forms import CommentForm
 from .gamification import get_level_progress
+from .achievements import check_lesson_count_achievements, check_course_completion_achievements
 import markdown
 
 
@@ -187,23 +188,27 @@ def mark_lesson_complete(request, lesson_id):
         return render(request, "courses/not_enrolled.html", {"course": course})
 
     # create completion if not exists
-    LessonCompletion.objects.get_or_create(
+    completion, created = LessonCompletion.objects.get_or_create(
         user=request.user,
         lesson=lesson,
     )
 
-    # grant XP (avoid duplicates)
-    already_rewarded = XPEvent.objects.filter(
-        user=request.user,
-        reason=f"Completed lesson {lesson.id}"
-    ).exists()
-
-    if not already_rewarded:
+    # grant XP (avoid duplicates) - only if newly created
+    if created:
         XPEvent.objects.create(
             user=request.user,
             points=10,
-            reason=f"Completed lesson {lesson.id}",
+            reason=f"Completed lesson: {lesson.title}",
         )
+
+    # Calculate total completed lessons count
+    total_completed = LessonCompletion.objects.filter(user=request.user).count()
+    
+    # Check for lesson count achievements (1st, 5th, 10th lesson etc.)
+    check_lesson_count_achievements(request.user, total_completed, request)
+    
+    # Check for course completion achievements
+    check_course_completion_achievements(request.user, course, request)
 
     # 4. Check XP AFTER adding points
     xp_after = XPEvent.objects.filter(user=request.user).aggregate(Sum('points'))['points__sum'] or 0

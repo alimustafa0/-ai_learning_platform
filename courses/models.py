@@ -126,7 +126,9 @@ class XPEvent(models.Model):
 class Achievement(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-
+    xp_reward = models.IntegerField(default=50, help_text="XP awarded when earning this achievement")
+    icon = models.CharField(max_length=100, blank=True, default="🏆", help_text="Emoji or icon name")
+    
     def __str__(self):
         return self.name
 
@@ -176,3 +178,4 @@ class Comment(models.Model):
     def is_reply(self):
         """Check if this comment is a reply to another comment."""
         return self.parent is not None
+    

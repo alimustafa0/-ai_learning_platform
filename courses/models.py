@@ -163,6 +163,74 @@ class Payment(models.Model):
     """
     Track course purchases.
     """
+
+    def generate_receipt_number(self):
+        """Generate a unique receipt number."""
+        return f"INV-{self.id:06d}-{self.created_at.strftime('%Y%m')}"
+    
+    def get_receipt_data(self):
+        """Return data for receipt/invoice."""
+        return {
+            'receipt_number': self.generate_receipt_number(),
+            'date': self.created_at.strftime('%B %d, %Y'),
+            'course': self.course.title,
+            'amount': f"${self.amount}",
+            'user_name': self.user.get_full_name() or self.user.email,
+            'user_email': self.user.email,
+            'payment_method': 'Credit Card (Stripe)',
+            'status': self.get_status_display(),
+            'transaction_id': self.stripe_payment_intent_id,
+        }
+    
+    def send_receipt_email(self):
+        """Send receipt email to user."""
+        from django.core.mail import send_mail
+        from django.template.loader import render_to_string
+        from django.conf import settings
+        
+        receipt_data = self.get_receipt_data()
+        
+        # Get site URL, default to localhost if not set
+        site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
+        
+        # Render email content
+        subject = f"Receipt for {self.course.title} - AI Learning Platform"
+        message = f"""
+        Thank you for your purchase!
+        
+        Receipt #{receipt_data['receipt_number']}
+        Date: {receipt_data['date']}
+        Course: {self.course.title}
+        Amount: ${self.amount}
+        
+        You can view your receipt online at:
+        {site_url}/courses/payments/{self.id}/receipt/
+        
+        Thank you for learning with us!
+        """
+        
+        html_message = render_to_string('courses/email_receipt.html', {
+            'payment': self,
+            'receipt': receipt_data,
+            'site_url': site_url,
+        })
+        
+        try:
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [self.user.email],
+                html_message=html_message,
+            )
+            return True
+        except Exception as e:
+            # Log error but don't crash the payment flow
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to send receipt email: {e}")
+            return False
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

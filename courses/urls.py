@@ -15,4 +15,5 @@ urlpatterns = [
     # path("<int:course_id>/process-payment/", views.process_payment, name="process_payment"),
     path("<int:course_id>/create-checkout-session/", views.create_checkout_session, name="create_checkout_session"),
     path("<int:course_id>/payment-success/", views.payment_success, name="payment_success"),
+    path("payments/<int:payment_id>/receipt/", views.payment_receipt, name="payment_receipt"),
 ]

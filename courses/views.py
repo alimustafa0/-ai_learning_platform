@@ -307,6 +307,9 @@ def dashboard(request):
             "progress_percentage": progress_percentage,
             "completed": is_completed,
         })
+
+    # Get payment history
+    payment_history = Payment.objects.filter(user=request.user).order_by('-created_at')[:10]
     
     return render(request, "courses/dashboard.html", {
         "total_xp": total_xp,
@@ -317,6 +320,7 @@ def dashboard(request):
         "all_achievements": all_achievements,
         "unlocked_ids": unlocked_ids,
         "course_data": course_data,  # Renamed from 'data' for clarity
+        "payment_history": payment_history,
     })
 
 @login_required
@@ -588,6 +592,14 @@ def payment_success(request, course_id):
                     points=50,
                     reason=f"Purchased course: {course.title}",
                 )
+                
+                # Try to send receipt email (optional)
+                try:
+                    payment.send_receipt_email()
+                except Exception as email_error:
+                    # Don't crash the payment flow if email fails
+                    print(f"Receipt email failed (non-critical): {email_error}")
+                    # You could log this to a proper logging system
             
             messages.success(request, f"🎉 Payment successful! You are now enrolled in '{course.title}'.")
         else:
@@ -603,3 +615,22 @@ def payment_success(request, course_id):
     except Exception as e:
         messages.error(request, f"Error processing payment: {str(e)}")
         return redirect('course_detail', course_id=course_id)
+
+@login_required
+def payment_receipt(request, payment_id):
+    """
+    Display payment receipt/invoice.
+    """
+    payment = get_object_or_404(Payment, id=payment_id, user=request.user)
+    
+    # Verify user owns this payment
+    if payment.user != request.user and not request.user.is_staff:
+        messages.error(request, "You don't have permission to view this receipt.")
+        return redirect('dashboard')
+    
+    receipt_data = payment.get_receipt_data()
+    
+    return render(request, 'courses/payment_receipt.html', {
+        'payment': payment,
+        'receipt': receipt_data,
+    })

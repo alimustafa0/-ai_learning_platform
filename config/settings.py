@@ -147,3 +147,12 @@ CKEDITOR_CONFIGS = {
 STRIPE_PUBLISHABLE_KEY = config("STRIPE_PUBLISHABLE_KEY", default="pk_test_...")
 STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY", default="sk_test_...")
 STRIPE_WEBHOOK_SECRET = config("STRIPE_WEBHOOK_SECRET", default="")
+SITE_URL = config("SITE_URL", default="http://localhost:8000")
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.mailtrap.io')
+EMAIL_PORT = config('EMAIL_PORT', default=2525, cast=int)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+DEFAULT_FROM_EMAIL = 'noreply@ailearningplatform.com'

@@ -104,4 +104,59 @@
         </div>
     {% endif %}
 
+    <!-- Payment History -->
+    {% if payment_history %}
+        <h3 style="margin-top: 40px;">💰 Payment History</h3>
+        
+        <div style="
+            overflow-x: auto;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        ">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f8f9fa;">
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Date</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Course</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Amount</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Status</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Receipt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payment_history %}
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 12px;">{{ payment.created_at|date:"M d, Y" }}</td>
+                        <td style="padding: 12px;">{{ payment.course.title }}</td>
+                        <td style="padding: 12px;">${{ payment.amount }}</td>
+                        <td style="padding: 12px;">
+                            <span style="
+                                display: inline-block;
+                                padding: 3px 8px;
+                                border-radius: 12px;
+                                font-size: 0.8em;
+                                background: {% if payment.status == 'succeeded' %}#d4edda{% elif payment.status == 'pending' %}#fff3cd{% else %}#f8d7da{% endif %};
+                                color: {% if payment.status == 'succeeded' %}#155724{% elif payment.status == 'pending' %}#856404{% else %}#721c24{% endif %};
+                            ">
+                                {{ payment.get_status_display }}
+                            </span>
+                        </td>
+                        <td style="padding: 12px;">
+                            {% if payment.status == 'succeeded' %}
+                                <a href="{% url 'payment_receipt' payment.id %}" style="color: #007bff;">
+                                    View Receipt
+                                </a>
+                            {% else %}
+                                <span style="color: #999;">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
 {% endblock %}

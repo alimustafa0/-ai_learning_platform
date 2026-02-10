@@ -1,6 +1,6 @@
 from django.contrib import admin
 from . import models
-from .models import Course, Module, Lesson, Enrollment, LessonCompletion, XPEvent, Achievement, UserAchievement, Category, Comment, Payment
+from .models import Course, Module, Lesson, Enrollment, LessonCompletion, XPEvent, Achievement, UserAchievement, Category, Comment, Payment, Refund
 from ckeditor.widgets import CKEditorWidget
 
 
@@ -99,6 +99,7 @@ class PaymentAdmin(admin.ModelAdmin):
     search_fields = ('user__email', 'course__title', 'stripe_payment_intent_id')
     readonly_fields = ('created_at', 'updated_at')
     list_per_page = 20
+    actions = ['refund_payments']
     
     fieldsets = (
         (None, {
@@ -107,6 +108,75 @@ class PaymentAdmin(admin.ModelAdmin):
         ('Stripe IDs', {
             'fields': ('stripe_payment_intent_id', 'stripe_checkout_session_id'),
             'classes': ('collapse',),
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+
+    def refund_payments(self, request, queryset):
+        """
+        Admin action to refund selected payments.
+        """
+        # Only allow refunding succeeded payments
+        queryset = queryset.filter(status='succeeded')
+        
+        refunded_count = 0
+        failed_count = 0
+        
+        for payment in queryset:
+            # Calculate refundable amount (full amount for now)
+            refundable = payment.amount
+            
+            # Check if already refunded
+            total_refunded = sum(refund.amount for refund in payment.refunds.filter(status='succeeded'))
+            if total_refunded >= payment.amount:
+                self.message_user(request, f"Payment {payment.id} already fully refunded.", level='warning')
+                continue
+            
+            if total_refunded > 0:
+                refundable = payment.amount - total_refunded
+            
+            try:
+                refund, created, stripe_refund = payment.create_refund(
+                    amount=refundable,
+                    reason="Admin refund via dashboard",
+                    admin_user=request.user
+                )
+                
+                if created and stripe_refund:
+                    refunded_count += 1
+                    self.message_user(request, f"Refunded ${refundable} for payment {payment.id}. Refund ID: {stripe_refund.id}")
+                else:
+                    failed_count += 1
+                    self.message_user(request, f"Failed to refund payment {payment.id}", level='error')
+                    
+            except Exception as e:
+                failed_count += 1
+                self.message_user(request, f"Error refunding payment {payment.id}: {str(e)}", level='error')
+        
+        self.message_user(request, f"Successfully refunded {refunded_count} payment(s). {failed_count} failed.")
+    
+    refund_payments.short_description = "Refund selected payments"
+
+@admin.register(Refund)
+class RefundAdmin(admin.ModelAdmin):
+    list_display = ('payment', 'amount', 'status', 'admin_user', 'created_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('payment__stripe_payment_intent_id', 'reason', 'admin_user__email')
+    readonly_fields = ('created_at', 'updated_at', 'stripe_refund_id')
+    
+    fieldsets = (
+        (None, {
+            'fields': ('payment', 'amount', 'reason', 'status')
+        }),
+        ('Stripe', {
+            'fields': ('stripe_refund_id',),
+            'classes': ('collapse',),
+        }),
+        ('Admin', {
+            'fields': ('admin_user',),
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),

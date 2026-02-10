@@ -158,11 +158,71 @@ class UserAchievement(models.Model):
     def __str__(self):
         return f"{self.user.email} - {self.achievement.name}"
     
-# === ADD PAYMENT MODELS ===
+
 class Payment(models.Model):
     """
     Track course purchases.
     """
+
+    def create_refund(self, amount, reason, admin_user=None):
+        """
+        Create a refund for this payment.
+        Returns (refund, created, stripe_refund)
+        """
+        import stripe
+        from django.conf import settings
+        
+        # Validate amount
+        if amount <= 0:
+            raise ValueError("Refund amount must be positive")
+        
+        if amount > self.amount:
+            amount = self.amount
+        
+        # Check if already refunded (total refunds)
+        total_refunded = sum(refund.amount for refund in self.refunds.filter(status='succeeded'))
+        if total_refunded >= self.amount:
+            raise ValueError("Payment already fully refunded")
+        
+        if total_refunded + amount > self.amount:
+            amount = self.amount - total_refunded
+        
+        try:
+            # Create refund in Stripe
+            stripe_refund = stripe.Refund.create(
+                payment_intent=self.stripe_payment_intent_id,
+                amount=int(amount * 100),  # Convert to cents
+                reason='requested_by_customer'  # or 'duplicate', 'fraudulent'
+            )
+            
+            # Create refund record
+            refund = Refund.objects.create(
+                payment=self,
+                admin_user=admin_user,
+                stripe_refund_id=stripe_refund.id,
+                amount=amount,
+                reason=reason,
+                status=stripe_refund.status
+            )
+            
+            # Update payment status if fully refunded
+            new_total_refunded = total_refunded + amount
+            if new_total_refunded >= self.amount:
+                self.status = 'refunded'
+                self.save()
+            
+            return refund, True, stripe_refund
+            
+        except stripe.error.StripeError as e:
+            # Create failed refund record
+            refund = Refund.objects.create(
+                payment=self,
+                admin_user=admin_user,
+                amount=amount,
+                reason=f"{reason} (Failed: {str(e)})",
+                status='failed'
+            )
+            return refund, False, None
 
     def generate_receipt_number(self):
         """Generate a unique receipt number."""
@@ -300,3 +360,46 @@ class Comment(models.Model):
         """Check if this comment is a reply to another comment."""
         return self.parent is not None
     
+class Refund(models.Model):
+    """
+    Track refunds for payments.
+    """
+    payment = models.ForeignKey(
+        Payment,
+        on_delete=models.CASCADE,
+        related_name="refunds"
+    )
+    admin_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="processed_refunds"
+    )
+    stripe_refund_id = models.CharField(max_length=100, blank=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    reason = models.TextField()
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending'),
+            ('succeeded', 'Succeeded'),
+            ('failed', 'Failed'),
+            ('canceled', 'Canceled'),
+        ],
+        default='pending'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Refund for {self.payment} - ${self.amount}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure refund amount doesn't exceed payment amount
+        if self.amount > self.payment.amount:
+            self.amount = self.payment.amount
+        super().save(*args, **kwargs)
+

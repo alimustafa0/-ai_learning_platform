@@ -29,10 +29,11 @@
 
     <header style="margin-bottom:20px;">
         <a href="/courses/dashboard/">Dashboard</a> |
-        <a href="/courses/">Courses</a>
+        <a href="/courses/">Courses</a> |
+        <a href="/courses/leaderboard/">Leaderboard</a>
         {% if request.user.is_authenticated %}
-    <div style="float:right;">
-        {% if request.user.first_name or request.user.last_name %}
+            <div style="float:right;">
+                {% if request.user.first_name or request.user.last_name %}
                     {{ request.user.get_full_name|default:request.user.email }}
                 {% else %}
                     {{ request.user.email }}

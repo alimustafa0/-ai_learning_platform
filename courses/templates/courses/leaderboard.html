@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto; padding: 20px;">
+    <h1>🏆 Leaderboard</h1>
+    <p>Top learners by XP earned</p>
+    
+    <!-- Current User Position -->
+    {% if request.user.is_authenticated and current_user_rank %}
+        <div style="
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        ">
+            <h3 style="margin: 0;">Your Position: #{{ current_user_rank }}</h3>
+            <p style="margin: 5px 0;">
+                {{ request.user.get_full_name|default:request.user.email }} • 
+                Level {{ global_level_number }} • 
+                {{ current_user_xp }} XP
+            </p>
+        </div>
+    {% endif %}
+    
+    <!-- Leaderboard Table -->
+    <div style="
+        overflow-x: auto;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    ">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa;">
+                    <th style="padding: 15px; text-align: center; border-bottom: 2px solid #ddd;">Rank</th>
+                    <th style="padding: 15px; text-align: left; border-bottom: 2px solid #ddd;">Learner</th>
+                    <th style="padding: 15px; text-align: left; border-bottom: 2px solid #ddd;">Level</th>
+                    <th style="padding: 15px; text-align: right; border-bottom: 2px solid #ddd;">XP</th>
+                    <th style="padding: 15px; text-align: center; border-bottom: 2px solid #ddd;">Achievements</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in leaderboard %}
+                <tr style="border-bottom: 1px solid #eee; {% if entry.user.id == request.user.id %}background: #f0f8ff;{% endif %}">
+                    <td style="padding: 15px; text-align: center; font-weight: bold;">
+                        {% if entry.rank == 1 %}
+                            <span style="color: gold;">🥇</span>
+                        {% elif entry.rank == 2 %}
+                            <span style="color: silver;">🥈</span>
+                        {% elif entry.rank == 3 %}
+                            <span style="color: #cd7f32;">🥉</span>
+                        {% else %}
+                            #{{ entry.rank }}
+                        {% endif %}
+                    </td>
+                    <td style="padding: 15px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            {% if entry.user.avatar %}
+                                <img src="{{ entry.user.avatar.url }}" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                            {% else %}
+                                <div style="width: 40px; height: 40px; background: #007bff; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                    {{ entry.user.email|first|upper }}
+                                </div>
+                            {% endif %}
+                            <div>
+                                <strong>
+                                    {% if entry.user.first_name or entry.user.last_name %}
+                                        {{ entry.user.get_full_name }}
+                                    {% else %}
+                                        {{ entry.user.email }}
+                                    {% endif %}
+                                </strong>
+                                {% if entry.user.id == request.user.id %}
+                                    <span style="background: #007bff; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; margin-left: 5px;">You</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 15px;">
+                        <span style="
+                            display: inline-block;
+                            background: #e9ecef;
+                            padding: 5px 10px;
+                            border-radius: 15px;
+                            font-size: 0.9em;
+                        ">
+                            {{ entry.level_number }} - {{ entry.level_title }}
+                        </span>
+                    </td>
+                    <td style="padding: 15px; text-align: right; font-weight: bold; font-size: 1.1em;">
+                        {{ entry.total_xp }} XP
+                    </td>
+                    <td style="padding: 15px; text-align: center;">
+                        <span style="
+                            display: inline-block;
+                            background: #ffc107;
+                            color: black;
+                            padding: 5px 10px;
+                            border-radius: 15px;
+                            font-size: 0.9em;
+                            font-weight: bold;
+                        ">
+                            {{ entry.achievement_count }} 🏆
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Legend -->
+    <div style="margin-top: 20px; font-size: 0.9em; color: #666;">
+        <p><strong>How to climb the leaderboard:</strong></p>
+        <ul>
+            <li>Complete lessons (+10 XP each)</li>
+            <li>Enroll in courses (+25 XP each)</li>
+            <li>Purchase courses (+50 XP bonus)</li>
+            <li>Earn achievements (+XP varies)</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

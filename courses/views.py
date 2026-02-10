@@ -11,6 +11,7 @@ import time
 import stripe
 from django.conf import settings
 from django.urls import reverse
+from users.models import User
 
 # Configure Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -633,4 +634,52 @@ def payment_receipt(request, payment_id):
     return render(request, 'courses/payment_receipt.html', {
         'payment': payment,
         'receipt': receipt_data,
+    })
+
+def leaderboard(request):
+    """
+    Display user leaderboard based on XP.
+    """
+    from django.db.models import Sum
+    
+    # Get users with their XP totals using aggregation (more efficient)
+    users_with_xp = User.objects.annotate(
+        total_xp=Sum('xp_events__points')
+    ).filter(total_xp__gt=0).order_by('-total_xp')[:50]
+    
+    # Prepare data for template
+    leaderboard_data = []
+    for i, user in enumerate(users_with_xp, 1):
+        total_xp = user.total_xp or 0
+        current_level, _ = get_level_progress(total_xp)
+        
+        leaderboard_data.append({
+            'user': user,
+            'total_xp': total_xp,
+            'level_number': current_level[0],
+            'level_title': current_level[1],
+            'achievement_count': UserAchievement.objects.filter(user=user).count(),
+            'rank': i,
+        })
+    
+    # Get current user's position and XP
+    current_user_rank = None
+    current_user_xp = 0
+    
+    if request.user.is_authenticated:
+        current_user_xp = XPEvent.objects.filter(user=request.user).aggregate(
+            Sum("points")
+        )["points__sum"] or 0
+        
+        # Find user's rank
+        for i, user in enumerate(users_with_xp, 1):
+            if user.id == request.user.id:
+                current_user_rank = i
+                break
+    
+    return render(request, 'courses/leaderboard.html', {
+        'leaderboard': leaderboard_data,
+        'current_user_rank': current_user_rank,
+        'current_user_xp': current_user_xp,
+        'total_users': users_with_xp.count(),
     })

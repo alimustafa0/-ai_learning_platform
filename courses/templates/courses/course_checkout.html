@@ -13,43 +13,29 @@
     
     <!-- Simple Checkout Form (will be replaced with Stripe) -->
     <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
-        <h3>Payment Information</h3>
+        <h3>Complete Your Purchase</h3>
         
-        <form method="post" action="{% url 'process_payment' course.id %}">
+        <!-- Course Summary -->
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+            <p><strong>{{ course.title }}</strong></p>
+            <p>Price: <strong>${{ course.price }}</strong></p>
+        </div>
+        
+        <!-- Test Info -->
+        <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0; border: 1px solid #ffeaa7;">
+            <strong>💳 Test Mode</strong>
+            <p>Use card: <code>4242 4242 4242 4242</code></p>
+            <p>Any future date, any CVC, any ZIP</p>
+            <p>Use email: any email address</p>
+        </div>
+        
+        <!-- Stripe Checkout Button -->
+        <form method="post" action="{% url 'create_checkout_session' course.id %}">
             {% csrf_token %}
-            
-            <!-- Test Card Info -->
-            <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0; border: 1px solid #ffeaa7;">
-                <strong>💳 Test Mode</strong>
-                <p>Use card: <code>4242 4242 4242 4242</code></p>
-                <p>Any future date, any CVC, any ZIP</p>
-            </div>
-            
-            <div style="margin: 15px 0;">
-                <label>Cardholder Name:</label>
-                <input type="text" name="cardholder_name" required style="width: 100%; padding: 10px; margin-top: 5px;">
-            </div>
-            
-            <div style="margin: 15px 0;">
-                <label>Card Number:</label>
-                <input type="text" name="card_number" placeholder="4242 4242 4242 4242" required style="width: 100%; padding: 10px; margin-top: 5px;">
-            </div>
-            
-            <div style="display: flex; gap: 15px;">
-                <div style="flex: 1;">
-                    <label>Expiry Date:</label>
-                    <input type="text" name="expiry" placeholder="MM/YY" required style="width: 100%; padding: 10px; margin-top: 5px;">
-                </div>
-                <div style="flex: 1;">
-                    <label>CVC:</label>
-                    <input type="text" name="cvc" placeholder="123" required style="width: 100%; padding: 10px; margin-top: 5px;">
-                </div>
-            </div>
-            
             <button type="submit" style="
                 width: 100%;
                 padding: 15px;
-                background: #28a745;
+                background: #5469d4;
                 color: white;
                 border: none;
                 border-radius: 5px;
@@ -58,13 +44,20 @@
                 margin-top: 20px;
                 cursor: pointer;
             ">
-                Pay ${{ course.price }}
+                💳 Pay ${{ course.price }} with Stripe
             </button>
         </form>
         
         <p style="text-align: center; margin-top: 15px;">
             <a href="{% url 'course_detail' course.id %}">← Back to Course</a>
         </p>
+        
+        <div style="margin-top: 20px; text-align: center;">
+            <img src="https://stripe.com/img/v3/home/twitter.png" alt="Stripe" style="height: 30px; opacity: 0.7;">
+            <p style="font-size: 0.8em; color: #666; margin-top: 5px;">
+                Secure payment powered by Stripe
+            </p>
+        </div>
     </div>
     
     <div style="margin-top: 30px; font-size: 0.9em; color: #666;">

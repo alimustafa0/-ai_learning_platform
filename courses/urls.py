@@ -12,5 +12,7 @@ urlpatterns = [
     path("<int:course_id>/enroll/", views.enroll_course, name="enroll_course"),
     path("courses/<int:course_id>/completed/", views.course_completed, name="course_completed"),
     path("<int:course_id>/checkout/", views.course_checkout, name="course_checkout"),
-    path("<int:course_id>/process-payment/", views.process_payment, name="process_payment"),
+    # path("<int:course_id>/process-payment/", views.process_payment, name="process_payment"),
+    path("<int:course_id>/create-checkout-session/", views.create_checkout_session, name="create_checkout_session"),
+    path("<int:course_id>/payment-success/", views.payment_success, name="payment_success"),
 ]

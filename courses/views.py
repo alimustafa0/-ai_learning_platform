@@ -2,12 +2,18 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
-from config import settings
+from config import settings as setting
 from .models import Course, Enrollment, Lesson, LessonCompletion, XPEvent, Achievement, UserAchievement, Payment
 from .forms import CommentForm
 from .gamification import get_level_progress
 from .achievements import check_lesson_count_achievements, check_course_completion_achievements
 import time
+import stripe
+from django.conf import settings
+from django.urls import reverse
+
+# Configure Stripe
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 def course_list(request):
@@ -373,17 +379,71 @@ def course_checkout(request, course_id):
     
     return render(request, 'courses/course_checkout.html', {
         'course': course,
-        'stripe_public_key': settings.STRIPE_PUBLISHABLE_KEY,
+        'stripe_public_key': setting.STRIPE_PUBLISHABLE_KEY,
     })
 
-@login_required
-def process_payment(request, course_id):
-    """
-    Process payment for a course (simulated for now).
-    """
-    if request.method != 'POST':
-        return redirect('course_checkout', course_id=course_id)
+# @login_required
+# def process_payment(request, course_id):
+#     """
+#     Process payment for a course (simulated for now).
+#     """
+#     if request.method != 'POST':
+#         return redirect('course_checkout', course_id=course_id)
     
+#     course = get_object_or_404(Course, id=course_id, is_published=True)
+    
+#     # Check if already enrolled
+#     if Enrollment.objects.filter(user=request.user, course=course).exists():
+#         messages.info(request, f"You are already enrolled in '{course.title}'.")
+#         return redirect('course_detail', course_id=course.id)
+    
+#     # Check if course is free (shouldn't happen but as safety)
+#     if course.is_free():
+#         return redirect('enroll_course', course_id=course.id)
+    
+#     # Simulate payment processing
+#     # In a real implementation, this would communicate with Stripe
+    
+#     # Create a payment record
+#     payment = Payment.objects.create(
+#         user=request.user,
+#         course=course,
+#         stripe_payment_intent_id=f"simulated_{int(time.time())}",
+#         stripe_checkout_session_id=f"simulated_session_{int(time.time())}",
+#         amount=course.price,
+#         currency="USD",
+#         status="succeeded"
+#     )
+    
+#     # Enroll the user
+#     enrollment, created = Enrollment.objects.get_or_create(
+#         user=request.user,
+#         course=course
+#     )
+    
+#     if created:
+#         # Award XP for enrollment (even paid courses get XP)
+#         XPEvent.objects.create(
+#             user=request.user,
+#             points=25,
+#             reason=f"Enrolled in paid course: {course.title}",
+#         )
+        
+#         # Award XP for payment (bonus for supporting platform)
+#         XPEvent.objects.create(
+#             user=request.user,
+#             points=50,
+#             reason=f"Purchased course: {course.title}",
+#         )
+    
+#     messages.success(request, f"🎉 Payment successful! You are now enrolled in '{course.title}'.")
+#     return redirect('course_detail', course_id=course.id)
+
+@login_required
+def create_checkout_session(request, course_id):
+    """
+    Create a Stripe Checkout Session for course purchase.
+    """
     course = get_object_or_404(Course, id=course_id, is_published=True)
     
     # Check if already enrolled
@@ -391,44 +451,155 @@ def process_payment(request, course_id):
         messages.info(request, f"You are already enrolled in '{course.title}'.")
         return redirect('course_detail', course_id=course.id)
     
-    # Check if course is free (shouldn't happen but as safety)
+    # Check if course is free
     if course.is_free():
         return redirect('enroll_course', course_id=course.id)
     
-    # Simulate payment processing
-    # In a real implementation, this would communicate with Stripe
-    
-    # Create a payment record
-    payment = Payment.objects.create(
+    # Check for existing pending payment
+    existing_payment = Payment.objects.filter(
         user=request.user,
         course=course,
-        stripe_payment_intent_id=f"simulated_{int(time.time())}",
-        stripe_checkout_session_id=f"simulated_session_{int(time.time())}",
-        amount=course.price,
-        currency="USD",
-        status="succeeded"
-    )
+        status='pending'
+    ).first()
     
-    # Enroll the user
-    enrollment, created = Enrollment.objects.get_or_create(
-        user=request.user,
-        course=course
-    )
+    if existing_payment:
+        # Try to retrieve existing session
+        try:
+            session = stripe.checkout.Session.retrieve(existing_payment.stripe_checkout_session_id)
+            return redirect(session.url)
+        except:
+            # Session expired or invalid, continue to create new one
+            pass
     
-    if created:
-        # Award XP for enrollment (even paid courses get XP)
-        XPEvent.objects.create(
-            user=request.user,
-            points=25,
-            reason=f"Enrolled in paid course: {course.title}",
+    try:
+        # Build URLs
+        success_url = request.build_absolute_uri(
+            reverse('payment_success', kwargs={'course_id': course.id})
+        )
+        cancel_url = request.build_absolute_uri(
+            reverse('course_detail', kwargs={'course_id': course.id})
         )
         
-        # Award XP for payment (bonus for supporting platform)
-        XPEvent.objects.create(
-            user=request.user,
-            points=50,
-            reason=f"Purchased course: {course.title}",
+        # Create Stripe Checkout Session
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {
+                        'name': course.title,
+                        'description': course.description[:500] if course.description else "",
+                    },
+                    'unit_amount': int(course.price * 100),  # Convert to cents
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=f"{success_url}?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=cancel_url,
+            metadata={
+                'course_id': str(course.id),
+                'user_id': str(request.user.id),
+            },
+            customer_email=request.user.email,
         )
+        
+        # Generate unique payment intent ID
+        payment_intent_id = checkout_session.payment_intent or f"pending_{checkout_session.id}"
+        
+        # Create a pending payment record
+        Payment.objects.create(
+            user=request.user,
+            course=course,
+            stripe_payment_intent_id=payment_intent_id,
+            stripe_checkout_session_id=checkout_session.id,
+            amount=course.price,
+            currency="USD",
+            status="pending"
+        )
+        
+        # Redirect to Stripe Checkout
+        return redirect(checkout_session.url)
+        
+    except Exception as e:
+        messages.error(request, f"Payment error: {str(e)}")
+        return redirect('course_checkout', course_id=course.id)
     
-    messages.success(request, f"🎉 Payment successful! You are now enrolled in '{course.title}'.")
-    return redirect('course_detail', course_id=course.id)
+@login_required
+def payment_success(request, course_id):
+    """
+    Handle successful payment and enroll user.
+    """
+    session_id = request.GET.get('session_id')
+    
+    if not session_id:
+        messages.error(request, "Invalid payment session.")
+        return redirect('course_detail', course_id=course_id)
+    
+    try:
+        # Retrieve the session from Stripe
+        session = stripe.checkout.Session.retrieve(session_id)
+        
+        # Verify the session belongs to this user/course
+        if str(session.metadata.get('user_id')) != str(request.user.id):
+            messages.error(request, "This payment session doesn't belong to you.")
+            return redirect('course_detail', course_id=course_id)
+        
+        if str(session.metadata.get('course_id')) != str(course_id):
+            messages.error(request, "Payment session course mismatch.")
+            return redirect('course_detail', course_id=course_id)
+        
+        course = get_object_or_404(Course, id=course_id)
+        
+        # Find or create payment record
+        payment, created = Payment.objects.get_or_create(
+            stripe_checkout_session_id=session_id,
+            defaults={
+                'user': request.user,
+                'course': course,
+                'stripe_payment_intent_id': session.payment_intent or '',
+                'amount': course.price,
+                'currency': 'USD',
+                'status': 'pending'
+            }
+        )
+        
+        # Update payment status
+        if session.payment_status == 'paid':
+            payment.status = 'succeeded'
+            payment.stripe_payment_intent_id = session.payment_intent or payment.stripe_payment_intent_id
+            payment.save()
+            
+            # Enroll the user if not already
+            enrollment, enrolled = Enrollment.objects.get_or_create(
+                user=request.user,
+                course=course
+            )
+            
+            if enrolled:
+                # Award XP
+                XPEvent.objects.create(
+                    user=request.user,
+                    points=25,
+                    reason=f"Enrolled in paid course: {course.title}",
+                )
+                XPEvent.objects.create(
+                    user=request.user,
+                    points=50,
+                    reason=f"Purchased course: {course.title}",
+                )
+            
+            messages.success(request, f"🎉 Payment successful! You are now enrolled in '{course.title}'.")
+        else:
+            payment.status = 'pending'
+            payment.save()
+            messages.warning(request, "Payment is still processing. Please wait a moment.")
+        
+        return redirect('course_detail', course_id=course_id)
+        
+    except stripe.error.StripeError as e:
+        messages.error(request, f"Stripe error: {str(e)}")
+        return redirect('course_detail', course_id=course_id)
+    except Exception as e:
+        messages.error(request, f"Error processing payment: {str(e)}")
+        return redirect('course_detail', course_id=course_id)

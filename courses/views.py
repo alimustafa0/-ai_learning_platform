@@ -2,10 +2,12 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
-from .models import Course, Enrollment, Lesson, LessonCompletion, XPEvent, Achievement, UserAchievement
+from config import settings
+from .models import Course, Enrollment, Lesson, LessonCompletion, XPEvent, Achievement, UserAchievement, Payment
 from .forms import CommentForm
 from .gamification import get_level_progress
 from .achievements import check_lesson_count_achievements, check_course_completion_achievements
+import time
 
 
 def course_list(request):
@@ -61,27 +63,37 @@ def course_detail(request, course_id):
 def enroll_course(request, course_id):
     """
     Enroll the current user in a course.
+    For free courses: enroll directly.
+    For paid courses: redirect to checkout.
     """
     course = get_object_or_404(Course, id=course_id, is_published=True)
     
-    # Check if user is already enrolled
-    enrollment, created = Enrollment.objects.get_or_create(
-        user=request.user,
-        course=course
-    )
-    
-    if created:
-        messages.success(request, f"You have successfully enrolled in '{course.title}'!")
-        # Award XP for enrollment
-        XPEvent.objects.create(
-            user=request.user,
-            points=25,
-            reason=f"Enrolled in course: {course.title}",
-        )
-    else:
+    # Check if already enrolled
+    if Enrollment.objects.filter(user=request.user, course=course).exists():
         messages.info(request, f"You are already enrolled in '{course.title}'.")
+        return redirect('course_detail', course_id=course.id)
     
-    return redirect('course_detail', course_id=course.id)
+    # Check if course is free
+    if course.is_free():
+        # Free course: enroll directly
+        enrollment, created = Enrollment.objects.get_or_create(
+            user=request.user,
+            course=course
+        )
+        
+        if created:
+            messages.success(request, f"You have successfully enrolled in '{course.title}'!")
+            # Award XP for enrollment
+            XPEvent.objects.create(
+                user=request.user,
+                points=25,
+                reason=f"Enrolled in course: {course.title}",
+            )
+        return redirect('course_detail', course_id=course.id)
+    else:
+        # Paid course: redirect to checkout
+        messages.info(request, f"'{course.title}' is a paid course. Please complete payment to enroll.")
+        return redirect('course_checkout', course_id=course.id)
 
 @login_required
 def lesson_detail(request, lesson_id):
@@ -341,3 +353,82 @@ def course_completed(request, course_id):
         return render(request, "courses/not_enrolled.html", {"course": course})
 
     return render(request, "courses/course_completed.html", {"course": course})
+
+@login_required
+def course_checkout(request, course_id):
+    """
+    Display checkout page for a paid course.
+    """
+    course = get_object_or_404(Course, id=course_id, is_published=True)
+    
+    # Check if already enrolled
+    if Enrollment.objects.filter(user=request.user, course=course).exists():
+        messages.info(request, f"You are already enrolled in '{course.title}'.")
+        return redirect('course_detail', course_id=course.id)
+    
+    # Check if course is actually paid
+    if course.is_free():
+        messages.info(request, f"'{course.title}' is free. Redirecting to enrollment...")
+        return redirect('enroll_course', course_id=course.id)
+    
+    return render(request, 'courses/course_checkout.html', {
+        'course': course,
+        'stripe_public_key': settings.STRIPE_PUBLISHABLE_KEY,
+    })
+
+@login_required
+def process_payment(request, course_id):
+    """
+    Process payment for a course (simulated for now).
+    """
+    if request.method != 'POST':
+        return redirect('course_checkout', course_id=course_id)
+    
+    course = get_object_or_404(Course, id=course_id, is_published=True)
+    
+    # Check if already enrolled
+    if Enrollment.objects.filter(user=request.user, course=course).exists():
+        messages.info(request, f"You are already enrolled in '{course.title}'.")
+        return redirect('course_detail', course_id=course.id)
+    
+    # Check if course is free (shouldn't happen but as safety)
+    if course.is_free():
+        return redirect('enroll_course', course_id=course.id)
+    
+    # Simulate payment processing
+    # In a real implementation, this would communicate with Stripe
+    
+    # Create a payment record
+    payment = Payment.objects.create(
+        user=request.user,
+        course=course,
+        stripe_payment_intent_id=f"simulated_{int(time.time())}",
+        stripe_checkout_session_id=f"simulated_session_{int(time.time())}",
+        amount=course.price,
+        currency="USD",
+        status="succeeded"
+    )
+    
+    # Enroll the user
+    enrollment, created = Enrollment.objects.get_or_create(
+        user=request.user,
+        course=course
+    )
+    
+    if created:
+        # Award XP for enrollment (even paid courses get XP)
+        XPEvent.objects.create(
+            user=request.user,
+            points=25,
+            reason=f"Enrolled in paid course: {course.title}",
+        )
+        
+        # Award XP for payment (bonus for supporting platform)
+        XPEvent.objects.create(
+            user=request.user,
+            points=50,
+            reason=f"Purchased course: {course.title}",
+        )
+    
+    messages.success(request, f"🎉 Payment successful! You are now enrolled in '{course.title}'.")
+    return redirect('course_detail', course_id=course.id)

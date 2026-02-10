@@ -142,3 +142,8 @@ CKEDITOR_CONFIGS = {
         'width': '100%',
     },
 }
+
+# Stripe Configuration
+STRIPE_PUBLISHABLE_KEY = config("STRIPE_PUBLISHABLE_KEY", default="pk_test_...")
+STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY", default="sk_test_...")
+STRIPE_WEBHOOK_SECRET = config("STRIPE_WEBHOOK_SECRET", default="")

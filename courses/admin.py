@@ -1,6 +1,6 @@
 from django.contrib import admin
 from . import models
-from .models import Course, Module, Lesson, Enrollment, LessonCompletion, XPEvent, Achievement, UserAchievement, Category, Comment
+from .models import Course, Module, Lesson, Enrollment, LessonCompletion, XPEvent, Achievement, UserAchievement, Category, Comment, Payment
 from ckeditor.widgets import CKEditorWidget
 
 
@@ -35,11 +35,24 @@ class ModuleInline(admin.TabularInline):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ("title", "is_published", "created_at", "required_level")
-    list_filter = ("is_published", "categories")
+    list_display = ("title", "is_published", "price", "created_at", "required_level")
+    list_filter = ("is_published", "categories", "price")
     search_fields = ("title", "categories__name")
     filter_horizontal = ("categories",)
     inlines = [ModuleInline]
+    # Fields to show in the edit form
+    fieldsets = (
+        (None, {
+            'fields': ('title', 'description', 'is_published')
+        }),
+        ('Pricing', {
+            'fields': ('price', 'stripe_price_id', 'stripe_product_id'),
+            'classes': ('collapse',),
+        }),
+        ('Requirements', {
+            'fields': ('required_level', 'categories')
+        }),
+    )
 
 @admin.register(Enrollment)
 class EnrollmentAdmin(admin.ModelAdmin):
@@ -78,3 +91,25 @@ class CommentAdmin(admin.ModelAdmin):
         """Display ✓ if comment is a reply."""
         return "✓" if obj.parent else ""
     is_reply_display.short_description = 'Is Reply'
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ('user', 'course', 'amount', 'status', 'created_at')
+    list_filter = ('status', 'created_at', 'course')
+    search_fields = ('user__email', 'course__title', 'stripe_payment_intent_id')
+    readonly_fields = ('created_at', 'updated_at')
+    list_per_page = 20
+    
+    fieldsets = (
+        (None, {
+            'fields': ('user', 'course', 'amount', 'currency', 'status')
+        }),
+        ('Stripe IDs', {
+            'fields': ('stripe_payment_intent_id', 'stripe_checkout_session_id'),
+            'classes': ('collapse',),
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )

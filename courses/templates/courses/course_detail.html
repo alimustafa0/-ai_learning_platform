@@ -38,13 +38,33 @@
                     <button>Resume Course</button>
                 </a>
             {% else %}
-                <form method="post" action="{% url 'enroll_course' course.id %}">
-                    {% csrf_token %}
-                    <button type="submit">Enroll in this Course</button>
-                </form>
+                {% if course.is_free %}
+                    <form method="post" action="{% url 'enroll_course' course.id %}">
+                        {% csrf_token %}
+                        <button type="submit" style="background: #28a745; color: white;">
+                            Enroll in this FREE Course
+                        </button>
+                    </form>
+                {% else %}
+                    <!-- Paid course -->
+                    <div>
+                        <p>This is a premium course. Purchase required to enroll.</p>
+                        <a href="{% url 'course_checkout' course.id %}">
+                            <button style="background: #ffc107; color: black; font-weight: bold;">
+                                💳 Purchase for ${{ course.price }}
+                            </button>
+                        </a>
+                        <p style="margin-top: 10px; font-size: 0.9em;">
+                            <a href="{% url 'enroll_course' course.id %}">
+                                Or try to enroll directly (will redirect to checkout)
+                            </a>
+                        </p>
+                    </div>
+                {% endif %}
             {% endif %}
         {% else %}
-            <p>Please <a href="{% url 'login' %}">login</a> to enroll in this course.</p>
+            <p>Please <a href="{% url 'login' %}">login</a> to 
+            {% if course.is_free %}enroll{% else %}purchase{% endif %} this course.</p>
         {% endif %}
     </div>
     <!-- END ENROLLMENT SECTION -->

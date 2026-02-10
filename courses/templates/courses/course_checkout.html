@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2>Checkout: {{ course.title }}</h2>
+    
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3>Course Details</h3>
+        <p>{{ course.description|truncatewords:50 }}</p>
+        <p><strong>Price: ${{ course.price }}</strong></p>
+        <p>Required Level: {{ course.required_level }}</p>
+    </div>
+    
+    <!-- Simple Checkout Form (will be replaced with Stripe) -->
+    <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+        <h3>Payment Information</h3>
+        
+        <form method="post" action="{% url 'process_payment' course.id %}">
+            {% csrf_token %}
+            
+            <!-- Test Card Info -->
+            <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0; border: 1px solid #ffeaa7;">
+                <strong>💳 Test Mode</strong>
+                <p>Use card: <code>4242 4242 4242 4242</code></p>
+                <p>Any future date, any CVC, any ZIP</p>
+            </div>
+            
+            <div style="margin: 15px 0;">
+                <label>Cardholder Name:</label>
+                <input type="text" name="cardholder_name" required style="width: 100%; padding: 10px; margin-top: 5px;">
+            </div>
+            
+            <div style="margin: 15px 0;">
+                <label>Card Number:</label>
+                <input type="text" name="card_number" placeholder="4242 4242 4242 4242" required style="width: 100%; padding: 10px; margin-top: 5px;">
+            </div>
+            
+            <div style="display: flex; gap: 15px;">
+                <div style="flex: 1;">
+                    <label>Expiry Date:</label>
+                    <input type="text" name="expiry" placeholder="MM/YY" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                </div>
+                <div style="flex: 1;">
+                    <label>CVC:</label>
+                    <input type="text" name="cvc" placeholder="123" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                </div>
+            </div>
+            
+            <button type="submit" style="
+                width: 100%;
+                padding: 15px;
+                background: #28a745;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 16px;
+                font-weight: bold;
+                margin-top: 20px;
+                cursor: pointer;
+            ">
+                Pay ${{ course.price }}
+            </button>
+        </form>
+        
+        <p style="text-align: center; margin-top: 15px;">
+            <a href="{% url 'course_detail' course.id %}">← Back to Course</a>
+        </p>
+    </div>
+    
+    <div style="margin-top: 30px; font-size: 0.9em; color: #666;">
+        <p>🔒 Secure payment. Your payment information is encrypted.</p>
+        <p>💰 30-day money-back guarantee.</p>
+    </div>
+</div>
+{% endblock %}

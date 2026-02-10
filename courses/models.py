@@ -28,8 +28,21 @@ class Course(models.Model):
 
     categories = models.ManyToManyField(Category, blank=True, related_name="courses")
 
+    price = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0.00,
+        help_text="Price in USD. 0.00 = free course"
+    )
+
+    stripe_price_id = models.CharField(max_length=100, blank=True, help_text="Stripe Price ID for this course")
+    stripe_product_id = models.CharField(max_length=100, blank=True, help_text="Stripe Product ID for this course")
+
     def __str__(self):
         return self.title
+    
+    def is_free(self):
+        return self.price == 0
 
 
 class Module(models.Model):
@@ -144,6 +157,44 @@ class UserAchievement(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.achievement.name}"
+    
+# === ADD PAYMENT MODELS ===
+class Payment(models.Model):
+    """
+    Track course purchases.
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="payments"
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="payments"
+    )
+    stripe_payment_intent_id = models.CharField(max_length=100, unique=True)
+    stripe_checkout_session_id = models.CharField(max_length=100, unique=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=3, default="USD")
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending'),
+            ('succeeded', 'Succeeded'),
+            ('failed', 'Failed'),
+            ('canceled', 'Canceled'),
+        ],
+        default='pending'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.course.title} - ${self.amount}"
 
 class Comment(models.Model):
     """

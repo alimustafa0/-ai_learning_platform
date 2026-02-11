@@ -7,6 +7,8 @@
 <form method="post">
     {% csrf_token %}
     
+    <input type="hidden" name="next" value="{% url 'dashboard' %}">
+    
     <!-- Display form errors -->
     {% if form.errors %}
         <div style="color: red; margin-bottom: 15px;">

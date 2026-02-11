@@ -34,8 +34,8 @@
         </table>
         
         <div style="text-align: center; margin-top: 30px;">
-            <a href="{{ site_url }}/courses/payments/{{ payment.id }}/receipt/" 
-               style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            <a href="{% url 'payment_receipt' payment.id %}" 
+            style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
                 View Full Receipt Online
             </a>
         </div>

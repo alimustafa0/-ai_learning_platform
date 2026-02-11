@@ -683,3 +683,18 @@ def leaderboard(request):
         'current_user_xp': current_user_xp,
         'total_users': users_with_xp.count(),
     })
+
+def welcome(request):
+    """Welcome/landing page for the platform."""
+    # Get some stats for the homepage
+    total_courses = Course.objects.filter(is_published=True).count()
+    total_users = User.objects.count()
+    
+    # Get featured courses
+    featured_courses = Course.objects.filter(is_published=True)[:3]
+    
+    return render(request, 'courses/welcome.html', {
+        'total_courses': total_courses,
+        'total_users': total_users,
+        'featured_courses': featured_courses,
+    })

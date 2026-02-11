@@ -1,5 +1,6 @@
 from pathlib import Path
 from decouple import config
+from django.urls import reverse_lazy
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,8 +28,8 @@ ENVIRONMENT = config("ENVIRONMENT", default="development")
 AUTH_USER_MODEL = "users.User"
 
 # Add these two lines:
-LOGIN_REDIRECT_URL = "/courses/dashboard"  # Or "/courses/dashboard/" if you prefer
-LOGOUT_REDIRECT_URL = "/courses/"  # Optional: where to go after logout
+LOGIN_REDIRECT_URL = reverse_lazy('dashboard')
+LOGOUT_REDIRECT_URL = reverse_lazy('welcome')
 
 # Application definition
 

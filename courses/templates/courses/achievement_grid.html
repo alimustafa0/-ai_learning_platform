@@ -1,0 +1,94 @@
+{% if achievements %}
+<div class="achievements-container">
+    <div class="row g-4">
+        {% for item in achievements %}
+        <div class="col-md-4 col-lg-3">
+            <div class="card achievement-card h-100 {% if item.unlocked %}unlocked{% else %}locked{% endif %}">
+                <div class="card-body text-center">
+                    <!-- Achievement Icon -->
+                    <div class="achievement-icon-wrapper mb-3">
+                        <span class="achievement-icon display-4">{{ item.achievement.icon|default:"🏆" }}</span>
+                    </div>
+                    
+                    <!-- Achievement Name -->
+                    <h6 class="fw-bold mb-2">{{ item.achievement.name }}</h6>
+                    
+                    <!-- Achievement Description -->
+                    {% if item.achievement.description %}
+                        <p class="small text-muted mb-3">{{ item.achievement.description }}</p>
+                    {% endif %}
+                    
+                    <!-- Progress Bar (for locked achievements) -->
+                    {% if not item.unlocked and item.threshold > 0 %}
+                        <div class="progress mb-2" style="height: 6px;">
+                            <div class="progress-bar {% if item.percentage > 50 %}bg-success{% else %}bg-info{% endif %}" 
+                                 style="width: {{ item.percentage }}%;"></div>
+                        </div>
+                        <small class="text-muted">
+                            {{ item.current }}/{{ item.threshold }}
+                        </small>
+                    {% endif %}
+                    
+                    <!-- Status Badge -->
+                    {% if item.unlocked %}
+                        <span class="badge bg-success mt-2">
+                            <i class="fas fa-check-circle me-1"></i>Unlocked
+                        </span>
+                    {% else %}
+                        <span class="badge bg-secondary mt-2">
+                            <i class="fas fa-lock me-1"></i>
+                            {% if item.remaining > 0 %}
+                                {{ item.remaining }} more to go
+                            {% else %}
+                                Locked
+                            {% endif %}
+                        </span>
+                    {% endif %}
+                    
+                    <!-- XP Reward -->
+                    <div class="xp-badge mt-2">
+                        <small class="text-warning">
+                            <i class="fas fa-star me-1"></i>+{{ item.achievement.xp_reward }} XP
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .achievement-card {
+        border: none;
+        border-radius: 15px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    }
+    .achievement-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .achievement-card.unlocked {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    .achievement-card.unlocked .text-muted {
+        color: rgba(255,255,255,0.8) !important;
+    }
+    .achievement-card.unlocked .badge.bg-success {
+        background-color: #28a745 !important;
+    }
+    .achievement-icon-wrapper {
+        width: 80px;
+        height: 80px;
+        line-height: 80px;
+        margin: 0 auto;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+    }
+    .xp-badge {
+        font-size: 0.85rem;
+    }
+</style>
+{% endif %}

@@ -1,125 +1,204 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Receipt #{{ receipt.receipt_number }} - AI Learning Platform{% endblock %}
 
 {% block content %}
-<div style="max-width: 800px; margin: 0 auto; padding: 20px;">
-    <!-- Printable Receipt -->
-    <div id="receipt" style="
-        background: white;
-        padding: 30px;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        border: 1px solid #ddd;
-    ">
-        <!-- Header -->
-        <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #007bff; padding-bottom: 20px;">
-            <h1 style="color: #007bff; margin: 0;">AI Learning Platform</h1>
-            <p style="color: #666; margin: 5px 0;">Invoice/Receipt</p>
-        </div>
-        
-        <!-- Receipt Info -->
-        <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
-            <div>
-                <h3>Bill To:</h3>
-                <p><strong>{{ receipt.user_name }}</strong></p>
-                <p>{{ receipt.user_email }}</p>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Receipt Card -->
+            <div class="card border-0 shadow-lg" id="receipt">
+                <!-- Receipt Header -->
+                <div class="card-header bg-gradient-primary text-white border-0 py-4">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h2 class="fw-bold mb-0">
+                                <i class="fas fa-receipt me-2"></i>AI Learning Platform
+                            </h2>
+                            <p class="text-white-50 mb-0">Official Payment Receipt</p>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="bg-white bg-opacity-25 rounded-3 p-2 d-inline-block">
+                                <span class="badge {% if payment.status == 'succeeded' %}bg-success{% else %}bg-warning{% endif %} fs-6">
+                                    {{ receipt.status }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body p-5">
+                    <!-- Receipt Number and Date -->
+                    <div class="row mb-5">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-1">Receipt Number</h6>
+                            <h4 class="fw-bold">{{ receipt.receipt_number }}</h4>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <h6 class="text-muted mb-1">Date Issued</h6>
+                            <h4 class="fw-bold">{{ receipt.date }}</h4>
+                        </div>
+                    </div>
+                    
+                    <!-- Billing Information -->
+                    <div class="row mb-5">
+                        <div class="col-md-6">
+                            <div class="bg-light rounded-4 p-4">
+                                <h6 class="fw-bold text-primary mb-3">
+                                    <i class="fas fa-user me-2"></i>Bill To:
+                                </h6>
+                                <h5 class="fw-bold mb-1">{{ receipt.user_name }}</h5>
+                                <p class="text-muted mb-0">{{ receipt.user_email }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-light rounded-4 p-4">
+                                <h6 class="fw-bold text-primary mb-3">
+                                    <i class="fas fa-building me-2"></i>From:
+                                </h6>
+                                <h5 class="fw-bold mb-1">AI Learning Platform</h5>
+                                <p class="text-muted mb-0">support@ailearningplatform.com</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Order Details Table -->
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="fas fa-shopping-cart me-2"></i>Order Details
+                    </h6>
+                    
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="px-4 py-3">Item</th>
+                                    <th class="px-4 py-3">Description</th>
+                                    <th class="px-4 py-3 text-end">Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="px-4 py-3 fw-bold">{{ receipt.course }}</td>
+                                    <td class="px-4 py-3 text-muted">Online Course Access - Lifetime</td>
+                                    <td class="px-4 py-3 text-end fw-bold">{{ receipt.amount }}</td>
+                                </tr>
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="2" class="px-4 py-3 text-end fw-bold">Total:</td>
+                                    <td class="px-4 py-3 text-end fw-bold fs-5 text-primary">
+                                        {{ receipt.amount }} {{ receipt.currency }}
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    <!-- Payment Details -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3">
+                                <h6 class="fw-bold mb-2">Payment Method</h6>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
+                                        <i class="fas fa-credit-card text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <p class="mb-0 fw-bold">{{ receipt.payment_method }}</p>
+                                        <small class="text-muted">Via Stripe</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3">
+                                <h6 class="fw-bold mb-2">Transaction ID</h6>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-success bg-opacity-10 rounded-circle p-2 me-2">
+                                        <i class="fas fa-hashtag text-success"></i>
+                                    </div>
+                                    <div>
+                                        <code class="fw-bold">{{ receipt.transaction_id|truncatechars:20 }}</code>
+                                        <small class="text-muted d-block">Stripe Payment Intent</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Thank You Message -->
+                    <div class="text-center py-4">
+                        <div class="display-5 text-success mb-3">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h5 class="fw-bold mb-2">Thank You for Your Purchase!</h5>
+                        <p class="text-muted">
+                            Your payment has been successfully processed. You now have lifetime access to this course.
+                        </p>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="border-top pt-4 mt-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="small text-muted mb-0">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    This is an official receipt for your records.
+                                </p>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <p class="small text-muted mb-0">
+                                    <i class="fas fa-shield-alt me-1"></i>
+                                    Secured by Stripe
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div style="text-align: right;">
-                <h3>Receipt #{{ receipt.receipt_number }}</h3>
-                <p>Date: {{ receipt.date }}</p>
-                <p>Status: <span style="color: {% if payment.status == 'succeeded' %}#28a745{% else %}#dc3545{% endif %};">
-                    {{ receipt.status }}
-                </span></p>
+            
+            <!-- Action Buttons -->
+            <div class="text-center mt-4">
+                <button onclick="window.print()" class="btn btn-primary btn-lg me-2">
+                    <i class="fas fa-print me-2"></i>Print Receipt
+                </button>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+            
+            <!-- Email Receipt Notice -->
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-envelope me-1"></i>
+                    A copy of this receipt has been sent to {{ receipt.user_email }}
+                </small>
             </div>
         </div>
-        
-        <!-- Course Details -->
-        <div style="margin-bottom: 30px;">
-            <h3>Course Purchase</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="background: #f8f9fa;">
-                        <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Item</th>
-                        <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Description</th>
-                        <th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td style="padding: 15px; border: 1px solid #ddd;">{{ receipt.course }}</td>
-                        <td style="padding: 15px; border: 1px solid #ddd;">Online Course Access</td>
-                        <td style="padding: 15px; border: 1px solid #ddd; text-align: right;">{{ receipt.amount }}</td>
-                    </tr>
-                    <tr style="font-weight: bold;">
-                        <td colspan="2" style="padding: 15px; border: 1px solid #ddd; text-align: right;">Total:</td>
-                        <td style="padding: 15px; border: 1px solid #ddd; text-align: right;">{{ receipt.amount }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Payment Details -->
-        <div style="margin-bottom: 30px;">
-            <h3>Payment Details</h3>
-            <p>Payment Method: {{ receipt.payment_method }}</p>
-            <p>Transaction ID: <code>{{ receipt.transaction_id }}</code></p>
-            <p>Thank you for your purchase!</p>
-        </div>
-        
-        <!-- Footer -->
-        <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.9em;">
-            <p>AI Learning Platform</p>
-            <p>support@ailearningplatform.com</p>
-            <p>This is an automated receipt. Please save for your records.</p>
-        </div>
-    </div>
-    
-    <!-- Actions -->
-    <div style="margin-top: 30px; text-align: center;">
-        <button onclick="window.print()" style="
-            padding: 10px 20px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-right: 10px;
-        ">
-            🖨️ Print Receipt
-        </button>
-        <a href="{% url 'dashboard' %}">
-            <button style="
-                padding: 10px 20px;
-                background: #6c757d;
-                color: white;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-            ">
-                ← Back to Dashboard
-            </button>
-        </a>
     </div>
 </div>
 
+<!-- Print Styles -->
 <style>
-@media print {
-    body * {
-        visibility: hidden;
+    @media print {
+        body {
+            background: white;
+        }
+        .navbar-custom,
+        footer,
+        .btn,
+        a[href] {
+            display: none !important;
+        }
+        #receipt {
+            box-shadow: none !important;
+            border: none !important;
+        }
+        .card-header {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
     }
-    #receipt, #receipt * {
-        visibility: visible;
-    }
-    #receipt {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        box-shadow: none;
-        border: none;
-    }
-    button {
-        display: none !important;
-    }
-}
 </style>
 {% endblock %}

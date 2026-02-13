@@ -138,14 +138,39 @@ class XPEvent(models.Model):
     def __str__(self):
         return f"{self.user.email} +{self.points} XP for {self.reason}"
 
+    
 class Achievement(models.Model):
     name = models.CharField(max_length=255)
+    code = models.SlugField(
+        max_length=50, 
+        unique=True,
+        help_text="Unique identifier for use in code (e.g., 'first_lesson', 'course_complete')"
+    )
     description = models.TextField(blank=True)
     xp_reward = models.IntegerField(default=50, help_text="XP awarded when earning this achievement")
     icon = models.CharField(max_length=100, blank=True, default="🏆", help_text="Emoji or icon name")
+    category = models.CharField(
+        max_length=50,
+        choices=[
+            ('lessons', 'Lessons Completed'),
+            ('courses', 'Courses Completed'),
+            ('xp', 'Total XP'),
+            ('streak', 'Learning Streak'),
+            ('special', 'Special Achievements'),
+        ],
+        default='special',
+        help_text="Category of achievement for progress tracking"
+    )
+    threshold = models.IntegerField(
+        default=0,
+        help_text="Number required to unlock (e.g., 5 lessons, 100 XP)"
+    )
     
     def __str__(self):
         return self.name
+    
+    class Meta:
+        ordering = ['category', 'threshold']
 
 class UserAchievement(models.Model):
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)

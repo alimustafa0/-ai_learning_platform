@@ -262,6 +262,11 @@ def dashboard(request):
     unlocked_ids = UserAchievement.objects.filter(
         user=request.user
     ).values_list("achievement_id", flat=True)
+
+    # Get achievement progress
+    from .achievements import get_achievement_progress, get_recent_achievements
+    achievement_progress = get_achievement_progress(request.user)
+    recent_achievements = get_recent_achievements(request.user)
     
     # Get enrollments and course progress
     enrollments = request.user.enrollments.select_related("course")
@@ -307,6 +312,8 @@ def dashboard(request):
         "course_data": course_data,  # Renamed from 'data' for clarity
         "payment_history": payment_history,
         "recommendations": recommendations,
+        "achievement_progress": achievement_progress,
+        "recent_achievements": recent_achievements,
     })
 
 @login_required

@@ -1,227 +1,342 @@
 {% extends "base.html" %}
+{% load course_extras %}
+{% load static %}
+
+{% block title %}{{ lesson.title }} - {{ course.title }}{% endblock %}
 
 {% block content %}
-
-    <div style="display: flex; gap: 40px;">
-
-        <!-- {% if messages %}
-            {% for message in messages %}
-                <div style="padding:15px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 5px; margin-bottom: 20px;">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %} -->
-
+<div class="container-fluid py-4">
+    <div class="row">
         <!-- Sidebar -->
-        <div style="width: 300px;">
-            <h3>{{ course.title }}</h3>
-
-            {% for module in course.modules.all %}
-                <strong>{{ module.order }}. {{ module.title }}</strong>
-
-                <ul>
-                    {% for item in module.lessons.all %}
-                        <li>
-                            {% if item.id == lesson.id %}
-                                <b>▶ {{ item.order }}. {{ item.title }}</b>
-
-                            {% elif item.id in completed_lessons %}
-                                <a href="{% url 'lesson_detail' item.id %}">
-                                    ✓ {{ item.order }}. {{ item.title }}
-                                </a>
-
-                            {% else %}
-                                <a href="{% url 'lesson_detail' item.id %}">
-                                    {{ item.order }}. {{ item.title }}
-                                </a>
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% endfor %}
-        </div>
-
-        <!-- Lesson Content -->
-        <div style="flex: 1;">
-
-            <div style="margin-bottom: 20px;">
-                <strong>
-                    Progress: {{ progress_percentage }}%
-                    ({{ completed_count }} / {{ total_lessons }} lessons)
-                </strong>
-
-                <div style="
-                    width: 100%;
-                    background-color: #e9ecef;
-                    height: 12px;
-                    margin-top: 10px;
-                    border-radius: 6px;
-                    overflow: hidden;
-                ">
-                    <div style="
-                        width: {{ progress_percentage }}%;
-                        background: linear-gradient(90deg, #007bff, #6610f2);
-                        height: 100%;
-                        transition: width 0.5s ease;
-                        border-radius: 6px;
-                    "></div>
+        <div class="col-lg-3 mb-4 mb-lg-0">
+            <div class="lesson-sidebar sticky-lg-top" style="top: 20px;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-book-open me-2 text-primary"></i>
+                        {{ course.title }}
+                    </h5>
+                    <span class="badge bg-primary">{{ progress_percentage }}%</span>
                 </div>
-            </div>
-
-            <h1>{{ lesson.title }}</h1>
-
-            {% if lesson.video_url %}
-                <div>
-                    <iframe width="800" height="450"
-                            src="{{ lesson.video_url }}"
-                            frameborder="0"
-                            allowfullscreen>
-                    </iframe>
-                </div>
-            {% endif %}
-
-            <hr>
-
-            <div>
-                {{ content|safe }}
-            </div>
-
-            <hr>
-
-            <div style="margin: 30px 0;">
-                {% if is_completed %}
-                    <div style="padding: 15px; background: #d4edda; color: #155724; border-radius: 5px; display: inline-flex; align-items: center; gap: 10px;">
-                        <span>✅</span>
-                        <strong>Completed on {{ lesson.completions.first.completed_at|date:"F j, Y" }}</strong>
-                    </div>
-                {% else %}
-                    <form method="post" action="{% url 'mark_lesson_complete' lesson.id %}">
-                        {% csrf_token %}
-                        <button type="submit" style="
-                            padding: 12px 24px;
-                            background: linear-gradient(135deg, #4CAF50, #2E7D32);
-                            color: white;
-                            border: none;
-                            border-radius: 8px;
-                            font-size: 16px;
-                            font-weight: bold;
-                            cursor: pointer;
-                            transition: all 0.3s ease;
-                            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                        ">
-                            ✅ Mark as Complete (+10 XP)
-                        </button>
-                        <p style="margin-top: 8px; font-size: 14px; color: #666;">
-                            Completing this lesson will award you 10 XP and progress your course completion.
-                        </p>
-                    </form>
-                {% endif %}
-            </div>
-
-            <hr>
-
-            <!-- COMMENTS SECTION -->
-            <div style="margin-top: 50px; padding-top: 30px; border-top: 1px solid #eee;">
-                <h3>💬 Discussion</h3>
                 
-                <!-- Comment Form -->
-                <div style="margin-bottom: 30px;">
-                    <form method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="comment_submit" value="1">
-                        
-                        <div style="margin-bottom: 10px;">
-                            <label for="id_content"><strong>Add a comment or question:</strong></label>
-                            {{ comment_form.content }}
-                            {% if comment_form.content.errors %}
-                                <div style="color: red;">{{ comment_form.content.errors }}</div>
-                            {% endif %}
+                <!-- Progress Bar -->
+                <div class="progress mb-4" style="height: 6px;">
+                    <div class="progress-bar" style="width: {{ progress_percentage }}%;"></div>
+                </div>
+                
+                <!-- Modules Accordion -->
+                <div class="accordion" id="lessonSidebarAccordion">
+                    {% for module in course.modules.all %}
+                        <div class="accordion-item border-0 mb-2">
+                            <h2 class="accordion-header" id="sidebarHeading{{ module.id }}">
+                                <button class="accordion-button bg-light rounded {% if not forloop.first %}collapsed{% endif %}" 
+                                        type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#sidebarCollapse{{ module.id }}">
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-primary me-2">{{ module.order }}</span>
+                                        <span class="small fw-bold">{{ module.title|truncatechars:30 }}</span>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="sidebarCollapse{{ module.id }}" 
+                                 class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                                 data-bs-parent="#lessonSidebarAccordion">
+                                <div class="accordion-body p-0 pt-2">
+                                    <div class="list-group list-group-flush">
+                                        {% for item in module.lessons.all %}
+                                            <a href="{% url 'lesson_detail' item.id %}" 
+                                               class="list-group-item list-group-item-action d-flex align-items-center py-2 px-3
+                                                      {% if item.id == lesson.id %}active{% endif %}
+                                                      {% if item.id in completed_lessons %}text-success{% endif %}">
+                                                <span class="me-2">
+                                                    {% if item.id in completed_lessons %}
+                                                        <i class="fas fa-check-circle text-success"></i>
+                                                    {% else %}
+                                                        <i class="far fa-circle text-muted"></i>
+                                                    {% endif %}
+                                                </span>
+                                                <span class="flex-grow-1 small">
+                                                    {{ item.order }}. {{ item.title|truncatechars:25 }}
+                                                </span>
+                                                {% if item.id == lesson.id %}
+                                                    <i class="fas fa-play text-primary ms-2"></i>
+                                                {% endif %}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Course Info -->
+                <div class="mt-4 pt-2">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small">Course Progress</span>
+                        <span class="fw-bold small">{{ completed_count }}/{{ total_lessons }}</span>
+                    </div>
+                    <a href="{% url 'course_detail' course.id %}" class="btn btn-outline-primary w-100 btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Course
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <!-- Lesson Header -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <nav aria-label="breadcrumb" class="mb-3">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item">
+                                <a href="{% url 'course_detail' course.id %}" class="text-decoration-none">
+                                    {{ course.title }}
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <span class="text-muted">Module {{ lesson.module.order }}</span>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">
+                                Lesson {{ lesson.order }}
+                            </li>
+                        </ol>
+                    </nav>
+                    
+                    <h1 class="display-6 fw-bold mb-0">{{ lesson.title }}</h1>
+                </div>
+            </div>
+            
+            <!-- Video Section -->
+            {% if lesson.video_url %}
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-0 overflow-hidden" style="border-radius: 0.5rem;">
+                        <div id="youtube-player-container" style="position: relative; padding-bottom: 56.25%; height: 0; background: #000;">
+                            <div id="youtube-player" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></div>
                         </div>
                         
-                        <button type="submit" style="
-                            padding: 8px 16px;
-                            background-color: #007bff;
-                            color: white;
-                            border: none;
-                            border-radius: 5px;
-                            cursor: pointer;
-                        ">
-                            Post Comment
-                        </button>
-                    </form>
+                        <!-- Fallback -->
+                        <div id="video-fallback" style="display: none; padding: 3rem; text-align: center;">
+                            <div class="py-4">
+                                <div class="display-1 text-muted mb-3">
+                                    <i class="fas fa-video-slash"></i>
+                                </div>
+                                <h5 class="fw-bold mb-2">Video Cannot Be Embedded</h5>
+                                <p class="text-muted mb-3">
+                                    This video is not available for embedding due to the owner's settings.
+                                </p>
+                                <a href="{{ lesson.video_url }}" target="_blank" class="btn btn-danger btn-lg">
+                                    <i class="fab fa-youtube me-2"></i>Watch on YouTube
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
-                <!-- Comments List -->
-                <div>
-                    <h4>Comments ({{ comments.count }})</h4>
+                <!-- YouTube IFrame API -->
+                <script src="https://www.youtube.com/iframe_api"></script>
+                <script>
+                    function getYouTubeVideoId(url) {
+                        if (!url) return null;
+                        const patterns = [
+                            /(?:youtube\.com\/watch\?v=)([^&]+)/,
+                            /(?:youtu\.be\/)([^?]+)/,
+                            /(?:youtube\.com\/embed\/)([^?]+)/
+                        ];
+                        for (const pattern of patterns) {
+                            const match = url.match(pattern);
+                            if (match) return match[1];
+                        }
+                        return null;
+                    }
+
+                    let player;
+                    const videoUrl = "{{ lesson.video_url|safe }}";
+                    const videoId = getYouTubeVideoId(videoUrl);
                     
-                    {% if comments %}
-                        {% for comment in comments %}
-                            <div style="
-                                margin-bottom: 25px;
-                                padding: 15px;
-                                background-color: #f8f9fa;
-                                border-radius: 8px;
-                                border-left: 4px solid #007bff;
-                            ">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                                    <strong>
-                                        {% if comment.user.first_name or comment.user.last_name %}
-                                            {{ comment.user.get_full_name }}
-                                        {% else %}
-                                            {{ comment.user.email }}
-                                        {% endif %}
-                                    </strong>
-                                    <small style="color: #666;">
-                                        {{ comment.created_at|timesince }} ago
-                                        {% if comment.is_edited %}
-                                            (edited)
-                                        {% endif %}
-                                    </small>
-                                </div>
-                                
-                                <p style="margin: 0; white-space: pre-wrap;">{{ comment.content }}</p>
-                                
-                                <!-- Reply button (future feature) -->
-                                <!-- <div style="margin-top: 10px;">
-                                    <button style="
-                                        background: none;
-                                        border: none;
-                                        color: #666;
-                                        cursor: pointer;
-                                        font-size: 0.9em;
-                                        padding: 0;
-                                    ">
-                                        Reply
-                                    </button>
-                                </div> -->
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        <p style="color: #666; font-style: italic;">
-                            No comments yet. Be the first to ask a question or share your thoughts!
-                        </p>
-                    {% endif %}
+                    window.onYouTubeIframeAPIReady = function() {
+                        if (!videoId) {
+                            document.getElementById('youtube-player-container').innerHTML = 
+                                '<iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" ' +
+                                'src="{{ lesson.video_url|video_embed_url }}" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>';
+                            return;
+                        }
+                        
+                        player = new YT.Player('youtube-player', {
+                            videoId: videoId,
+                            playerVars: {
+                                'autoplay': 0,
+                                'rel': 0,
+                                'showinfo': 0,
+                                'modestbranding': 1
+                            },
+                            events: {
+                                'onError': function(event) {
+                                    if (event.data === 5 || event.data === 101 || event.data === 150) {
+                                        document.getElementById('youtube-player-container').style.display = 'none';
+                                        document.getElementById('video-fallback').style.display = 'block';
+                                    }
+                                }
+                            }
+                        });
+                    };
+                </script>
+            {% endif %}
+            
+            <!-- Lesson Content -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="lesson-content">
+                        {{ content|safe }}
+                    </div>
                 </div>
             </div>
-            <!-- END COMMENTS SECTION -->
-             <hr>
-
-            <div>
-                {% if previous_lesson %}
-                    <a href="{% url 'lesson_detail' previous_lesson.id %}">
-                        ← Previous
-                    </a>
-                {% endif %}
-
-                {% if next_lesson %}
-                    <a href="{% url 'lesson_detail' next_lesson.id %}">
-                        Next →
-                    </a>
-                {% endif %}
+            
+            <!-- Completion & Navigation -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            {% if is_completed %}
+                                <div class="d-flex align-items-center text-success">
+                                    <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                                        <i class="fas fa-check-circle fa-2x text-success"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-1">Lesson Completed!</h6>
+                                        <small>
+                                            Completed on {{ lesson.completions.first.completed_at|date:"F j, Y" }}
+                                        </small>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <form method="post" action="{% url 'mark_lesson_complete' lesson.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="fas fa-check-circle me-2"></i>Mark Complete (+10 XP)
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-md-end gap-2">
+                                {% if previous_lesson %}
+                                    <a href="{% url 'lesson_detail' previous_lesson.id %}" 
+                                       class="btn btn-outline-secondary">
+                                        <i class="fas fa-arrow-left me-1"></i>Previous
+                                    </a>
+                                {% endif %}
+                                {% if next_lesson %}
+                                    <a href="{% url 'lesson_detail' next_lesson.id %}" 
+                                       class="btn btn-primary">
+                                        Next<i class="fas fa-arrow-right ms-1"></i>
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'course_completed' course.id %}" 
+                                       class="btn btn-warning">
+                                        Complete Course<i class="fas fa-trophy ms-1"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Comments Section -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-comments me-2 text-primary"></i>
+                        Discussion ({{ comments.count }})
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Comment Form -->
+                    <form method="post" class="mb-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="comment_submit" value="1">
+                        <div class="mb-3">
+                            <label for="id_content" class="form-label fw-bold">Add a comment:</label>
+                            {{ comment_form.content }}
+                            {% if comment_form.content.errors %}
+                                <div class="text-danger small mt-1">{{ comment_form.content.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>Post Comment
+                        </button>
+                    </form>
+                    
+                    <!-- Comments List -->
+                    <div class="comments-list">
+                        {% if comments %}
+                            {% for comment in comments %}
+                                <div class="comment mb-3">
+                                    <div class="comment-meta">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-2"
+                                                 style="width: 36px; height: 36px;">
+                                                <span class="fw-bold text-primary small">
+                                                    {{ comment.user.email|first|upper }}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <strong class="comment-author">
+                                                    {% if comment.user.get_full_name %}
+                                                        {{ comment.user.get_full_name }}
+                                                    {% else %}
+                                                        {{ comment.user.email }}
+                                                    {% endif %}
+                                                </strong>
+                                                <span class="comment-date ms-2">
+                                                    {{ comment.created_at|timesince }} ago
+                                                    {% if comment.is_edited %}(edited){% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="comment-content mt-2 ps-5">
+                                        {{ comment.content|linebreaks }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-comment-dots fa-2x mb-3"></i>
+                                    <p class="mb-0">No comments yet. Be the first to share your thoughts!</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
-
     </div>
+</div>
 
+<style>
+    .lesson-content {
+        font-size: 1.1rem;
+        line-height: 1.7;
+    }
+    .lesson-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 0.5rem;
+    }
+    .lesson-content pre {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid #e9ecef;
+    }
+    .comment {
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        border-left: 4px solid var(--primary);
+    }
+</style>
 {% endblock %}

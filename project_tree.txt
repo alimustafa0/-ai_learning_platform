@@ -1,0 +1,111 @@
+
+ai_learning_platform:.
+¦   .env
+¦   .gitignore
+¦   db.sqlite3
+¦   manage.py
+¦   project_tree.txt
+¦   requirements.txt
+¦   Tree.txt
+¦   
++---avatars
+¦       modeified_image.jpg
+¦       
++---config
+¦   ¦   asgi.py
+¦   ¦   settings.py
+¦   ¦   urls.py
+¦   ¦   wsgi.py
+¦   ¦   __init__.py
+¦           
++---courses
+¦   ¦   achievements.py
+¦   ¦   admin.py
+¦   ¦   apps.py
+¦   ¦   context_processors.py
+¦   ¦   forms.py
+¦   ¦   gamification.py
+¦   ¦   models.py
+¦   ¦   tests.py
+¦   ¦   urls.py
+¦   ¦   views.py
+¦   ¦   __init__.py
+¦   ¦   
+¦   +---migrations
+¦   ¦   ¦   0001_initial.py
+¦   ¦   ¦   0002_enrollment.py
+¦   ¦   ¦   0003_lessoncompletion.py
+¦   ¦   ¦   0004_xpevent.py
+¦   ¦   ¦   0005_course_required_level.py
+¦   ¦   ¦   0006_achievement_userachievement.py
+¦   ¦   ¦   0007_category_course_categories.py
+¦   ¦   ¦   0008_comment.py
+¦   ¦   ¦   0009_achievement_icon_achievement_xp_reward.py
+¦   ¦   ¦   0010_alter_lesson_content.py
+¦   ¦   ¦   0011_payment.py
+¦   ¦   ¦   0012_course_price_course_stripe_price_id_and_more.py
+¦   ¦   ¦   0013_alter_payment_stripe_payment_intent_id.py
+¦   ¦   ¦   0014_refund.py
+¦   ¦   ¦   __init__.py
+¦   ¦           
+¦   +---static
+¦   ¦   +---courses
+¦   ¦       +---css
+¦   ¦               components.css
+¦   ¦               style.css
+¦   ¦               utils.css
+¦   ¦               
+¦   +---templates
+¦   ¦   ¦   base.html
+¦   ¦   ¦   
+¦   ¦   +---courses
+¦   ¦           course_checkout.html
+¦   ¦           course_completed.html
+¦   ¦           course_detail.html
+¦   ¦           course_list.html
+¦   ¦           dashboard.html
+¦   ¦           email_receipt.html
+¦   ¦           leaderboard.html
+¦   ¦           lesson_detail.html
+¦   ¦           level_locked.html
+¦   ¦           not_enrolled.html
+¦   ¦           payment_receipt.html
+¦   ¦           welcome.html
+¦   ¦           
+¦   +---templatetags
+¦   ¦   ¦   course_extras.py
+¦   ¦   ¦   course_filters.py
+¦           
++---media
+¦   +---avatars
+¦           111.jpg
+¦           modeified_image.jpg
+¦           modeified_image_zNanPjG.jpg
+¦           photo.jpg
+¦           WhatsApp_Image_2025-03-14_at_23.55.28_9605e039.jpg
+¦           
++---templates
+¦   +---registration
+¦           login.html
+¦           
++---users
+    ¦   admin.py
+    ¦   apps.py
+    ¦   forms.py
+    ¦   models.py
+    ¦   tests.py
+    ¦   urls.py
+    ¦   views.py
+    ¦   __init__.py
+    ¦   
+    +---migrations
+    ¦   ¦   0001_initial.py
+    ¦   ¦   0002_alter_user_managers.py
+    ¦   ¦   0003_user_avatar_user_bio_user_location_user_website_and_more.py
+    ¦   ¦   __init__.py
+    ¦           
+    +---templates
+    ¦   +---users
+    ¦           profile_edit.html
+    ¦           signup.html
+            

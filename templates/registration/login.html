@@ -1,37 +1,194 @@
 <!-- templates/registration/login.html -->
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Login - AI Learning Platform{% endblock %}
 
 {% block content %}
-<h2>Login</h2>
-
-<form method="post">
-    {% csrf_token %}
-    
-    <input type="hidden" name="next" value="{% url 'dashboard' %}">
-    
-    <!-- Display form errors -->
-    {% if form.errors %}
-        <div style="color: red; margin-bottom: 15px;">
-            Your username (email) and password didn't match. Please try again.
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+            <!-- Card Container -->
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-gradient-primary text-white text-center py-4 border-0">
+                    <div class="mb-3">
+                        <div class="bg-white bg-opacity-25 rounded-circle d-inline-flex p-3">
+                            <i class="fas fa-user fa-3x"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold mb-0">Welcome Back!</h3>
+                    <p class="text-white-50 mb-0">Please login to your account</p>
+                </div>
+                
+                <div class="card-body p-5">
+                    <!-- Error Messages -->
+                    {% if form.errors %}
+                        <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                            <i class="fas fa-exclamation-circle me-3 fa-2x"></i>
+                            <div>
+                                <strong>Login Failed</strong><br>
+                                Your email or password didn't match. Please try again.
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Login Form -->
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{% url 'dashboard' %}">
+                        
+                        <!-- Email Field -->
+                        <div class="mb-4">
+                            <label for="id_username" class="form-label fw-bold text-muted">
+                                <i class="fas fa-envelope me-2"></i>Email Address
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-envelope text-muted"></i>
+                                </span>
+                                <input type="email" 
+                                       name="username" 
+                                       id="id_username" 
+                                       class="form-control border-start-0 ps-0" 
+                                       placeholder="your@email.com" 
+                                       required
+                                       value="{{ form.username.value|default:'' }}">
+                            </div>
+                            {% if form.username.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.username.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Password Field -->
+                        <div class="mb-4">
+                            <label for="id_password" class="form-label fw-bold text-muted">
+                                <i class="fas fa-lock me-2"></i>Password
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-key text-muted"></i>
+                                </span>
+                                <input type="password" 
+                                       name="password" 
+                                       id="id_password" 
+                                       class="form-control border-start-0 ps-0" 
+                                       placeholder="••••••••" 
+                                       required>
+                                <button class="btn btn-light border" 
+                                        type="button" 
+                                        onclick="togglePassword()"
+                                        style="border-left: none !important;">
+                                    <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Remember Me & Forgot Password -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="rememberMe">
+                                <label class="form-check-label text-muted" for="rememberMe">
+                                    Remember me
+                                </label>
+                            </div>
+                            <a href="{% url 'password_reset' %}" class="text-decoration-none small">
+                                Forgot Password?
+                            </a>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Sign Up Link -->
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <p class="text-muted mb-0">
+                            Don't have an account? 
+                            <a href="{% url 'signup' %}" class="fw-bold text-decoration-none">
+                                Sign up here <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Demo Credentials (Test Mode) -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-flask text-warning fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="fw-bold mb-1">🔬 Test Mode</h6>
+                            <p class="text-muted small mb-0">
+                                Use any email to create an account, or login with existing credentials.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    {% endif %}
-    
-    <!-- Email field (username field) -->
-    <div style="margin-bottom: 15px;">
-        <label for="id_username">Email:</label><br>
-        <input type="email" name="username" id="id_username" required>
     </div>
-    
-    <!-- Password field -->
-    <div style="margin-bottom: 15px;">
-        <label for="id_password">Password:</label><br>
-        <input type="password" name="password" id="id_password" required>
-    </div>
-    
-    <button type="submit">Login</button>
-</form>
+</div>
 
-<p style="margin-top: 20px;">
-    Don't have an account? <a href="{% url 'signup' %}">Sign up</a>
-</p>
+<!-- Password Toggle Script -->
+<script>
+    function togglePassword() {
+        const passwordInput = document.getElementById('id_password');
+        const toggleIcon = document.getElementById('togglePasswordIcon');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.classList.remove('fa-eye');
+            toggleIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.classList.remove('fa-eye-slash');
+            toggleIcon.classList.add('fa-eye');
+        }
+    }
+</script>
+
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .input-group-text {
+        background: white;
+        border-right: none;
+    }
+    
+    .input-group .form-control {
+        border-left: none;
+    }
+    
+    .input-group .form-control:focus + .btn {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .btn-light.border {
+        background: white;
+        border-color: #dee2e6 !important;
+    }
+    
+    .btn-light.border:hover {
+        background: #f8f9fa;
+    }
+</style>
 {% endblock %}

@@ -1,56 +1,279 @@
 <!-- users/templates/users/signup.html -->
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sign Up - AI Learning Platform{% endblock %}
 
 {% block content %}
-<h2>Sign Up</h2>
-
-<form method="post">
-    {% csrf_token %}
-    
-    <!-- Display form errors if any -->
-    {% if form.errors %}
-        <div style="color: red; margin-bottom: 15px;">
-            Please correct the errors below.
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <!-- Card Container -->
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-gradient-success text-white text-center py-4 border-0">
+                    <div class="mb-3">
+                        <div class="bg-white bg-opacity-25 rounded-circle d-inline-flex p-3">
+                            <i class="fas fa-user-plus fa-3x"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold mb-0">Create Account</h3>
+                    <p class="text-white-50 mb-0">Start your learning journey today</p>
+                </div>
+                
+                <div class="card-body p-5">
+                    <!-- Form Errors -->
+                    {% if form.errors %}
+                        <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                            <i class="fas fa-exclamation-triangle me-3 fa-2x"></i>
+                            <div>
+                                <strong>Please correct the following errors:</strong>
+                                <ul class="mb-0 mt-1">
+                                    {% for field, errors in form.errors.items %}
+                                        {% for error in errors %}
+                                            <li class="small">{{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Sign Up Form -->
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Email Field -->
+                        <div class="mb-4">
+                            <label for="id_email" class="form-label fw-bold text-muted">
+                                <i class="fas fa-envelope me-2"></i>Email Address
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-envelope text-muted"></i>
+                                </span>
+                                {{ form.email }}
+                            </div>
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.email.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                We'll never share your email with anyone else.
+                            </div>
+                        </div>
+                        
+                        <!-- Password Field -->
+                        <div class="mb-4">
+                            <label for="id_password1" class="form-label fw-bold text-muted">
+                                <i class="fas fa-lock me-2"></i>Password
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-key text-muted"></i>
+                                </span>
+                                {{ form.password1 }}
+                                <button class="btn btn-light border" 
+                                        type="button" 
+                                        onclick="togglePassword('id_password1', 'togglePasswordIcon1')"
+                                        style="border-left: none !important;">
+                                    <i class="fas fa-eye" id="togglePasswordIcon1"></i>
+                                </button>
+                            </div>
+                            {% if form.password1.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.password1.errors.0 }}
+                                </div>
+                            {% endif %}
+                            {% if form.password1.help_text %}
+                                <div class="form-text">
+                                    <ul class="mb-0 ps-3">
+                                        <li>Your password can't be too similar to your other personal information.</li>
+                                        <li>Your password must contain at least 8 characters.</li>
+                                        <li>Your password can't be a commonly used password.</li>
+                                        <li>Your password can't be entirely numeric.</li>
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Password Confirmation -->
+                        <div class="mb-4">
+                            <label for="id_password2" class="form-label fw-bold text-muted">
+                                <i class="fas fa-check-circle me-2"></i>Confirm Password
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-check text-muted"></i>
+                                </span>
+                                {{ form.password2 }}
+                                <button class="btn btn-light border" 
+                                        type="button" 
+                                        onclick="togglePassword('id_password2', 'togglePasswordIcon2')"
+                                        style="border-left: none !important;">
+                                    <i class="fas fa-eye" id="togglePasswordIcon2"></i>
+                                </button>
+                            </div>
+                            {% if form.password2.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.password2.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                Enter the same password as before, for verification.
+                            </div>
+                        </div>
+                        
+                        <!-- Terms & Conditions -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="terms" required>
+                                <label class="form-check-label text-muted small" for="terms">
+                                    I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> and 
+                                    <a href="#" class="text-decoration-none">Privacy Policy</a>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>Create Account
+                            </button>
+                        </div>
+                        
+                        <!-- Bonus XP Badge -->
+                        <div class="text-center mt-3">
+                            <span class="badge bg-warning text-dark p-2">
+                                <i class="fas fa-star me-1"></i>
+                                +25 XP on first login!
+                            </span>
+                        </div>
+                    </form>
+                    
+                    <!-- Login Link -->
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <p class="text-muted mb-0">
+                            Already have an account? 
+                            <a href="{% url 'login' %}" class="fw-bold text-decoration-none">
+                                Log in here <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Benefits Card -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-4 text-center">
+                            <div class="text-primary mb-2">
+                                <i class="fas fa-trophy fa-2x"></i>
+                            </div>
+                            <h6 class="fw-bold mb-0">Earn XP</h6>
+                            <small class="text-muted">+10 per lesson</small>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="text-success mb-2">
+                                <i class="fas fa-medal fa-2x"></i>
+                            </div>
+                            <h6 class="fw-bold mb-0">Achievements</h6>
+                            <small class="text-muted">50+ to unlock</small>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="text-warning mb-2">
+                                <i class="fas fa-chart-line fa-2x"></i>
+                            </div>
+                            <h6 class="fw-bold mb-0">Leaderboards</h6>
+                            <small class="text-muted">Compete globally</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    {% endif %}
-    
-    <!-- Email field -->
-    <div style="margin-bottom: 15px;">
-        <label for="id_email">Email:</label><br>
-        {{ form.email }}
-        {% if form.email.errors %}
-            <div style="color: red;">{{ form.email.errors }}</div>
-        {% endif %}
     </div>
-    
-    <!-- Password1 field -->
-    <div style="margin-bottom: 15px;">
-        <label for="id_password1">Password:</label><br>
-        {{ form.password1 }}
-        {% if form.password1.errors %}
-            <div style="color: red;">{{ form.password1.errors }}</div>
-        {% endif %}
-        {% if form.password1.help_text %}
-            <div style="font-size: 0.9em; color: #666;">{{ form.password1.help_text }}</div>
-        {% endif %}
-    </div>
-    
-    <!-- Password2 field -->
-    <div style="margin-bottom: 15px;">
-        <label for="id_password2">Password confirmation:</label><br>
-        {{ form.password2 }}
-        {% if form.password2.errors %}
-            <div style="color: red;">{{ form.password2.errors }}</div>
-        {% endif %}
-        {% if form.password2.help_text %}
-            <div style="font-size: 0.9em; color: #666;">{{ form.password2.help_text }}</div>
-        {% endif %}
-    </div>
-    
-    <button type="submit">Sign Up</button>
-</form>
+</div>
 
-<p style="margin-top: 20px;">
-    Already have an account? <a href="{% url 'login' %}">Log in</a>
-</p>
+<!-- Password Toggle Script -->
+<script>
+    function togglePassword(inputId, iconId) {
+        const passwordInput = document.getElementById(inputId);
+        const toggleIcon = document.getElementById(iconId);
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.classList.remove('fa-eye');
+            toggleIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.classList.remove('fa-eye-slash');
+            toggleIcon.classList.add('fa-eye');
+        }
+    }
+    
+    // Add Bootstrap classes to form fields
+    document.addEventListener('DOMContentLoaded', function() {
+        // Style email field
+        const emailField = document.getElementById('id_email');
+        if (emailField) {
+            emailField.classList.add('form-control', 'border-start-0', 'ps-0');
+            emailField.placeholder = 'your@email.com';
+        }
+        
+        // Style password fields
+        const password1 = document.getElementById('id_password1');
+        if (password1) {
+            password1.classList.add('form-control', 'border-start-0', 'ps-0');
+            password1.placeholder = '••••••••';
+        }
+        
+        const password2 = document.getElementById('id_password2');
+        if (password2) {
+            password2.classList.add('form-control', 'border-start-0', 'ps-0');
+            password2.placeholder = '••••••••';
+        }
+    });
+</script>
+
+<style>
+    .bg-gradient-success {
+        background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+    }
+    
+    .form-control:focus {
+        border-color: var(--secondary);
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+    
+    .input-group-text {
+        background: white;
+        border-right: none;
+    }
+    
+    .input-group .form-control {
+        border-left: none;
+    }
+    
+    .input-group .form-control:focus + .btn {
+        border-color: var(--secondary);
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+    
+    .btn-light.border {
+        background: white;
+        border-color: #dee2e6 !important;
+    }
+    
+    .btn-light.border:hover {
+        background: #f8f9fa;
+    }
+    
+    .form-text ul {
+        margin-top: 5px;
+        padding-left: 20px;
+        color: #6c757d;
+        font-size: 0.875em;
+    }
+</style>
 {% endblock %}

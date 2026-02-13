@@ -1,107 +1,263 @@
-<!-- users/templates/users/profile_edit.html -->
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Edit Profile - AI Learning Platform{% endblock %}
 
 {% block content %}
-<div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-    <h2>Edit Your Profile</h2>
-    
-    <!-- Success/Error Messages -->
-    {% if messages %}
-        {% for message in messages %}
-            <div style="padding: 12px; margin-bottom: 20px; background-color: #d4edda; color: #155724; border-radius: 5px;">
-                {{ message }}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Profile Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="flex-shrink-0">
+                    <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                        <i class="fas fa-user-cog fa-2x text-primary"></i>
+                    </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <h1 class="display-6 fw-bold text-primary mb-1">Edit Profile</h1>
+                    <p class="text-muted mb-0">Update your personal information and public profile.</p>
+                </div>
             </div>
-        {% endfor %}
-    {% endif %}
-    
-    <!-- Current Avatar Preview -->
-    {% if request.user.avatar %}
-        <div style="margin-bottom: 20px;">
-            <p>Current Avatar:</p>
-            <img src="{{ request.user.avatar.url }}" alt="Avatar" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
-        </div>
-    {% endif %}
-    
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        
-        <!-- Form Fields -->
-        <div style="margin-bottom: 15px;">
-            <label for="id_first_name">First Name:</label>
-            {{ form.first_name }}
-            {% if form.first_name.errors %}
-                <div style="color: red; font-size: 0.9em;">{{ form.first_name.errors }}</div>
+            
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>{{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <!-- Profile Edit Form -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <!-- Current Avatar Preview -->
+                    {% if request.user.avatar %}
+                        <div class="text-center mb-4">
+                            <div class="position-relative d-inline-block">
+                                <img src="{{ request.user.avatar.url }}" 
+                                     alt="{{ request.user.email }}" 
+                                     class="rounded-circle border border-4 border-primary"
+                                     style="width: 120px; height: 120px; object-fit: cover;">
+                                <div class="position-absolute bottom-0 end-0">
+                                    <span class="badge bg-primary rounded-circle p-2">
+                                        <i class="fas fa-camera"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <p class="text-muted small mt-2">Current Avatar</p>
+                        </div>
+                    {% endif %}
+                    
+                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row g-4">
+                            <!-- First Name -->
+                            <div class="col-md-6">
+                                <label for="id_first_name" class="form-label fw-bold">First Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="fas fa-user text-muted"></i>
+                                    </span>
+                                    {{ form.first_name }}
+                                </div>
+                                {% if form.first_name.errors %}
+                                    <div class="text-danger small mt-1">{{ form.first_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Last Name -->
+                            <div class="col-md-6">
+                                <label for="id_last_name" class="form-label fw-bold">Last Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="fas fa-user text-muted"></i>
+                                    </span>
+                                    {{ form.last_name }}
+                                </div>
+                                {% if form.last_name.errors %}
+                                    <div class="text-danger small mt-1">{{ form.last_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Bio -->
+                            <div class="col-12">
+                                <label for="id_bio" class="form-label fw-bold">Bio</label>
+                                {{ form.bio }}
+                                <div class="form-text">{{ form.bio.help_text }}</div>
+                                {% if form.bio.errors %}
+                                    <div class="text-danger small mt-1">{{ form.bio.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Avatar -->
+                            <div class="col-12">
+                                <label for="id_avatar" class="form-label fw-bold">Profile Picture</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-camera text-muted"></i>
+                                    </span>
+                                    {{ form.avatar }}
+                                </div>
+                                <div class="form-text">Upload a profile picture (optional). Max size: 2MB</div>
+                                {% if form.avatar.errors %}
+                                    <div class="text-danger small mt-1">{{ form.avatar.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Website -->
+                            <div class="col-md-6">
+                                <label for="id_website" class="form-label fw-bold">Website</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="fas fa-globe text-muted"></i>
+                                    </span>
+                                    {{ form.website }}
+                                </div>
+                                {% if form.website.errors %}
+                                    <div class="text-danger small mt-1">{{ form.website.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Location -->
+                            <div class="col-md-6">
+                                <label for="id_location" class="form-label fw-bold">Location</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="fas fa-map-marker-alt text-muted"></i>
+                                    </span>
+                                    {{ form.location }}
+                                </div>
+                                {% if form.location.errors %}
+                                    <div class="text-danger small mt-1">{{ form.location.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <button type="submit" class="btn btn-primary px-5">
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                </button>
+                                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary ms-2">
+                                    Cancel
+                                </a>
+                            </div>
+                            <a href="{% url 'password_change' %}" class="text-decoration-none">
+                                <i class="fas fa-key me-1"></i>Change Password
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Account Information Card -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-info-circle me-2 text-primary"></i>
+                        Account Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex mb-3">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-light rounded-circle p-2">
+                                        <i class="fas fa-envelope text-muted"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <small class="text-muted d-block">Email Address</small>
+                                    <span class="fw-bold">{{ request.user.email }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex mb-3">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-light rounded-circle p-2">
+                                        <i class="fas fa-calendar text-muted"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <small class="text-muted d-block">Member Since</small>
+                                    <span class="fw-bold">{{ request.user.date_joined|date:"F j, Y" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Danger Zone (Optional) -->
+            {% if request.user.is_staff %}
+            <div class="card border-0 shadow-sm mt-4 border-danger">
+                <div class="card-header bg-danger bg-opacity-10 py-3">
+                    <h5 class="fw-bold mb-0 text-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Danger Zone
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-2">Admin actions are available in the admin panel.</p>
+                    <a href="{% url 'admin:index' %}" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-shield-alt me-1"></i>Go to Admin
+                    </a>
+                </div>
+            </div>
             {% endif %}
         </div>
-        
-        <div style="margin-bottom: 15px;">
-            <label for="id_last_name">Last Name:</label>
-            {{ form.last_name }}
-            {% if form.last_name.errors %}
-                <div style="color: red; font-size: 0.9em;">{{ form.last_name.errors }}</div>
-            {% endif %}
-        </div>
-        
-        <div style="margin-bottom: 15px;">
-            <label for="id_bio">Bio:</label>
-            {{ form.bio }}
-            {% if form.bio.errors %}
-                <div style="color: red; font-size: 0.9em;">{{ form.bio.errors }}</div>
-            {% endif %}
-            <small style="color: #666;">{{ form.bio.help_text }}</small>
-        </div>
-        
-        <div style="margin-bottom: 15px;">
-            <label for="id_avatar">Avatar Image:</label>
-            {{ form.avatar }}
-            {% if form.avatar.errors %}
-                <div style="color: red; font-size: 0.9em;">{{ form.avatar.errors }}</div>
-            {% endif %}
-            <small style="color: #666;">Upload a profile picture (optional)</small>
-        </div>
-        
-        <div style="margin-bottom: 15px;">
-            <label for="id_website">Website:</label>
-            {{ form.website }}
-            {% if form.website.errors %}
-                <div style="color: red; font-size: 0.9em;">{{ form.website.errors }}</div>
-            {% endif %}
-        </div>
-        
-        <div style="margin-bottom: 20px;">
-            <label for="id_location">Location:</label>
-            {{ form.location }}
-            {% if form.location.errors %}
-                <div style="color: red; font-size: 0.9em;">{{ form.location.errors }}</div>
-            {% endif %}
-        </div>
-        
-        <!-- Submit Button -->
-        <button type="submit" style="
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        ">
-            Update Profile
-        </button>
-        
-        <a href="{% url 'dashboard' %}" style="margin-left: 15px; color: #666;">
-            Cancel
-        </a>
-    </form>
-    
-    <hr style="margin: 30px 0;">
-    
-    <!-- Account Info -->
-    <div style="font-size: 0.9em; color: #666;">
-        <p><strong>Account Information:</strong></p>
-        <p>Email: {{ request.user.email }}</p>
-        <p>Member since: {{ request.user.date_joined|date:"F j, Y" }}</p>
-        <p><a href="{% url 'password_change' %}">Change Password</a></p>
     </div>
 </div>
+
+<!-- Form Styling -->
+<style>
+    .form-control, .form-select {
+        border: 2px solid #e9ecef;
+        border-radius: 0.5rem;
+        padding: 0.6rem 1rem;
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .input-group-text {
+        border: 2px solid #e9ecef;
+        border-right: none;
+        background: #f8f9fa;
+    }
+    
+    .input-group .form-control {
+        border-left: none;
+    }
+    
+    textarea.form-control {
+        min-height: 120px;
+    }
+    
+    /* Custom file input styling */
+    input[type="file"] {
+        padding: 0.5rem;
+        background: white;
+        border: 2px dashed #e9ecef;
+        border-radius: 0.5rem;
+        width: 100%;
+    }
+    
+    input[type="file"]:hover {
+        border-color: var(--primary);
+        background: #f8f9fa;
+    }
+</style>
 {% endblock %}

@@ -1,0 +1,412 @@
+/* ===== AI Learning Platform - Main Stylesheet ===== */
+/* Author: Your Name
+   Version: 1.0
+   Description: Custom styles for AI Learning Platform with Bootstrap 5 override */
+
+/* ===== 1. CSS Variables (Color Scheme) ===== */
+:root {
+    /* Primary Colors */
+    --primary: #6366f1;
+    --primary-dark: #4f52e0;
+    --primary-light: #818cf8;
+    --primary-bg: #eef2ff;
+    
+    /* Secondary Colors */
+    --secondary: #10b981;
+    --secondary-dark: #0e9f6e;
+    --secondary-light: #34d399;
+    
+    /* Neutral Colors */
+    --dark: #1f2937;
+    --gray-700: #374151;
+    --gray-600: #4b5563;
+    --gray-500: #6b7280;
+    --gray-400: #9ca3af;
+    --gray-300: #d1d5db;
+    --gray-200: #e5e7eb;
+    --gray-100: #f3f4f6;
+    --light: #f9fafb;
+    --white: #ffffff;
+    
+    /* Status Colors */
+    --success: #10b981;
+    --success-light: #d1fae5;
+    --warning: #f59e0b;
+    --warning-light: #fed7aa;
+    --danger: #ef4444;
+    --danger-light: #fee2e2;
+    --info: #3b82f6;
+    --info-light: #dbeafe;
+    
+    /* Typography */
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-xxl: 3rem;
+    
+    /* Border Radius */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --radius-full: 9999px;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+}
+
+/* ===== 2. Global Styles ===== */
+body {
+    font-family: var(--font-family);
+    color: var(--gray-700);
+    background-color: var(--gray-100);
+    line-height: 1.6;
+}
+
+/* ===== 3. Typography ===== */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--dark);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+}
+
+/* ===== 4. Navigation ===== */
+.navbar-custom {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    padding: var(--spacing-md) var(--spacing-xl);
+    box-shadow: var(--shadow-md);
+}
+
+.navbar-custom .navbar-brand,
+.navbar-custom .nav-link {
+    color: white !important;
+    font-weight: 500;
+}
+
+.navbar-custom .nav-link:hover {
+    color: rgba(255, 255, 255, 0.9) !important;
+    transform: translateY(-1px);
+}
+
+/* ===== 5. Cards ===== */
+.card {
+    border: none;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background: white;
+    border-bottom: 2px solid var(--gray-200);
+    padding: var(--spacing-lg);
+    font-weight: 600;
+}
+
+/* Course Cards */
+.course-card {
+    border-top: 4px solid var(--primary);
+}
+
+.course-card .price-badge {
+    background: var(--primary);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.course-card .free-badge {
+    background: var(--success);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* ===== 6. Buttons ===== */
+.btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: var(--primary);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-success {
+    background: var(--secondary);
+    border: none;
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--primary);
+    color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* ===== 7. Forms ===== */
+.form-control {
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    transition: all 0.2s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-bg);
+}
+
+.form-label {
+    font-weight: 500;
+    color: var(--gray-700);
+    margin-bottom: var(--spacing-xs);
+}
+
+/* ===== 8. Progress Bars ===== */
+.progress {
+    height: 0.75rem;
+    border-radius: var(--radius-full);
+    background: var(--gray-200);
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+    border-radius: var(--radius-full);
+}
+
+/* ===== 9. Badges ===== */
+.badge {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-full);
+    font-weight: 500;
+}
+
+.badge-category {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+
+.badge-level {
+    background: var(--primary-bg);
+    color: var(--primary-dark);
+}
+
+/* ===== 10. Alerts & Messages ===== */
+.alert {
+    border: none;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+}
+
+.alert-success {
+    background: var(--success-light);
+    color: var(--secondary-dark);
+}
+
+.alert-warning {
+    background: var(--warning-light);
+    color: #92400e;
+}
+
+.alert-danger {
+    background: var(--danger-light);
+    color: #991b1b;
+}
+
+/* ===== 11. Achievement Cards ===== */
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+}
+
+.achievement-card {
+    background: linear-gradient(135deg, var(--dark) 0%, var(--gray-700) 100%);
+    color: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.achievement-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary);
+}
+
+.achievement-card.locked {
+    opacity: 0.5;
+    filter: grayscale(100%);
+}
+
+.achievement-icon {
+    font-size: 2.5rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+/* ===== 12. Leaderboard ===== */
+.leaderboard-table {
+    background: white;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.leaderboard-table th {
+    background: var(--gray-100);
+    color: var(--gray-700);
+    font-weight: 600;
+    padding: var(--spacing-md);
+}
+
+.leaderboard-table td {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.rank-1 {
+    color: #ffd700;
+    font-weight: 700;
+}
+
+.rank-2 {
+    color: #c0c0c0;
+    font-weight: 700;
+}
+
+.rank-3 {
+    color: #cd7f32;
+    font-weight: 700;
+}
+
+/* ===== 13. Lesson Sidebar ===== */
+.lesson-sidebar {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.lesson-sidebar .module {
+    margin-bottom: var(--spacing-lg);
+}
+
+.lesson-sidebar .module-title {
+    color: var(--dark);
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+}
+
+.lesson-sidebar .lesson-item {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-xs);
+    transition: all 0.2s ease;
+}
+
+.lesson-sidebar .lesson-item:hover {
+    background: var(--gray-100);
+}
+
+.lesson-sidebar .lesson-item.active {
+    background: var(--primary-bg);
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.lesson-sidebar .lesson-completed {
+    color: var(--success);
+}
+
+/* ===== 14. Modals ===== */
+.modal-content {
+    border: none;
+    border-radius: var(--radius-lg);
+}
+
+.modal-header {
+    border-bottom: 2px solid var(--gray-200);
+    padding: var(--spacing-lg);
+}
+
+.modal-body {
+    padding: var(--spacing-lg);
+}
+
+.modal-footer {
+    border-top: 2px solid var(--gray-200);
+    padding: var(--spacing-lg);
+}
+
+/* ===== 15. Animations ===== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease;
+}
+
+/* ===== 16. Responsive Utilities ===== */
+@media (max-width: 768px) {
+    .achievements-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .lesson-sidebar {
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    h1 { font-size: 1.875rem; }
+    h2 { font-size: 1.5rem; }
+    h3 { font-size: 1.25rem; }
+}
+
+/* ===== 17. Print Styles ===== */
+@media print {
+    .no-print { display: none !important; }
+    .navbar-custom { display: none !important; }
+    .card { box-shadow: none; border: 1px solid #ddd; }
+}

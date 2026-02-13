@@ -2,6 +2,7 @@
 from .models import Achievement, UserAchievement, XPEvent
 from django.contrib import messages
 from django.core.cache import cache
+from django.db.models import Sum
 
 
 class AchievementCode:
@@ -184,3 +185,55 @@ def get_user_achievements(user):
         })
     
     return achievements_data
+
+def get_achievement_progress(user):
+    """
+    Calculate progress for all achievements for a user.
+    Returns list of achievements with current progress and status.
+    """
+    from .models import LessonCompletion, Course, XPEvent
+    
+    achievements = Achievement.objects.all().order_by('category', 'threshold')
+    user_achievements = set(
+        UserAchievement.objects.filter(user=user)
+        .values_list('achievement_id', flat=True)
+    )
+    
+    # Calculate user stats once for efficiency
+    total_lessons = LessonCompletion.objects.filter(user=user).count()
+    total_courses = Course.objects.filter(enrollments__user=user).count()
+    total_xp = XPEvent.objects.filter(user=user).aggregate(total=Sum('points'))['total'] or 0
+    
+    progress_data = []
+    
+    for achievement in achievements:
+        # Calculate current progress based on category
+        if achievement.category == 'lessons':
+            current = total_lessons
+        elif achievement.category == 'courses':
+            current = total_courses
+        elif achievement.category == 'xp':
+            current = total_xp
+        else:
+            current = 0
+        
+        # Calculate percentage
+        if achievement.threshold > 0:
+            percentage = min(100, int((current / achievement.threshold) * 100))
+        else:
+            percentage = 100 if achievement.id in user_achievements else 0
+        
+        progress_data.append({
+            'achievement': achievement,
+            'unlocked': achievement.id in user_achievements,
+            'current': current,
+            'threshold': achievement.threshold,
+            'percentage': percentage,
+            'remaining': max(0, achievement.threshold - current) if not achievement.id in user_achievements else 0,
+        })
+    
+    return progress_data
+
+def get_recent_achievements(user, limit=5):
+    """Get recently unlocked achievements."""
+    return UserAchievement.objects.filter(user=user).select_related('achievement').order_by('-unlocked_at')[:limit]

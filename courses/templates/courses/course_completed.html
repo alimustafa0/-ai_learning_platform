@@ -1,15 +1,171 @@
-<h1>🎉 Congratulations!</h1>
+{% extends "base.html" %}
+{% load static %}
 
-<p>
-    You have completed <strong>{{ course.title }}</strong>.
-</p>
+{% block title %}Course Completed! - {{ course.title }}{% endblock %}
 
-<p>
-    Amazing work. Keep going and continue your learning journey!
-</p>
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Success Card with Confetti -->
+            <div class="card border-0 shadow-lg text-center">
+                <div class="card-body p-5">
+                    <!-- Animated Trophy Icon -->
+                    <div class="mb-4">
+                        <div class="display-1 text-warning animate__animated animate__bounceIn">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Congratulations Message -->
+                    <h1 class="display-4 fw-bold text-primary mb-3 animate__animated animate__fadeInUp">
+                        🎉 Congratulations!
+                    </h1>
+                    
+                    <div class="mb-4 animate__animated animate__fadeInUp animate__delay-1s">
+                        <p class="lead mb-2">
+                            You have successfully completed
+                        </p>
+                        <h2 class="fw-bold text-dark mb-3">
+                            "{{ course.title }}"
+                        </h2>
+                        <div class="d-flex justify-content-center gap-2 mb-4">
+                            <span class="badge bg-success px-3 py-2">
+                                <i class="fas fa-check-circle me-1"></i>100% Complete
+                            </span>
+                            <span class="badge bg-primary px-3 py-2">
+                                <i class="fas fa-star me-1"></i>+100 XP
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Achievement Unlocked -->
+                    <div class="bg-light rounded-4 p-4 mb-4 animate__animated animate__fadeInUp animate__delay-2s">
+                        <div class="row align-items-center">
+                            <div class="col-md-3 text-center mb-3 mb-md-0">
+                                <div class="display-3 text-warning">
+                                    🏆
+                                </div>
+                            </div>
+                            <div class="col-md-9 text-center text-md-start">
+                                <h5 class="fw-bold mb-1">Achievement Unlocked!</h5>
+                                <p class="text-muted mb-2">Course Complete - {{ course.title }}</p>
+                                <span class="badge bg-warning text-dark">+100 XP</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Inspirational Message -->
+                    <div class="mb-5 animate__animated animate__fadeInUp animate__delay-3s">
+                        <p class="text-muted mb-1">Amazing work! You've mastered this course.</p>
+                        <p class="text-muted">Keep going and continue your learning journey!</p>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-3 d-md-flex justify-content-md-center animate__animated animate__fadeInUp animate__delay-4s">
+                        <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg px-5">
+                            <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                        </a>
+                        <a href="{% url 'course_list' %}" class="btn btn-outline-primary btn-lg px-5">
+                            <i class="fas fa-book-open me-2"></i>Browse More Courses
+                        </a>
+                    </div>
+                    
+                    <!-- Social Share (Optional) -->
+                    <div class="mt-5 pt-4 border-top">
+                        <p class="text-muted small mb-3">Share your achievement:</p>
+                        <div class="d-flex justify-content-center gap-3">
+                            <a href="#" class="btn btn-outline-secondary rounded-circle p-3" style="width: 50px; height: 50px;">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-secondary rounded-circle p-3" style="width: 50px; height: 50px;">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-secondary rounded-circle p-3" style="width: 50px; height: 50px;">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Course Stats Summary -->
+            <div class="row g-4 mt-4">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm text-center h-100">
+                        <div class="card-body">
+                            <div class="text-primary mb-2">
+                                <i class="fas fa-clock fa-2x"></i>
+                            </div>
+                            <h6 class="fw-bold mb-0">Time Invested</h6>
+                            <p class="text-muted small">~5 hours</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm text-center h-100">
+                        <div class="card-body">
+                            <div class="text-success mb-2">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                            <h6 class="fw-bold mb-0">Lessons Completed</h6>
+                            <p class="text-muted small">{{ total_lessons|default:"All" }} lessons</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm text-center h-100">
+                        <div class="card-body">
+                            <div class="text-warning mb-2">
+                                <i class="fas fa-bolt fa-2x"></i>
+                            </div>
+                            <h6 class="fw-bold mb-0">XP Earned</h6>
+                            <p class="text-muted small">+{{ course_xp|default:"100" }} XP</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-<br>
+<!-- Confetti Animation -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Launch confetti celebration
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
+        
+        // Additional burst after 0.5 seconds
+        setTimeout(function() {
+            confetti({
+                particleCount: 100,
+                spread: 50,
+                origin: { y: 0.6 }
+            });
+        }, 500);
+    });
+</script>
 
-<a href="{% url 'dashboard' %}">
-    Go to My Dashboard
-</a>
+<!-- Add Animate.css for animations -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+<style>
+    .animate__delay-1s {
+        animation-delay: 0.3s;
+    }
+    .animate__delay-2s {
+        animation-delay: 0.6s;
+    }
+    .animate__delay-3s {
+        animation-delay: 0.9s;
+    }
+    .animate__delay-4s {
+        animation-delay: 1.2s;
+    }
+</style>
+{% endblock %}

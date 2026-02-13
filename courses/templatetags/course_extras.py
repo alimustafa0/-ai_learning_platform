@@ -141,3 +141,21 @@ def recommendation_reason_badge(reason):
         'Popular with learners': 'bg-info',
     }
     return reason_classes.get(reason, 'bg-secondary')
+
+@register.inclusion_tag('courses/achievement_grid.html')
+def render_achievements(user):
+    """
+    Display achievement gallery with progress.
+    """
+    from ..achievements import get_achievement_progress
+    achievements = get_achievement_progress(user)
+    return {'achievements': achievements}
+
+@register.inclusion_tag('courses/recent_achievements.html')
+def render_recent_achievements(user):
+    """
+    Display recently unlocked achievements.
+    """
+    from ..achievements import get_recent_achievements
+    recent = get_recent_achievements(user)
+    return {'recent_achievements': recent}

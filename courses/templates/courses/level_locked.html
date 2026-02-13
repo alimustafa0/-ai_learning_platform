@@ -1,13 +1,96 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Course Locked - {{ course.title }}{% endblock %}
 
 {% block content %}
-<h2>🔒 Course Locked</h2>
-
-<p>
-This course requires Level {{ required_level }}.
-</p>
-
-<p>Keep learning and come back soon 💪</p>
-
-<a href="{% url 'course_list' %}">← Back to Courses</a>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-lg text-center">
+                <div class="card-body p-5">
+                    <!-- Lock Icon Animation -->
+                    <div class="mb-4">
+                        <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex p-4">
+                            <i class="fas fa-lock fa-4x text-warning"></i>
+                        </div>
+                    </div>
+                    
+                    <h1 class="display-5 fw-bold text-warning mb-3">🔒 Course Locked</h1>
+                    
+                    <div class="bg-light rounded-4 p-4 mb-4">
+                        <p class="lead mb-2">This course requires:</p>
+                        <div class="display-6 fw-bold text-primary mb-2">
+                            Level {{ required_level }}
+                        </div>
+                        <span class="badge bg-primary py-2 px-3">
+                            <i class="fas fa-signal me-1"></i>Required Level
+                        </span>
+                    </div>
+                    
+                    <!-- Current User Level -->
+                    <div class="mb-4">
+                        <p class="text-muted mb-2">Your current level:</p>
+                        <div class="d-inline-block bg-light rounded-pill py-2 px-4">
+                            <span class="fw-bold">
+                                {% if user_level_number %}
+                                    Level {{ user_level_number }}
+                                {% else %}
+                                    Not logged in
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Message -->
+                    <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+                        <i class="fas fa-info-circle fa-2x me-3"></i>
+                        <div class="text-start">
+                            <strong>Keep learning!</strong><br>
+                            Complete more lessons and earn XP to reach Level {{ required_level }}.
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-3 d-md-flex justify-content-md-center">
+                        <a href="{% url 'course_list' %}" class="btn btn-primary btn-lg px-5">
+                            <i class="fas fa-book-open me-2"></i>Browse Courses
+                        </a>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-primary btn-lg px-5">
+                            <i class="fas fa-tachometer-alt me-2"></i>My Dashboard
+                        </a>
+                    </div>
+                    
+                    <!-- Motivational Message -->
+                    <div class="mt-5 pt-4 border-top">
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-heart text-danger me-2"></i>
+                            Don't give up! Every lesson brings you closer to your goal.
+                        </p>
+                        <p class="text-muted mt-2">
+                            <i class="fas fa-bolt text-warning me-2"></i>
+                            Complete lessons to earn +10 XP each
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recommended Action -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-lightbulb text-primary me-2"></i>
+                        Recommended for Level {{ user_level_number|default:"0" }}
+                    </h5>
+                    <p class="text-muted mb-3">
+                        While you work toward Level {{ required_level }}, check out these beginner-friendly courses:
+                    </p>
+                    <a href="{% url 'course_list' %}?level=1" class="btn btn-outline-success w-100">
+                        <i class="fas fa-search me-2"></i>Browse Level 1 Courses
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

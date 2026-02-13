@@ -1,162 +1,388 @@
 {% extends "base.html" %}
+{% load static %}
+{% load course_extras %}  <!-- Make sure to load the template tags -->
+
+{% block title %}Dashboard - AI Learning Platform{% endblock %}
 
 {% block content %}
-
-    <h1>My Dashboard</h1>
-
-    <div class="profile-header" style="margin-bottom: 30px; padding: 20px; background: #f8f9fa; border-radius: 5px;">
-        <h2>{{ request.user.email }}</h2>
-        <p>⭐ Total XP: {{ total_xp }} | Level: {{ level_number }} - {{ level_title }}</p>
-        
-        <div style="background:#ddd; height:10px; border-radius:5px; margin: 10px 0;">
-            <div style="width: {{ level_progress_percent }}%;
-                        background: linear-gradient(90deg, #4CAF50, #8BC34A);
-                        height:10px;
-                        border-radius:5px;">
-            </div>
+<div class="container py-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5 fw-bold text-primary">
+                <i class="fas fa-tachometer-alt me-3"></i>Welcome Back,
+                {% if request.user.first_name %}
+                    {{ request.user.first_name }}!
+                {% else %}
+                    Learner!
+                {% endif %}
+            </h1>
+            <p class="lead text-muted">
+                Track your progress, earn achievements, and continue learning.
+            </p>
         </div>
-
-        <p style="font-size:12px; color: #666;">
-            {{ level_progress_percent }}% to {{ next_level_title }}
-        </p>
     </div>
 
-    <h3>🏆 Achievements</h3>
-
-    <div class="achievements-grid">
-        {% for achievement in all_achievements %}
-            <div class="achievement-card 
-                {% if achievement.id not in unlocked_ids %}
-                    locked
-                {% endif %}
-            ">
-                <p>{{ achievement.name }}</p>
-                {% if achievement.description %}
-                    <small>{{ achievement.description }}</small>
-                {% endif %}
-            </div>
-        {% empty %}
-            <p>No achievements yet.</p>
-        {% endfor %}
-    </div>
-
-    <h3 style="margin-top: 30px;">📚 My Courses</h3>
-
-    {% if course_data %}
-        {% for item in course_data %}
-            <div style="
-                margin-bottom: 25px;
-                padding: 20px;
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                background: white;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h4 style="margin: 0;">
-                        {{ item.course.title }}
-                        {% if item.completed %}
-                            <span style="color: gold;">🏆 Completed</span>
-                        {% endif %}
-                    </h4>
-                    <span>{{ item.progress_percentage }}%</span>
-                </div>
-
-                <p style="margin: 10px 0; color: #666;">
-                    {{ item.completed_count }} of {{ item.total_lessons }} lessons completed
-                </p>
-
-                <div style="
-                    background-color: #e9ecef;
-                    height: 12px;
-                    border-radius: 6px;
-                    margin: 15px 0;
-                    overflow: hidden;">
-                    <div style="
-                        width: {{ item.progress_percentage }}%;
-                        background: linear-gradient(90deg, #007bff, #6610f2);
-                        height: 100%;
-                        transition: width 0.5s ease;">
+    <!-- Stats Overview -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-star fa-2x text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Total XP</h6>
+                            <h2 class="fw-bold mb-0">{{ total_xp }}</h2>
+                        </div>
                     </div>
                 </div>
-
-                <div style="display: flex; gap: 10px;">
-                    <a href="{% url 'resume_course' item.course.id %}">
-                        <button>▶ Resume</button>
-                    </a>
-                    <a href="{% url 'course_detail' item.course.id %}">
-                        <button>View Course</button>
-                    </a>
-                    {% if item.completed %}
-                        <a href="{% url 'course_completed' item.course.id %}">
-                            <button style="background: gold;">View Certificate</button>
-                        </a>
-                    {% endif %}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-trophy fa-2x text-success"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Current Level</h6>
+                            <h2 class="fw-bold mb-0">{{ level_number }} - {{ level_title }}</h2>
+                        </div>
+                    </div>
                 </div>
             </div>
-        {% endfor %}
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-medal fa-2x text-warning"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Achievements</h6>
+                            <h2 class="fw-bold mb-0">{{ unlocked_ids|length }} / {{ all_achievements|length }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level Progress -->
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-chart-line me-2 text-primary"></i>
+                        Progress to Level {{ next_level_title }}
+                    </h5>
+                    <div class="progress" style="height: 12px;">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ level_progress_percent }}%;" 
+                             aria-valuenow="{{ level_progress_percent }}" 
+                             aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                    <p class="text-muted small mt-2 mb-lg-0">
+                        <i class="fas fa-info-circle me-1"></i>
+                        {{ level_progress_percent }}% complete - {{ total_xp }} XP earned
+                    </p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a href="{% url 'leaderboard' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-trophy me-2"></i>View Leaderboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Courses Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold">
+            <i class="fas fa-book-open me-2 text-primary"></i>
+            My Courses
+        </h3>
+        <a href="{% url 'course_list' %}" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-plus-circle me-1"></i>Browse More
+        </a>
+    </div>
+
+    {% if course_data %}
+        <div class="row g-4 mb-5">
+            {% for item in course_data %}
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100 hover-lift">
+                        <div class="card-body p-4">
+                            <!-- Course Header -->
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="fw-bold mb-0">
+                                    <a href="{% url 'course_detail' item.course.id %}" 
+                                       class="text-decoration-none text-dark">
+                                        {{ item.course.title }}
+                                    </a>
+                                </h5>
+                                {% if item.completed %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>Completed
+                                    </span>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Progress Stats -->
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Progress</span>
+                                <span class="fw-bold">{{ item.progress_percentage }}%</span>
+                            </div>
+                            
+                            <!-- Progress Bar -->
+                            <div class="progress mb-3" style="height: 8px;">
+                                <div class="progress-bar bg-primary" 
+                                     style="width: {{ item.progress_percentage }}%;" 
+                                     role="progressbar"></div>
+                            </div>
+                            
+                            <!-- Lesson Count -->
+                            <p class="text-muted small mb-3">
+                                <i class="fas fa-check-circle text-success me-1"></i>
+                                {{ item.completed_count }} of {{ item.total_lessons }} lessons completed
+                            </p>
+                            
+                            <!-- Action Buttons -->
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'resume_course' item.course.id %}" 
+                                   class="btn btn-primary btn-sm flex-grow-1">
+                                    <i class="fas fa-play-circle me-1"></i>Resume
+                                </a>
+                                <a href="{% url 'course_detail' item.course.id %}" 
+                                   class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-info-circle"></i>
+                                </a>
+                                {% if item.completed %}
+                                    <a href="{% url 'course_completed' item.course.id %}" 
+                                       class="btn btn-outline-warning btn-sm">
+                                        <i class="fas fa-certificate"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
     {% else %}
-        <div style="text-align: center; padding: 40px; color: #666;">
-            <p>You are not enrolled in any courses yet.</p>
-            <a href="{% url 'course_list' %}">
-                <button>Browse Courses</button>
-            </a>
+        <!-- Empty State -->
+        <div class="card border-0 shadow-sm mb-5">
+            <div class="card-body p-5 text-center">
+                <div class="py-4">
+                    <div class="display-1 text-muted mb-3">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">No Courses Yet</h4>
+                    <p class="text-muted mb-4">
+                        You haven't enrolled in any courses. Start your learning journey today!
+                    </p>
+                    <a href="{% url 'course_list' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-search me-2"></i>Browse Courses
+                    </a>
+                </div>
+            </div>
         </div>
     {% endif %}
+
+    <!-- ===== NEW: AI-POWERED RECOMMENDATIONS SECTION ===== -->
+    {% if recommendations %}
+        <div class="recommendations-section mb-5">
+            <div class="d-flex align-items-center mb-4">
+                <h3 class="fw-bold mb-0">
+                    <i class="fas fa-robot text-primary me-2"></i>
+                    Recommended for You
+                </h3>
+                <span class="badge bg-primary ms-3 px-3 py-2">
+                    <i class="fas fa-magic me-1"></i>AI Powered
+                </span>
+            </div>
+            
+            <div class="row g-4">
+                {% for item in recommendations %}
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100 hover-lift">
+                            <div class="card-body">
+                                <!-- Course Level Badge -->
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <span class="badge bg-{% if item.course.required_level <= level_number %}success{% else %}warning{% endif %} bg-opacity-10 text-dark">
+                                        Level {{ item.course.required_level }}
+                                    </span>
+                                    <span class="text-muted small">
+                                        <i class="fas fa-users me-1"></i>
+                                        {{ item.course.enrollments.count }}
+                                    </span>
+                                </div>
+                                
+                                <!-- Course Title -->
+                                <h5 class="fw-bold mb-2">
+                                    <a href="{% url 'course_detail' item.course.id %}" 
+                                       class="text-decoration-none text-dark">
+                                        {{ item.course.title }}
+                                    </a>
+                                </h5>
+                                
+                                <!-- Course Description -->
+                                <p class="text-muted small mb-3">
+                                    {{ item.course.description|truncatewords:15 }}
+                                </p>
+                                
+                                <!-- Reason Badge -->
+                                <div class="mb-3">
+                                    <span class="badge {% if item.score == 3 %}bg-primary{% elif item.score == 2 %}bg-success{% else %}bg-info{% endif %} bg-opacity-10 text-dark px-3 py-2">
+                                        <i class="fas fa-lightbulb me-1"></i>
+                                        {{ item.reason }}
+                                    </span>
+                                </div>
+                                
+                                <!-- Action Button -->
+                                <a href="{% url 'course_detail' item.course.id %}" 
+                                   class="btn btn-outline-primary btn-sm w-100">
+                                    <i class="fas fa-eye me-1"></i>View Course
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Optional: Refresh Recommendations Link -->
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-sync-alt me-1"></i>
+                    Recommendations based on your learning history
+                </small>
+            </div>
+        </div>
+    {% endif %}
+    <!-- ===== END RECOMMENDATIONS SECTION ===== -->
+
+    <!-- Achievements Section -->
+    <!-- Recent Achievements -->
+    {% if recent_achievements %}
+        {% render_recent_achievements request.user %}
+    {% endif %}
+
+    <!-- Achievements Gallery -->
+    <h3 class="fw-bold mb-4">
+        <i class="fas fa-medal me-2 text-primary"></i>
+        Achievement Gallery
+    </h3>
+
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-body p-4">
+            {% render_achievements request.user %}
+        </div>
+    </div>
+    
 
     <!-- Payment History -->
     {% if payment_history %}
-        <h3 style="margin-top: 40px;">💰 Payment History</h3>
+        <h3 class="fw-bold mb-4">
+            <i class="fas fa-credit-card me-2 text-primary"></i>
+            Payment History
+        </h3>
         
-        <div style="
-            overflow-x: auto;
-            margin: 20px 0;
-            background: white;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-        ">
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="background: #f8f9fa;">
-                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Date</th>
-                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Course</th>
-                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Amount</th>
-                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Status</th>
-                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Receipt</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for payment in payment_history %}
-                    <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 12px;">{{ payment.created_at|date:"M d, Y" }}</td>
-                        <td style="padding: 12px;">{{ payment.course.title }}</td>
-                        <td style="padding: 12px;">${{ payment.amount }}</td>
-                        <td style="padding: 12px;">
-                            <span style="
-                                display: inline-block;
-                                padding: 3px 8px;
-                                border-radius: 12px;
-                                font-size: 0.8em;
-                                background: {% if payment.status == 'succeeded' %}#d4edda{% elif payment.status == 'pending' %}#fff3cd{% else %}#f8d7da{% endif %};
-                                color: {% if payment.status == 'succeeded' %}#155724{% elif payment.status == 'pending' %}#856404{% else %}#721c24{% endif %};
-                            ">
-                                {{ payment.get_status_display }}
-                            </span>
-                        </td>
-                        <td style="padding: 12px;">
-                            {% if payment.status == 'succeeded' %}
-                                <a href="{% url 'payment_receipt' payment.id %}" style="color: #007bff;">
-                                    View Receipt
-                                </a>
-                            {% else %}
-                                <span style="color: #999;">—</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="px-4 py-3">Date</th>
+                                <th class="px-4 py-3">Course</th>
+                                <th class="px-4 py-3">Amount</th>
+                                <th class="px-4 py-3">Status</th>
+                                <th class="px-4 py-3">Receipt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payment_history %}
+                                <tr>
+                                    <td class="px-4 py-3">
+                                        <i class="far fa-calendar-alt text-muted me-2"></i>
+                                        {{ payment.created_at|date:"M d, Y" }}
+                                    </td>
+                                    <td class="px-4 py-3 fw-bold">{{ payment.course.title }}</td>
+                                    <td class="px-4 py-3">${{ payment.amount }}</td>
+                                    <td class="px-4 py-3">
+                                        {% if payment.status == 'succeeded' %}
+                                            <span class="badge bg-success">Paid</span>
+                                        {% elif payment.status == 'pending' %}
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Failed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        {% if payment.status == 'succeeded' %}
+                                            <a href="{% url 'payment_receipt' payment.id %}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-file-invoice me-1"></i>Receipt
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     {% endif %}
+</div>
 
+<!-- Add some custom CSS for hover effects -->
+<style>
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 2rem rgba(0,0,0,0.1) !important;
+    }
+    .achievements-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+    .achievement-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem 1rem;
+        border-radius: 12px;
+        text-align: center;
+        transition: transform 0.2s ease;
+    }
+    .achievement-card.locked {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        opacity: 0.7;
+    }
+    .achievement-card:hover {
+        transform: scale(1.05);
+    }
+    .achievement-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .bg-opacity-10 {
+        --bg-opacity: 0.1;
+    }
+</style>
 {% endblock %}

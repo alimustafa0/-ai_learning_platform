@@ -1,9 +1,87 @@
-<h1>You are not enrolled in "{{ course.title }}"</h1>
+{% extends "base.html" %}
+{% load static %}
 
-<p>
-    To access the lessons, you need to enroll first.
-</p>
+{% block title %}Not Enrolled - {{ course.title }}{% endblock %}
 
-<a href="{% url 'course_detail' course.id %}">
-    Back to course page
-</a>
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-lg text-center">
+                <div class="card-body p-5">
+                    <!-- Icon -->
+                    <div class="mb-4">
+                        <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex p-4">
+                            <i class="fas fa-exclamation-circle fa-4x text-info"></i>
+                        </div>
+                    </div>
+                    
+                    <h1 class="display-5 fw-bold text-info mb-3">Not Enrolled</h1>
+                    
+                    <div class="bg-light rounded-4 p-4 mb-4">
+                        <p class="lead mb-2">You are not enrolled in</p>
+                        <h3 class="fw-bold text-primary mb-0">"{{ course.title }}"</h3>
+                    </div>
+                    
+                    <p class="text-muted mb-4">
+                        To access the lessons and track your progress, you need to enroll in this course first.
+                    </p>
+                    
+                    <!-- Course Quick View -->
+                    <div class="d-flex align-items-center bg-light rounded-3 p-3 mb-4">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded-2 p-2">
+                                <i class="fas fa-tag text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3 text-start">
+                            <small class="text-muted d-block">Course Price</small>
+                            {% if course.is_free %}
+                                <span class="fw-bold text-success">FREE</span>
+                            {% else %}
+                                <span class="fw-bold text-primary">${{ course.price }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="flex-shrink-0 text-start">
+                            <small class="text-muted d-block">Level Required</small>
+                            <span class="fw-bold">{{ course.required_level }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'course_detail' course.id %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Course Page
+                        </a>
+                        
+                        {% if course.is_free %}
+                            <form method="post" action="{% url 'enroll_course' course.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-lg w-100">
+                                    <i class="fas fa-plus-circle me-2"></i>Enroll Now - FREE
+                                </button>
+                            </form>
+                        {% else %}
+                            <a href="{% url 'course_checkout' course.id %}" class="btn btn-warning btn-lg">
+                                <i class="fas fa-shopping-cart me-2"></i>Purchase for ${{ course.price }}
+                            </a>
+                        {% endif %}
+                        
+                        <a href="{% url 'course_list' %}" class="btn btn-outline-secondary">
+                            Browse Other Courses
+                        </a>
+                    </div>
+                    
+                    <!-- Help Text -->
+                    <div class="mt-4 pt-3 border-top">
+                        <p class="small text-muted mb-0">
+                            <i class="fas fa-question-circle me-1"></i>
+                            Already enrolled? <a href="{% url 'login' %}" class="text-decoration-none">Login here</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

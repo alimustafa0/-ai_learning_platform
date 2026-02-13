@@ -1,68 +1,225 @@
 {% extends "base.html" %}
+{% load course_filters %}
+
+{% block title %}Courses - AI Learning Platform{% endblock %}
 
 {% block content %}
-   
-   <h1>Courses</h1>
+<div class="container py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5 fw-bold text-primary">
+                <i class="fas fa-book-open me-3"></i>Explore Courses
+            </h1>
+            <p class="lead text-muted">
+                Discover your next learning adventure. {% if courses %}We found {{ courses|length }} course{{ courses|length|pluralize }} for you.{% endif %}
+            </p>
+        </div>
+    </div>
 
-    <ul>
-        {% for course in courses %}
-            <!-- Add categories display -->
-            <div style="margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-                <h3>
-                    <a href="{% url 'course_detail' course.id %}">{{ course.title }}</a>
-                </h3>
-                
-                <p>{{ course.description|truncatewords:30 }}</p>
-
-                <!-- PRICE BADGE -->
-                <div style="margin: 10px 0;">
-                    <span style="
-                        display: inline-block;
-                        background: {% if course.price == 0 %}#28a745{% else %}#007bff{% endif %};
-                        color: white;
-                        padding: 5px 12px;
-                        border-radius: 20px;
-                        font-weight: bold;
-                        font-size: 0.9em;
-                    ">
-                        {% if course.price == 0 %}
-                            FREE
-                        {% else %}
-                            ${{ course.price }}
+    <!-- Course Grid -->
+    {% if courses %}
+        <div class="row g-4">
+            {% for course in courses %}
+                <div class="col-xl-4 col-lg-6 col-md-6">
+                    <!-- Course Card -->
+                    <div class="card course-card h-100 shadow-sm hover-lift">
+                        <!-- Card Header with Gradient -->
+                        <div class="card-header bg-gradient-primary text-white border-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="small">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    {{ course.created_at|date:"M Y" }}
+                                </span>
+                                <span class="badge bg-white text-primary">
+                                    <i class="fas fa-signal me-1"></i>Level {{ course.required_level }}
+                                </span>
+                            </div>
+                            <h5 class="card-title mt-3 mb-0">
+                                <a href="{% url 'course_detail' course.id %}" class="text-white text-decoration-none">
+                                    {{ course.title }}
+                                </a>
+                            </h5>
+                        </div>
+                        
+                        <!-- Card Body -->
+                        <div class="card-body">
+                            <!-- Description -->
+                            <p class="card-text text-muted mb-3">
+                                {{ course.description|truncatewords:25 }}
+                            </p>
+                            
+                            <!-- Categories -->
+                            {% if course.categories.all %}
+                                <div class="mb-3">
+                                    {% for category in course.categories.all %}
+                                        <span class="badge bg-light text-dark me-1 mb-1">
+                                            <i class="fas fa-tag me-1"></i>{{ category.name }}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Divider -->
+                            <hr class="my-3">
+                            
+                            <!-- Price and Actions -->
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    {% if course.is_free %}
+                                        <span class="badge free-badge">
+                                            <i class="fas fa-gift me-1"></i>FREE
+                                        </span>
+                                    {% else %}
+                                        <span class="h5 mb-0 text-primary fw-bold">
+                                            ${{ course.price }}
+                                        </span>
+                                        <small class="text-muted ms-1">USD</small>
+                                    {% endif %}
+                                </div>
+                                
+                                <a href="{% url 'course_detail' course.id %}" 
+                                   class="btn btn-outline-primary btn-sm rounded-pill px-4">
+                                    View Course
+                                    <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Card Footer with Progress (if enrolled) -->
+                        {% if request.user.is_authenticated %}
+                            {% with enrollment=request.user.enrollments.all %}
+                                {% for e in enrollment %}
+                                    {% if e.course.id == course.id %}
+                                        <div class="card-footer bg-light border-0">
+                                            <small class="text-muted">
+                                                <i class="fas fa-check-circle text-success me-1"></i>
+                                                Enrolled {{ e.enrolled_at|date:"M d, Y" }}
+                                            </small>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endwith %}
                         {% endif %}
-                    </span>
-                </div>
-                
-                <!-- CATEGORIES -->
-                {% if course.categories.all %}
-                    <div style="margin: 10px 0;">
-                        {% for category in course.categories.all %}
-                            <span style="
-                                display: inline-block;
-                                background: #e9ecef;
-                                color: #495057;
-                                padding: 4px 10px;
-                                margin-right: 5px;
-                                margin-bottom: 5px;
-                                border-radius: 20px;
-                                font-size: 0.9em;
-                            ">
-                                {{ category.name }}
-                            </span>
-                        {% endfor %}
                     </div>
-                {% endif %}
-                
-                <p>
-                    <small>
-                        Level required: {{ course.required_level }} | 
-                        Published: {{ course.created_at|date:"M d, Y" }}
-                    </small>
-                </p>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Empty State -->
+        <div class="row">
+            <div class="col-12 text-center py-5">
+                <div class="empty-state">
+                    <div class="mb-4">
+                        <i class="fas fa-book-open fa-4x text-muted"></i>
+                    </div>
+                    <h3 class="h4 text-muted mb-3">No Courses Available</h3>
+                    <p class="text-muted mb-4">
+                        We're working on adding exciting new courses. Check back soon!
+                    </p>
+                    {% if request.user.is_staff %}
+                        <a href="{% url 'admin:courses_course_add' %}" class="btn btn-primary">
+                            <i class="fas fa-plus-circle me-2"></i>Create First Course
+                        </a>
+                    {% endif %}
+                </div>
             </div>
-        {% empty %}
-            <p>No courses available yet.</p>
-        {% endfor %}
-    </ul>
+        </div>
+    {% endif %}
+    
+    <!-- Course Stats -->
+    {% if courses %}
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card bg-light border-0">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4 mb-3 mb-md-0">
+                                <h3 class="h2 text-primary mb-0">{{ courses|length }}</h3>
+                                <small class="text-muted">Total Courses</small>
+                            </div>
+                            <div class="col-md-4 mb-3 mb-md-0">
+                                <h3 class="h2 text-success mb-0">
+                                    {{ courses|length_where:"is_free=True" }}
+                                </h3>
+                                <small class="text-muted">Free Courses</small>
+                            </div>
+                            <div class="col-md-4">
+                                <h3 class="h2 text-warning mb-0">
+                                    {{ courses|length_where:"is_free=False" }}
+                                </h3>
+                                <small class="text-muted">Premium Courses</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Custom animations and effects */
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+    }
+    
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    }
+    
+    .card-header.bg-gradient-primary {
+        border-bottom: none;
+        padding: 1.5rem 1.5rem 1rem;
+    }
+    
+    .course-card {
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .course-card .card-footer {
+        background-color: rgba(0,0,0,0.02);
+        padding: 0.75rem 1.5rem;
+    }
+    
+    .empty-state {
+        padding: 3rem;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .card-header h5 {
+            font-size: 1.1rem;
+        }
+        
+        .empty-state {
+            padding: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add smooth scroll to top when clicking "View Course"
+    document.querySelectorAll('.btn-outline-primary').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            // Optional: Add analytics tracking here
+            console.log('Course clicked:', this.href);
+        });
+    });
+</script>
 {% endblock %}

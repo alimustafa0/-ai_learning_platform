@@ -1,68 +1,220 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Checkout - {{ course.title }}{% endblock %}
 
 {% block content %}
-<div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-    <h2>Checkout: {{ course.title }}</h2>
-    
-    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-        <h3>Course Details</h3>
-        <p>{{ course.description|truncatewords:50 }}</p>
-        <p><strong>Price: ${{ course.price }}</strong></p>
-        <p>Required Level: {{ course.required_level }}</p>
-    </div>
-    
-    <!-- Simple Checkout Form (will be replaced with Stripe) -->
-    <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
-        <h3>Complete Your Purchase</h3>
-        
-        <!-- Course Summary -->
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
-            <p><strong>{{ course.title }}</strong></p>
-            <p>Price: <strong>${{ course.price }}</strong></p>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'course_list' %}" class="text-decoration-none">Courses</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'course_detail' course.id %}" class="text-decoration-none">{{ course.title }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Checkout</li>
+                </ol>
+            </nav>
+            
+            <!-- Checkout Card -->
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-gradient-primary text-white py-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                                <i class="fas fa-shopping-cart fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h2 class="fw-bold mb-1">Complete Your Purchase</h2>
+                            <p class="text-white-50 mb-0">You're one step away from unlocking this course</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body p-5">
+                    <!-- Order Summary -->
+                    <h5 class="fw-bold mb-4">
+                        <i class="fas fa-receipt me-2 text-primary"></i>
+                        Order Summary
+                    </h5>
+                    
+                    <div class="card bg-light border-0 mb-4">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h5 class="fw-bold mb-2">{{ course.title }}</h5>
+                                    <p class="text-muted small mb-2">{{ course.description|truncatewords:30 }}</p>
+                                    <div class="d-flex gap-2">
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-signal me-1"></i>Level {{ course.required_level }}
+                                        </span>
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-infinity me-1"></i>Lifetime Access
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                    <div class="display-6 fw-bold text-primary">
+                                        ${{ course.price }}
+                                    </div>
+                                    <small class="text-muted">USD</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Price Breakdown -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Subtotal:</span>
+                            <span class="fw-bold">${{ course.price }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Tax:</span>
+                            <span class="fw-bold">$0.00</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <span class="h5 fw-bold">Total:</span>
+                            <span class="h4 fw-bold text-primary">${{ course.price }} USD</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Test Mode Notice -->
+                    <div class="alert alert-warning d-flex align-items-center mb-4" role="alert">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-flask fa-2x me-3"></i>
+                        </div>
+                        <div>
+                            <h6 class="alert-heading fw-bold mb-1">🔬 Test Mode - No Real Charges</h6>
+                            <p class="small mb-0">
+                                Use card: <code class="bg-dark text-warning px-2 py-1 rounded">4242 4242 4242 4242</code> 
+                                • Any future date • Any CVC • Any ZIP
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Method -->
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-credit-card me-2 text-primary"></i>
+                        Payment Method
+                    </h5>
+                    
+                    <div class="card border-0 bg-light mb-4">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-white rounded-3 p-2">
+                                        <img src="https://stripe.com/img/v3/home/twitter.png" 
+                                             alt="Stripe" 
+                                             style="height: 30px;">
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="fw-bold mb-1">Secure Payment by Stripe</h6>
+                                    <p class="text-muted small mb-0">
+                                        <i class="fas fa-lock me-1"></i>
+                                        Your payment information is encrypted and secure
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Checkout Form -->
+                    <form method="post" action="{% url 'create_checkout_session' course.id %}" id="checkout-form">
+                        {% csrf_token %}
+                        
+                        <div class="d-grid gap-3">
+                            <button type="submit" class="btn btn-primary btn-lg py-3" id="checkout-button">
+                                <i class="fab fa-stripe me-2"></i>
+                                Pay ${{ course.price }} with Stripe
+                            </button>
+                            
+                            <div class="text-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-shield-alt me-1"></i>
+                                    30-day money-back guarantee
+                                </small>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- Trust Badges -->
+                    <div class="row g-3 mt-4 pt-3 border-top text-center">
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <i class="fas fa-lock text-success me-2"></i>
+                                <small class="text-muted">Secure SSL</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <i class="fas fa-undo-alt text-success me-2"></i>
+                                <small class="text-muted">30-Day Refund</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <i class="fas fa-headset text-success me-2"></i>
+                                <small class="text-muted">24/7 Support</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer Links -->
+                <div class="card-footer bg-white py-4 text-center">
+                    <div class="d-flex justify-content-center gap-4">
+                        <a href="{% url 'course_detail' course.id %}" class="text-decoration-none small">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Course
+                        </a>
+                        <span class="text-muted">|</span>
+                        <a href="#" class="text-decoration-none small">Terms of Service</a>
+                        <span class="text-muted">|</span>
+                        <a href="#" class="text-decoration-none small">Privacy Policy</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- FAQ Section -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-question-circle me-2 text-primary"></i>
+                        Frequently Asked Questions
+                    </h6>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <p class="fw-bold small mb-1">What payment methods are accepted?</p>
+                            <p class="text-muted small mb-0">All major credit cards via Stripe's secure payment gateway.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="fw-bold small mb-1">Is this a one-time payment?</p>
+                            <p class="text-muted small mb-0">Yes, one payment gives you lifetime access to the course.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="fw-bold small mb-1">Can I get a refund?</p>
+                            <p class="text-muted small mb-0">Yes, we offer a 30-day money-back guarantee.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="fw-bold small mb-1">Will I receive a receipt?</p>
+                            <p class="text-muted small mb-0">Yes, an email receipt will be sent to your inbox.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <!-- Test Info -->
-        <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0; border: 1px solid #ffeaa7;">
-            <strong>💳 Test Mode</strong>
-            <p>Use card: <code>4242 4242 4242 4242</code></p>
-            <p>Any future date, any CVC, any ZIP</p>
-            <p>Use email: any email address</p>
-        </div>
-        
-        <!-- Stripe Checkout Button -->
-        <form method="post" action="{% url 'create_checkout_session' course.id %}">
-            {% csrf_token %}
-            <button type="submit" style="
-                width: 100%;
-                padding: 15px;
-                background: #5469d4;
-                color: white;
-                border: none;
-                border-radius: 5px;
-                font-size: 16px;
-                font-weight: bold;
-                margin-top: 20px;
-                cursor: pointer;
-            ">
-                💳 Pay ${{ course.price }} with Stripe
-            </button>
-        </form>
-        
-        <p style="text-align: center; margin-top: 15px;">
-            <a href="{% url 'course_detail' course.id %}">← Back to Course</a>
-        </p>
-        
-        <div style="margin-top: 20px; text-align: center;">
-            <img src="https://stripe.com/img/v3/home/twitter.png" alt="Stripe" style="height: 30px; opacity: 0.7;">
-            <p style="font-size: 0.8em; color: #666; margin-top: 5px;">
-                Secure payment powered by Stripe
-            </p>
-        </div>
-    </div>
-    
-    <div style="margin-top: 30px; font-size: 0.9em; color: #666;">
-        <p>🔒 Secure payment. Your payment information is encrypted.</p>
-        <p>💰 30-day money-back guarantee.</p>
     </div>
 </div>
+
+<!-- Loading State for Button -->
+<script>
+    document.getElementById('checkout-form')?.addEventListener('submit', function(e) {
+        const button = document.getElementById('checkout-button');
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Redirecting to Stripe...';
+        button.disabled = true;
+    });
+</script>
 {% endblock %}

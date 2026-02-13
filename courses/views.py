@@ -238,6 +238,9 @@ def mark_lesson_complete(request, lesson_id):
 
 @login_required
 def dashboard(request):
+    from .recommendations import get_course_recommendations
+
+    recommendations = get_course_recommendations(request.user, limit=3)
     # Calculate user stats FIRST (independent of enrollments)
     total_xp = XPEvent.objects.filter(user=request.user).aggregate(total=Sum('points'))['total'] or 0
     current_level, next_level = get_level_progress(total_xp)
@@ -303,6 +306,7 @@ def dashboard(request):
         "unlocked_ids": unlocked_ids,
         "course_data": course_data,  # Renamed from 'data' for clarity
         "payment_history": payment_history,
+        "recommendations": recommendations,
     })
 
 @login_required

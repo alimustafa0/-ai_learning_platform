@@ -1,6 +1,8 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
+from users.forms import CustomUserCreationForm, UserProfileForm
+
 User = get_user_model()
 
 class UserModelTests(TestCase):
@@ -103,3 +105,59 @@ class UserModelTests(TestCase):
         
         location_field = user._meta.get_field('location')
         self.assertEqual(location_field.help_text, "City, Country")
+
+class UserFormsTest(TestCase):
+    def test_registration_form_valid_data(self):
+        """Test registration form with valid data"""
+        form_data = {
+            'email': 'newuser@example.com',
+            'first_name': 'John',
+            'last_name': 'Doe',
+            'password1': 'testpass123',
+            'password2': 'testpass123',
+        }
+        form = CustomUserCreationForm(data=form_data)
+        self.assertTrue(form.is_valid())
+    
+    def test_registration_form_missing_first_name(self):
+        """Test registration fails without first name"""
+        form_data = {
+            'email': 'newuser@example.com',
+            'last_name': 'Doe',
+            'password1': 'testpass123',
+            'password2': 'testpass123',
+        }
+        form = CustomUserCreationForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('first_name', form.errors)
+    
+    def test_registration_form_password_mismatch(self):
+        """Test registration fails when passwords don't match"""
+        form_data = {
+            'email': 'newuser@example.com',
+            'first_name': 'John',
+            'last_name': 'Doe',
+            'password1': 'testpass123',
+            'password2': 'differentpass123',
+        }
+        form = CustomUserCreationForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('password2', form.errors)
+    
+    def test_profile_form_valid_data(self):
+        """Test profile form with valid data"""
+        user = User.objects.create_user(
+            email='test@example.com',
+            password='testpass123',
+            first_name='Test',
+            last_name='User'
+        )
+        form_data = {
+            'first_name': 'Updated',
+            'last_name': 'Name',
+            'bio': 'This is my bio',
+            'website': 'https://example.com',
+            'location': 'New York',
+        }
+        form = UserProfileForm(data=form_data, instance=user)
+        self.assertTrue(form.is_valid())

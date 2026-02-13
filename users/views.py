@@ -17,11 +17,21 @@ def signup(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
+            # Add welcome message
+            from django.contrib import messages
+            messages.success(request, f'Welcome to AI Learning Platform, {user.first_name}!')
             return redirect('dashboard')
     else:
         form = CustomUserCreationForm()
     
     return render(request, 'users/signup.html', {'form': form})
+
+@login_required
+def profile_view(request):
+    """
+    Display user profile information.
+    """
+    return render(request, 'users/profile.html', {'profile_user': request.user})
 
 # === ADD THIS NEW VIEW ===
 @login_required
@@ -30,13 +40,20 @@ def profile_edit(request):
     Allow users to edit their profile information.
     """
     if request.method == 'POST':
-        form = UserProfileForm(request.POST, request.FILES, instance=request.user)
+        form = UserProfileForm(
+            request.POST, 
+            request.FILES, 
+            instance=request.user
+        )
         if form.is_valid():
             form.save()
-            # Add a success message
             from django.contrib import messages
             messages.success(request, 'Your profile has been updated!')
-            return redirect('profile_edit')
+            return redirect('profile_view')  # Redirect to view profile
+        else:
+            # If form is invalid, show error message
+            from django.contrib import messages
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = UserProfileForm(instance=request.user)
     

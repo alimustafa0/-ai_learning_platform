@@ -59,3 +59,11 @@ class UserModelTests(TestCase):
             password="testpass123"
         )
         self.assertEqual(str(user2), "noname@example.com")
+
+    def test_create_user_without_password_fails(self):
+        """Test creating a user without a password raises error"""
+        with self.assertRaises(ValueError):
+            User.objects.create_user(
+                email="test@example.com",
+                password=None
+            )

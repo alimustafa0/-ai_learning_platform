@@ -31,8 +31,6 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     
     # === ADD THESE PROFILE FIELDS ===
-    first_name = models.CharField(max_length=30, blank=True)
-    last_name = models.CharField(max_length=30, blank=True)
     bio = models.TextField(max_length=500, blank=True, help_text="Tell us about yourself")
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     website = models.URLField(blank=True)

@@ -41,21 +41,21 @@ class UserModelTests(TestCase):
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_active)
 
-def test_user_string_representation(self):
-    """Test the string representation of the user"""
-    user = User.objects.create_user(
-        email="test@example.com",
-        password="testpass123",
-        first_name="John",
-        last_name="Doe"
-    )
-    
-    # Should show email with name in parentheses
-    self.assertEqual(str(user), "test@example.com (John Doe)")
-    
-    # Test with no name
-    user2 = User.objects.create_user(
-        email="noname@example.com",
-        password="testpass123"
-    )
-    self.assertEqual(str(user2), "noname@example.com")
+    def test_user_string_representation(self):
+        """Test the string representation of the user"""
+        user = User.objects.create_user(
+            email="test@example.com",
+            password="testpass123",
+            first_name="John",
+            last_name="Doe"
+        )
+        
+        # Should show email with name in parentheses
+        self.assertEqual(str(user), "test@example.com (John Doe)")
+        
+        # Test with no name
+        user2 = User.objects.create_user(
+            email="noname@example.com",
+            password="testpass123"
+        )
+        self.assertEqual(str(user2), "noname@example.com")

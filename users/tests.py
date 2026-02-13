@@ -1,5 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.urls import reverse
+from django.contrib.messages import get_messages
 
 from users.forms import CustomUserCreationForm, UserProfileForm
 
@@ -239,3 +241,73 @@ class UserFormsTest(TestCase):
         self.assertTrue(form.is_valid())
         # Check that protocol was added
         self.assertEqual(form.cleaned_data['website'], 'https://example.com')
+
+
+class UserViewsTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='test@example.com',
+            password='testpass123',
+            first_name='Test',
+            last_name='User'
+        )
+    
+    def test_signup_view_get(self):
+        """Test signup page loads"""
+        response = self.client.get(reverse('signup'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'users/signup.html')
+    
+    def test_signup_view_post_success(self):
+        """Test user can sign up successfully"""
+        response = self.client.post(reverse('signup'), {
+            'email': 'newuser@example.com',
+            'first_name': 'New',
+            'last_name': 'User',
+            'password1': 'testpass123',
+            'password2': 'testpass123',
+        })
+        # Should redirect to dashboard
+        self.assertRedirects(response, reverse('dashboard'))
+        # Check user was created
+        self.assertTrue(User.objects.filter(email='newuser@example.com').exists())
+    
+    def test_profile_view_requires_login(self):
+        """Test profile view redirects anonymous users"""
+        response = self.client.get(reverse('profile_view'))
+        self.assertRedirects(response, f"{reverse('login')}?next={reverse('profile_view')}")
+    
+    def test_profile_view_authenticated(self):
+        """Test authenticated user can view profile"""
+        self.client.login(email='test@example.com', password='testpass123')
+        response = self.client.get(reverse('profile_view'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'users/profile.html')
+        self.assertEqual(response.context['profile_user'], self.user)
+    
+    def test_profile_edit_view_requires_login(self):
+        """Test profile edit view redirects anonymous users"""
+        response = self.client.get(reverse('profile_edit'))
+        self.assertRedirects(response, f"{reverse('login')}?next={reverse('profile_edit')}")
+    
+    def test_profile_edit_update_success(self):
+        """Test user can update profile"""
+        self.client.login(email='test@example.com', password='testpass123')
+        response = self.client.post(reverse('profile_edit'), {
+            'first_name': 'Updated',
+            'last_name': 'Name',
+            'bio': 'This is my new bio',
+            'website': 'https://example.com',
+            'location': 'New York',
+        })
+        # Should redirect to profile view
+        self.assertRedirects(response, reverse('profile_view'))
+        
+        # Check user was updated
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, 'Updated')
+        self.assertEqual(self.user.bio, 'This is my new bio')
+        
+        # Check success message
+        messages = list(get_messages(response.wsgi_request))
+        self.assertTrue(any(msg.message == 'Your profile has been updated!' for msg in messages))

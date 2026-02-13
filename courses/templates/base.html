@@ -1,135 +1,205 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>AI Learning Platform</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Learning Platform{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <style>
-    .achievements-grid {
-        display: flex;
-        gap: 15px;
-        flex-wrap: wrap;
-        margin-top: 10px;
-    }
-
-    .achievement-card {
-        padding: 12px 18px;
-        border-radius: 10px;
-        background: #1f2937;
-        color: white;
-        font-weight: bold;
-    }
-
-    .achievement-card.locked {
-        filter: grayscale(100%);
-        opacity: 0.4;
-    }
-    </style>
+    
+    <!-- Custom CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'courses/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'courses/css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'courses/css/utils.css' %}">
+    
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-
-    <header style="margin-bottom:20px;">
-        <a href="{% url 'welcome' %}">Home</a> |
-        <a href="{% url 'dashboard' %}">Dashboard</a> |
-        <a href="{% url 'course_list' %}">Courses</a> |
-        <a href="{% url 'leaderboard' %}">Leaderboard</a>
-        {% if request.user.is_authenticated %}
-            <div style="float:right;">
-                {% if request.user.first_name or request.user.last_name %}
-                    {{ request.user.get_full_name|default:request.user.email }}
-                {% else %}
-                    {{ request.user.email }}
-                {% endif %}
-                |
-                {% if global_level_number and global_level_title %}
-                    Level {{ global_level_number }} - {{ global_level_title }} |
-                {% endif %}
-                <a href="{% url 'profile_edit' %}">Profile</a> |
-                <form method="post" action="{% url 'logout' %}" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit" style="background: none; border: none; color: #007bff; cursor: pointer; padding: 0; font: inherit; text-decoration: underline;">
-                        Logout
-                    </button>
-                </form>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'welcome' %}">
+                <i class="fas fa-brain me-2"></i>AI Learning Platform
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard' %}">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'course_list' %}">
+                            <i class="fas fa-book me-1"></i>Courses
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'leaderboard' %}">
+                            <i class="fas fa-trophy me-1"></i>Leaderboard
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- User Menu -->
+                <div class="d-flex align-items-center">
+                    {% if request.user.is_authenticated %}
+                        <div class="dropdown">
+                            <button class="btn btn-link text-white dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown">
+                                {% if request.user.avatar %}
+                                    <img src="{{ request.user.avatar.url }}" alt="{{ request.user.email }}" 
+                                        class="rounded-circle me-2" width="32" height="32" style="object-fit: cover;">
+                                {% else %}
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
+                                        style="width: 32px; height: 32px; font-size: 14px;">
+                                        {% if request.user.get_full_name %}
+                                            {{ request.user.get_full_name|slice:":1"|upper }}
+                                        {% else %}
+                                            {{ request.user.email|slice:":1"|upper }}
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                                <span>
+                                    {% if request.user.get_full_name %}
+                                        {{ request.user.get_full_name|truncatechars:20 }}
+                                    {% else %}
+                                        {{ request.user.email|truncatechars:20 }}
+                                    {% endif %}
+                                    {% if global_level_number %}
+                                        <span class="badge bg-warning text-dark ms-2">
+                                            Level {{ global_level_number }}
+                                        </span>
+                                    {% endif %}
+                                </span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'profile_view' %}">
+                                        <i class="fas fa-user me-2"></i>My Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'profile_edit' %}">
+                                        <i class="fas fa-cog me-2"></i>Edit Profile
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="post" action="{% url 'logout' %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-outline-light me-2">
+                            <i class="fas fa-sign-in-alt me-1"></i>Login
+                        </a>
+                        <a href="{% url 'signup' %}" class="btn btn-light">
+                            <i class="fas fa-user-plus me-1"></i>Sign Up
+                        </a>
+                    {% endif %}
+                </div>
             </div>
-        {% else %}
-            <div style="float:right;">
-                <a href="{% url 'login' %}">Login</a> | <a href="{% url 'signup' %}">Sign Up</a>
-            </div>
-        {% endif %}
-        <hr>
-    </header>
+        </div>
+    </nav>
 
-
-    <!-- Notifications will appear here -->
-    <!-- {% if messages %}
-        {% for message in messages %}
-            <div style="
-                padding:12px;
-                margin:10px 0;
-                border-radius:6px;
-                background:#d4edda;
-                color:#155724;
-                font-weight:bold;">
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %} -->
-
+    <!-- Messages/Alerts -->
     {% if messages %}
-        {% for message in messages %}
-
-                <!-- LEVEL UP MODAL -->
-                <div id="levelup-modal" style="
-                    position:fixed;
-                    top:0; left:0;
-                    width:100%; height:100%;
-                    background:rgba(0,0,0,0.6);
-                    display:flex;
-                    justify-content:center;
-                    align-items:center;
-                    z-index:1000;">
-
-                    <div style="
-                        background:white;
-                        padding:40px;
-                        border-radius:10px;
-                        text-align:center;
-                        max-width:400px;">
-                        
-                        <h1>🎉 LEVEL UP!</h1>
-                        <p style="font-weight:bold;">{{ message }}</p>
-
-                        <button onclick="document.getElementById('levelup-modal').style.display='none'"
-                                style="margin-top:15px; padding:10px 20px;">
-                            Continue Learning
-                        </button>
-                        <script>
-                            confetti({
-                                particleCount: 120,
-                                spread: 70,
-                                origin: { y: 0.6 }
-                            });
-                        </script>
-                    </div>
-                </div>
-
-                <!-- Normal messages -->
-                <div style="
-                    padding:12px;
-                    margin:10px 0;
-                    border-radius:6px;
-                    background:#d4edda;
-                    color:#155724;
-                    font-weight:bold;">
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
                     {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-
-        {% endfor %}
+                
+                <!-- LEVEL UP MODAL -->
+                {% if "LEVEL UP" in message %}
+                    <div class="modal fade show" id="levelupModal" style="display: block; background: rgba(0,0,0,0.5);">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content text-center">
+                                <div class="modal-body p-5">
+                                    <div class="mb-4">
+                                        <span style="font-size: 4rem;">🎉</span>
+                                    </div>
+                                    <h2 class="text-primary mb-3">LEVEL UP!</h2>
+                                    <p class="lead mb-4">{{ message }}</p>
+                                    <button type="button" class="btn btn-primary btn-lg" onclick="document.getElementById('levelupModal').remove();">
+                                        Continue Learning
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <script>
+                        confetti({
+                            particleCount: 120,
+                            spread: 70,
+                            origin: { y: 0.6 }
+                        });
+                    </script>
+                {% endif %}
+            {% endfor %}
+        </div>
     {% endif %}
 
+    <!-- Main Content -->
+    <main class="container my-4">
+        {% block content %}{% endblock %}
+    </main>
 
-    <!-- Page content -->
-    {% block content %}{% endblock %}
+    <!-- Footer -->
+    <footer class="bg-dark text-white mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-brain me-2"></i>AI Learning Platform</h5>
+                    <p class="text-white-50">Master the future of technology through gamified learning.</p>
+                </div>
+                <div class="col-md-3">
+                    <h6>Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'course_list' %}" class="text-white-50 text-decoration-none">Courses</a></li>
+                        <li><a href="{% url 'dashboard' %}" class="text-white-50 text-decoration-none">Dashboard</a></li>
+                        <li><a href="{% url 'leaderboard' %}" class="text-white-50 text-decoration-none">Leaderboard</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6>Support</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white-50 text-decoration-none">Contact</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Privacy Policy</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="bg-white-50">
+            <div class="text-center text-white-50">
+                <small>&copy; {% now "Y" %} AI Learning Platform. All rights reserved.</small>
+            </div>
+        </div>
+    </footer>
 
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -32,17 +32,42 @@ class User(AbstractUser):
     username = None
     email = models.EmailField(unique=True)
     
-    # === ADD THESE PROFILE FIELDS ===
-    bio = models.TextField(max_length=500, blank=True, help_text="Tell us about yourself")
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
-    website = models.URLField(blank=True)
-    location = models.CharField(max_length=100, blank=True)
-    # ================================
+    # === PROFILE FIELDS ===
+    bio = models.TextField(
+        max_length=500, 
+        blank=True, 
+        verbose_name="Biography",
+        help_text="Tell us about yourself (max 500 characters)"
+    )
+    avatar = models.ImageField(
+        upload_to='avatars/', 
+        blank=True, 
+        null=True,
+        verbose_name="Profile Picture"
+    )
+    website = models.URLField(
+        blank=True,
+        verbose_name="Personal Website",
+        help_text="Optional: Your blog, portfolio, or social media link"
+    )
+    location = models.CharField(
+        max_length=100, 
+        blank=True,
+        verbose_name="Location",
+        help_text="City, Country"
+    )
+    # ======================
     
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
     objects = UserManager()
+    
+
+    class Meta:
+        ordering = ['email', 'first_name', 'last_name']
+        verbose_name = 'User'
+        verbose_name_plural = 'Users'
     
     def get_full_name(self):
         """

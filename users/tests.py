@@ -67,3 +67,39 @@ class UserModelTests(TestCase):
                 email="test@example.com",
                 password=None
             )
+
+    def test_user_ordering(self):
+        """Test that users are ordered correctly"""
+        # Create users in non-alphabetical order
+        User.objects.create_user(
+            email="b@example.com",
+            password="testpass123",
+            first_name="Beta"
+        )
+        User.objects.create_user(
+            email="a@example.com",
+            password="testpass123",
+            first_name="Alpha"
+        )
+        
+        users = User.objects.all()
+        # First user should be a@example.com (alphabetical by email)
+        self.assertEqual(users[0].email, "a@example.com")
+        self.assertEqual(users[1].email, "b@example.com")
+
+    def test_profile_field_help_text(self):
+        """Test that profile fields have proper help text"""
+        user = User.objects.create_user(
+            email="test@example.com",
+            password="testpass123"
+        )
+        
+        # Check field help texts
+        bio_field = user._meta.get_field('bio')
+        self.assertIn('max 500 characters', bio_field.help_text)
+        
+        website_field = user._meta.get_field('website')
+        self.assertIn('Optional', website_field.help_text)
+        
+        location_field = user._meta.get_field('location')
+        self.assertEqual(location_field.help_text, "City, Country")

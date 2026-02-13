@@ -13,6 +13,7 @@ from django.conf import settings
 from django.urls import reverse
 from users.models import User
 
+
 # Configure Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -133,26 +134,6 @@ def lesson_detail(request, lesson_id):
 
     total_lessons = Lesson.objects.filter(module__course=course).count()
     completed_count = len(completed_lessons)
-
-    if completed_count == 1:
-        achievement = Achievement.objects.get(name="First Lesson")
-
-        UserAchievement.objects.get_or_create(
-            user=request.user,
-            achievement=achievement
-        )
-
-        messages.success(request, "🏅 Achievement Unlocked: First Lesson!")
-
-    elif completed_count == 2:
-        achievement = Achievement.objects.get(name="Second Lesson")
-
-        UserAchievement.objects.get_or_create(
-            user=request.user,
-            achievement=achievement
-        )
-
-        messages.success(request, "🏅 Achievement Unlocked: Second Lesson!")
 
     progress_percentage = 0
     if total_lessons > 0:

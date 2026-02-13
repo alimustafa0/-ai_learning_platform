@@ -1,17 +1,45 @@
 # courses/achievements.py
 from .models import Achievement, UserAchievement, XPEvent
 from django.contrib import messages
+from django.core.cache import cache
 
-def check_and_award_achievement(user, achievement_name, request=None):
+
+class AchievementCode:
+    FIRST_LESSON = 'first-lesson'
+    SECOND_LESSON = 'second-lesson'
+    FIVE_LESSONS = 'five-lessons'
+    TEN_LESSONS = 'ten-lessons'
+    LESSON_MASTER = 'lesson-master'
+    LESSON_GURU = 'lesson-guru'
+    LESSON_LEGEND = 'lesson-legend'
+    COURSE_COMPLETE = 'course-complete'
+
+def get_achievement_by_code(code):
+    """
+    Get achievement by code with caching to reduce database queries.
+    """
+    cache_key = f'achievement_code_{code}'
+    achievement = cache.get(cache_key)
+    
+    if not achievement:
+        try:
+            achievement = Achievement.objects.get(code=code)
+            cache.set(cache_key, achievement, 3600)  # Cache for 1 hour
+        except Achievement.DoesNotExist:
+            return None
+    
+    return achievement
+
+def check_and_award_achievement(user, achievement_code, request=None):
     """
     Check if a user has earned an achievement and award it if not already earned.
-    Optionally display a message via request.
+    Uses achievement code instead of name for reliability.
     
     Returns: (was_awarded, achievement)
     """
-    try:
-        achievement = Achievement.objects.get(name=achievement_name)
-    except Achievement.DoesNotExist:
+    achievement = get_achievement_by_code(achievement_code)
+    
+    if not achievement:
         # Achievement doesn't exist yet
         return False, None
     
@@ -28,13 +56,17 @@ def check_and_award_achievement(user, achievement_name, request=None):
         # Award XP for earning achievement
         XPEvent.objects.create(
             user=user,
-            points=achievement.xp_reward if hasattr(achievement, 'xp_reward') else 50,
+            points=achievement.xp_reward,
             reason=f"Achievement: {achievement.name}",
         )
         
         # Show message if request is provided
         if request:
-            messages.success(request, f"🏆 Achievement Unlocked: {achievement.name}!")
+            messages.success(
+                request, 
+                f"🏆 Achievement Unlocked: {achievement.name}!",
+                extra_tags='achievement'
+            )
         
         return True, achievement
     
@@ -45,10 +77,19 @@ def check_and_award_achievement(user, achievement_name, request=None):
 def check_course_completion_achievements(user, course, request=None):
     """
     Check for achievements related to course completion.
+    Optimized to use fewer queries.
     """
     from .models import LessonCompletion, Lesson
     
-    total_lessons = Lesson.objects.filter(module__course=course).count()
+    # Get total lessons count (cached per course)
+    cache_key = f'course_lesson_count_{course.id}'
+    total_lessons = cache.get(cache_key)
+    
+    if not total_lessons:
+        total_lessons = Lesson.objects.filter(module__course=course).count()
+        cache.set(cache_key, total_lessons, 3600)
+    
+    # Get completed count in one query
     completed_count = LessonCompletion.objects.filter(
         user=user,
         lesson__module__course=course
@@ -59,7 +100,7 @@ def check_course_completion_achievements(user, course, request=None):
     # First course completion
     if completed_count == total_lessons and total_lessons > 0:
         awarded, achievement = check_and_award_achievement(
-            user, "Course Complete", request
+            user, AchievementCode.COURSE_COMPLETE, request
         )
         if awarded:
             achievements_awarded.append(achievement)
@@ -67,27 +108,79 @@ def check_course_completion_achievements(user, course, request=None):
     return achievements_awarded
 
 
-def check_lesson_count_achievements(user, new_count, request=None):
+def check_lesson_count_achievements(user, new_count=None, request=None):
     """
     Check for achievements based on total lessons completed across all courses.
+    If new_count is provided, use it; otherwise calculate from database.
+    
+    Args:
+        user: The user to check achievements for
+        new_count: Optional pre-calculated lesson count (for efficiency)
+        request: Optional request object for displaying messages
     """
     from .models import LessonCompletion
     
-    achievements_awarded = []
-    achievement_map = {
-        1: "First Lesson",
-        5: "Five Lessons",
-        10: "Ten Lessons",
-        25: "Lesson Master",
-        50: "Lesson Guru",
-        100: "Lesson Legend",
-    }
+    # Use provided count or calculate from database
+    if new_count is not None:
+        total_completed = new_count
+    else:
+        # Get total completed lessons count with caching
+        cache_key = f'user_lesson_count_{user.id}'
+        total_completed = cache.get(cache_key)
+        
+        if not total_completed:
+            total_completed = LessonCompletion.objects.filter(user=user).count()
+            cache.set(cache_key, total_completed, 300)  # Cache for 5 minutes
     
-    if new_count in achievement_map:
-        awarded, achievement = check_and_award_achievement(
-            user, achievement_map[new_count], request
-        )
-        if awarded:
-            achievements_awarded.append(achievement)
+    achievements_awarded = []
+    
+    # Map of thresholds to achievement codes
+    threshold_map = [
+        (1, AchievementCode.FIRST_LESSON),
+        (2, AchievementCode.SECOND_LESSON),
+        (5, AchievementCode.FIVE_LESSONS),
+        (10, AchievementCode.TEN_LESSONS),
+        (25, AchievementCode.LESSON_MASTER),
+        (50, AchievementCode.LESSON_GURU),
+        (100, AchievementCode.LESSON_LEGEND),
+    ]
+    
+    # Check each threshold
+    for threshold, code in threshold_map:
+        if total_completed >= threshold:
+            awarded, achievement = check_and_award_achievement(
+                user, code, request
+            )
+            if awarded:
+                achievements_awarded.append(achievement)
+                # Special message for milestone achievements
+                if request and threshold in [1, 2, 5, 10, 25, 50, 100]:
+                    messages.success(
+                        request,
+                        f"🎯 Milestone: You've completed {total_completed} lessons!",
+                        extra_tags='milestone'
+                    )
     
     return achievements_awarded
+
+
+def get_user_achievements(user):
+    """
+    Get all achievements for a user with unlocked status.
+    Useful for profile pages.
+    """
+    all_achievements = Achievement.objects.all().order_by('xp_reward')
+    user_achievements = set(
+        UserAchievement.objects.filter(user=user)
+        .values_list('achievement_id', flat=True)
+    )
+    
+    achievements_data = []
+    for achievement in all_achievements:
+        achievements_data.append({
+            'achievement': achievement,
+            'unlocked': achievement.id in user_achievements,
+            'unlocked_at': None,  # You can fetch this if needed
+        })
+    
+    return achievements_data

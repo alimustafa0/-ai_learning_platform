@@ -54,3 +54,12 @@ class User(AbstractUser):
         Return the short name for the user (first name).
         """
         return self.first_name
+
+    def __str__(self):
+        """
+        Return a string representation of the user.
+        Shows email and name if available.
+        """
+        if self.first_name or self.last_name:
+            return f"{self.email} ({self.get_full_name()})"
+        return self.email

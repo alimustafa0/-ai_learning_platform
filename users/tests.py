@@ -161,3 +161,81 @@ class UserFormsTest(TestCase):
         }
         form = UserProfileForm(data=form_data, instance=user)
         self.assertTrue(form.is_valid())
+
+    def test_profile_form_avatar_size_validation(self):
+        """Test that avatar file size is validated"""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        
+        # Create a mock file that's too large (3MB)
+        mock_image = SimpleUploadedFile(
+            "large.jpg", 
+            b"x" * (3 * 1024 * 1024),  # 3MB
+            content_type="image/jpeg"
+        )
+        
+        user = User.objects.create_user(
+            email='test@example.com',
+            password='testpass123'
+        )
+        
+        form_data = {
+            'first_name': 'Test',
+            'last_name': 'User',
+        }
+        form_files = {'avatar': mock_image}
+        
+        form = UserProfileForm(data=form_data, files=form_files, instance=user)
+        self.assertFalse(form.is_valid())
+        self.assertIn('avatar', form.errors)
+
+    def test_profile_form_avatar_extension_validation(self):
+        """Test that avatar file extension is validated"""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        
+        # Create a mock file with invalid extension
+        mock_file = SimpleUploadedFile(
+            "malicious.exe", 
+            b"fake image content",
+            content_type="application/x-msdownload"
+        )
+        
+        user = User.objects.create_user(
+            email='test@example.com',
+            password='testpass123'
+        )
+        
+        form_data = {
+            'first_name': 'Test',
+            'last_name': 'User',
+        }
+        form_files = {'avatar': mock_file}
+        
+        form = UserProfileForm(data=form_data, files=form_files, instance=user)
+        self.assertFalse(form.is_valid())
+        self.assertIn('avatar', form.errors)
+
+    def test_profile_form_website_validation(self):
+        """Test that website URL is properly validated"""
+        user = User.objects.create_user(
+            email='test@example.com',
+            password='testpass123'
+        )
+        
+        # Test invalid URL
+        form_data = {
+            'first_name': 'Test',
+            'last_name': 'User',
+            'website': 'not-a-valid-url',
+        }
+        form = UserProfileForm(data=form_data, instance=user)
+        self.assertFalse(form.is_valid())
+        self.assertIn('website', form.errors)
+        
+        # Test URL without protocol (should be accepted and normalized)
+        form_data = {
+            'website': 'example.com',
+        }
+        form = UserProfileForm(data=form_data, instance=user)
+        self.assertTrue(form.is_valid())
+        # Check that protocol was added
+        self.assertEqual(form.cleaned_data['website'], 'https://example.com')

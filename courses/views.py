@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from config import settings as setting
-from .models import Course, Enrollment, Lesson, LessonCompletion, Review, XPEvent, Achievement, UserAchievement, Payment, Comment, Certificate
+from .models import Course, Enrollment, Lesson, LessonCompletion, Review, XPEvent, Achievement, UserAchievement, Payment, Comment, Certificate, LearningStreak, LearningActivity
 from .forms import CommentForm, ReviewForm
 from .gamification import get_level_progress
 from .achievements import check_lesson_count_achievements, check_course_completion_achievements
@@ -20,6 +20,7 @@ from django.template.loader import render_to_string
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from weasyprint import HTML
 import tempfile
+from datetime import date
 
 
 
@@ -277,6 +278,43 @@ def mark_lesson_complete(request, lesson_id):
             points=10,
             reason=f"Completed lesson: {lesson.title}",
         )
+
+        today = date.today()
+        
+        # Get or create streak
+        streak, _ = LearningStreak.objects.get_or_create(user=request.user)
+        streak.update_streak(today)
+        
+        # Update daily activity
+        activity, _ = LearningActivity.objects.get_or_create(
+            user=request.user,
+            date=today
+        )
+        activity.count += 1
+        activity.xp_earned += 10
+        activity.save()
+        
+        # Award XP for streak milestones
+        if streak.current_streak in [7, 30, 100, 365]:
+            milestone_xp = {
+                7: 50,
+                30: 200,
+                100: 500,
+                365: 1000
+            }.get(streak.current_streak, 0)
+            
+            if milestone_xp:
+                XPEvent.objects.create(
+                    user=request.user,
+                    points=milestone_xp,
+                    reason=f"{streak.current_streak}-day learning streak!",
+                )
+                
+                messages.success(
+                    request,
+                    f"🔥 {streak.current_streak}-day streak! +{milestone_xp} XP bonus!",
+                    extra_tags='streak'
+                )
 
     # Calculate total completed lessons count
     total_completed = LessonCompletion.objects.filter(user=request.user).count()

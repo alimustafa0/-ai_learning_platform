@@ -602,14 +602,23 @@ class LearningStreak(models.Model):
         today = activity_date or date.today()
         old_streak = self.current_streak
         
+        print(f"\n=== UPDATING STREAK ===")
+        print(f"User: {self.user.email}")
+        print(f"Old streak: {old_streak}")
+        print(f"Last activity: {self.last_activity_date}")
+        print(f"Today: {today}")
+        
         if not self.last_activity_date:
             # First activity ever
             self.current_streak = 1
+            print(f"First activity ever - streak set to 1")
         elif self.last_activity_date == today - timedelta(days=1):
             # Consecutive day
             self.current_streak += 1
+            print(f"Consecutive day! New streak: {self.current_streak}")
         elif self.last_activity_date == today:
             # Already recorded activity today
+            print(f"Already recorded activity today - streak unchanged: {self.current_streak}")
             # Still check achievements in case they weren't awarded properly
             if request:
                 check_streak_achievements(self.user, self.current_streak, request)
@@ -617,17 +626,23 @@ class LearningStreak(models.Model):
         else:
             # Streak broken
             self.current_streak = 1
+            print(f"Streak broken! Days gap. New streak: 1")
         
         # Update longest streak if needed
         if self.current_streak > self.longest_streak:
             self.longest_streak = self.current_streak
+            print(f"New longest streak: {self.longest_streak}")
         
         self.last_activity_date = today
         self.save()
+        print(f"Saved streak. New current: {self.current_streak}")
         
         # Check for streak achievements
         if request:
+            print(f"Calling check_streak_achievements...")
             check_streak_achievements(self.user, self.current_streak, request)
+        
+        print(f"=== STREAK UPDATE COMPLETE ===\n")
 
 
 class LearningActivity(models.Model):

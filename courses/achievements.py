@@ -14,6 +14,7 @@ class AchievementCode:
     LESSON_GURU = 'lesson-guru'
     LESSON_LEGEND = 'lesson-legend'
     COURSE_COMPLETE = 'course-complete'
+    EARLY_BIRD = 'early-bird'
 
 def get_achievement_by_code(code):
     """
@@ -245,6 +246,10 @@ def check_streak_achievements(user, current_streak, request=None):
     """
     from .models import Achievement, UserAchievement, XPEvent
     
+    print(f"\n=== CHECKING STREAK ACHIEVEMENTS ===")
+    print(f"User: {user.email}")
+    print(f"Current streak: {current_streak}")
+    
     # Find all achievements that might be streak-related
     # Look for achievements with category containing 'streak' (case insensitive)
     streak_categories = ['streak', 'Learning Streak', 'Streak', 'learning streak']
@@ -255,6 +260,10 @@ def check_streak_achievements(user, current_streak, request=None):
         category__in=streak_categories
     )
     
+    print(f"Found {possible_achievements.count()} possible streak achievements")
+    for ach in possible_achievements:
+        print(f"  - {ach.name} (threshold: {ach.threshold}, category: {ach.category})")
+    
     # Also include achievements with threshold=1 that might be first streak
     if current_streak >= 1:
         first_streak_achievements = Achievement.objects.filter(
@@ -262,17 +271,27 @@ def check_streak_achievements(user, current_streak, request=None):
             category__in=streak_categories + ['', None]  # Include empty categories too
         )
         possible_achievements = possible_achievements | first_streak_achievements
+        print(f"After adding first-streak: {possible_achievements.distinct().count()} total")
     
     achievements_awarded = []
     
     for achievement in possible_achievements.distinct():
+        print(f"\nChecking achievement: {achievement.name}")
+        print(f"  - Threshold: {achievement.threshold}")
+        print(f"  - Current streak: {current_streak}")
+        print(f"  - Condition met: {current_streak >= achievement.threshold}")
+        
         # Check if user already has this achievement
         already_has = UserAchievement.objects.filter(
             user=user,
             achievement=achievement
         ).exists()
         
+        print(f"  - Already has: {already_has}")
+        
         if not already_has and current_streak >= achievement.threshold:
+            print(f"  >>> AWARDING ACHIEVEMENT! <<<")
+            
             # Award the achievement
             UserAchievement.objects.create(user=user, achievement=achievement)
             
@@ -291,6 +310,32 @@ def check_streak_achievements(user, current_streak, request=None):
                 )
             
             achievements_awarded.append(achievement)
-            print(f"Awarded streak achievement: {achievement.name} to {user.email}")  # Debug
-            
+            print(f"Awarded streak achievement: {achievement.name} to {user.email}")
+    
+    print(f"=== FINISHED CHECKING: awarded {len(achievements_awarded)} achievements ===\n")
     return achievements_awarded
+
+
+def check_early_bird_achievements(user, lesson_completed_at, request=None):
+    """
+    Check if user qualifies for Early Bird achievement.
+    """
+    from .models import LessonCompletion
+    from datetime import time
+    
+    # Check if lesson was completed before 9 AM
+    if lesson_completed_at.time() < time(9, 0):  # 9:00 AM
+        # Count how many early lessons user has
+        early_lessons = LessonCompletion.objects.filter(
+            user=user,
+            completed_at__time__lt=time(9, 0)
+        ).count()
+        
+        # Check if they hit the threshold
+        if early_lessons >= 2:
+            awarded, achievement = check_and_award_achievement(
+                user, 'early-bird', request
+            )
+            return awarded
+    
+    return False

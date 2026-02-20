@@ -591,14 +591,16 @@ class LearningStreak(models.Model):
     def __str__(self):
         return f"{self.user.email}: {self.current_streak} days"
     
-    def update_streak(self, activity_date=None):
+    def update_streak(self, activity_date=None, request=None):
         """
         Update streak based on activity date.
         Call this whenever a user completes a lesson.
         """
         from datetime import date, timedelta
+        from .achievements import check_streak_achievements  # Import here to avoid circular imports
         
         today = activity_date or date.today()
+        old_streak = self.current_streak
         
         if not self.last_activity_date:
             # First activity ever
@@ -608,6 +610,9 @@ class LearningStreak(models.Model):
             self.current_streak += 1
         elif self.last_activity_date == today:
             # Already recorded activity today
+            # Still check achievements in case they weren't awarded properly
+            if request:
+                check_streak_achievements(self.user, self.current_streak, request)
             return
         else:
             # Streak broken
@@ -619,6 +624,10 @@ class LearningStreak(models.Model):
         
         self.last_activity_date = today
         self.save()
+        
+        # Check for streak achievements
+        if request:
+            check_streak_achievements(self.user, self.current_streak, request)
 
 
 class LearningActivity(models.Model):

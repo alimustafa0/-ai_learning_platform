@@ -1,6 +1,6 @@
 from django.contrib import admin
 from . import models
-from .models import Course, Module, Lesson, Enrollment, LessonCompletion, XPEvent, Achievement, UserAchievement, Category, Comment, Payment, Refund
+from .models import Course, Module, Lesson, Enrollment, LessonCompletion, XPEvent, Achievement, UserAchievement, Category, Comment, Payment, Refund, LearningStreak, LearningActivity
 from ckeditor.widgets import CKEditorWidget
 
 
@@ -72,8 +72,34 @@ class XPEventAdmin(admin.ModelAdmin):
     list_filter = ("reason",)
     search_fields = ("user__email",)
 
-admin.site.register(Achievement)
-admin.site.register(UserAchievement)
+admin.register(Achievement)
+class AchievementAdmin(admin.ModelAdmin):
+    list_display = ['name', 'code', 'category', 'threshold', 'xp_reward', 'icon']
+    list_filter = ['category', 'xp_reward']
+    search_fields = ['name', 'code', 'description']
+    ordering = ['category', 'threshold']
+    prepopulated_fields = {'code': ('name',)}  # Auto-generate code from name
+    
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('name', 'code', 'description', 'icon')
+        }),
+        ('Achievement Criteria', {
+            'fields': ('category', 'threshold', 'xp_reward')
+        }),
+    )
+
+@admin.register(UserAchievement)
+class UserAchievementAdmin(admin.ModelAdmin):
+    list_display = ['user', 'achievement', 'unlocked_at']
+    list_filter = ['unlocked_at', 'achievement__category']
+    search_fields = ['user__email', 'user__username', 'achievement__name']
+    date_hierarchy = 'unlocked_at'
+    ordering = ['-unlocked_at']
+    raw_id_fields = ['user', 'achievement']  # Better for large datasets
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user', 'achievement')
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
@@ -183,3 +209,46 @@ class RefundAdmin(admin.ModelAdmin):
             'classes': ('collapse',),
         }),
     )
+
+
+@admin.register(LearningStreak)
+class LearningStreakAdmin(admin.ModelAdmin):
+    list_display = ['user', 'current_streak', 'longest_streak', 'last_activity_date', 'updated_at']
+    list_filter = ['current_streak', 'longest_streak', 'last_activity_date']
+    search_fields = ['user__email', 'user__username', 'user__first_name', 'user__last_name']
+    readonly_fields = ['updated_at']
+    ordering = ['-current_streak', '-longest_streak']
+    
+    fieldsets = (
+        ('User Information', {
+            'fields': ('user',)
+        }),
+        ('Streak Statistics', {
+            'fields': ('current_streak', 'longest_streak', 'last_activity_date')
+        }),
+        ('Metadata', {
+            'fields': ('updated_at',),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(LearningActivity)
+class LearningActivityAdmin(admin.ModelAdmin):
+    list_display = ['user', 'date', 'count', 'xp_earned']
+    list_filter = ['date', 'count']
+    search_fields = ['user__email', 'user__username', 'user__first_name', 'user__last_name']
+    date_hierarchy = 'date'
+    ordering = ['-date', '-count']
+    
+    fieldsets = (
+        ('User Information', {
+            'fields': ('user',)
+        }),
+        ('Activity Data', {
+            'fields': ('date', 'count', 'xp_earned')
+        }),
+    )
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user')

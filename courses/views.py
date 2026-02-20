@@ -278,12 +278,13 @@ def mark_lesson_complete(request, lesson_id):
             points=10,
             reason=f"Completed lesson: {lesson.title}",
         )
-
+        
+        # ===== UPDATED: Update streak and activity with request =====
         today = date.today()
         
         # Get or create streak
         streak, _ = LearningStreak.objects.get_or_create(user=request.user)
-        streak.update_streak(today)
+        streak.update_streak(today, request)  # Pass request for messages
         
         # Update daily activity
         activity, _ = LearningActivity.objects.get_or_create(
@@ -293,28 +294,6 @@ def mark_lesson_complete(request, lesson_id):
         activity.count += 1
         activity.xp_earned += 10
         activity.save()
-        
-        # Award XP for streak milestones
-        if streak.current_streak in [7, 30, 100, 365]:
-            milestone_xp = {
-                7: 50,
-                30: 200,
-                100: 500,
-                365: 1000
-            }.get(streak.current_streak, 0)
-            
-            if milestone_xp:
-                XPEvent.objects.create(
-                    user=request.user,
-                    points=milestone_xp,
-                    reason=f"{streak.current_streak}-day learning streak!",
-                )
-                
-                messages.success(
-                    request,
-                    f"🔥 {streak.current_streak}-day streak! +{milestone_xp} XP bonus!",
-                    extra_tags='streak'
-                )
 
     # Calculate total completed lessons count
     total_completed = LessonCompletion.objects.filter(user=request.user).count()

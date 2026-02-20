@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if is_editing %}Edit{% else %}Write{% endif %} Review - {{ course.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rating-container {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+    .rating-container input {
+        display: none;
+    }
+    .rating-container label {
+        font-size: 2rem;
+        color: #ddd;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+    .rating-container label:hover,
+    .rating-container label:hover ~ label,
+    .rating-container input:checked ~ label {
+        color: #ffc107;
+    }
+    .rating-container input:checked + label,
+    .rating-container input:checked + label ~ label {
+        color: #ffc107;
+    }
+    .review-preview {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'course_list' %}" class="text-decoration-none">Courses</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'course_detail' course.id %}" class="text-decoration-none">
+                            {{ course.title }}
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        {% if is_editing %}Edit Review{% else %}Write Review{% endif %}
+                    </li>
+                </ol>
+            </nav>
+            
+            <!-- Main Card -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h2 class="fw-bold mb-4">
+                        <i class="fas fa-star text-warning me-2"></i>
+                        {% if is_editing %}Edit Your Review{% else %}Write a Review{% endif %}
+                    </h2>
+                    
+                    <!-- Course Info Preview -->
+                    <div class="review-preview mb-4">
+                        <h5 class="fw-bold mb-2">{{ course.title }}</h5>
+                        <p class="mb-0 opacity-75 small">Share your experience to help other learners</p>
+                    </div>
+                    
+                    <!-- Review Form -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Rating Field -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Your Rating</label>
+                            <div class="rating-container">
+                                {% for i in "54321"|make_list %}
+                                    <input type="radio" name="rating" value="{{ i }}" id="star{{ i }}"
+                                           {% if form.rating.value == i|add:0 %}checked{% endif %} required>
+                                    <label for="star{{ i }}" title="{{ i }} stars">
+                                        <i class="fas fa-star"></i>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                            {% if form.rating.errors %}
+                                <div class="text-danger small mt-1">{{ form.rating.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Comment Field -->
+                        <div class="mb-4">
+                            <label for="{{ form.comment.id_for_label }}" class="form-label fw-bold">
+                                Your Review (Optional)
+                            </label>
+                            {{ form.comment }}
+                            {% if form.comment.help_text %}
+                                <div class="form-text">{{ form.comment.help_text }}</div>
+                            {% endif %}
+                            {% if form.comment.errors %}
+                                <div class="text-danger small mt-1">{{ form.comment.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Tips -->
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            <strong>Review Tips:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Be specific about what you learned</li>
+                                <li>Mention the instructor's teaching style</li>
+                                <li>Share how this course helped you</li>
+                                <li>Keep it constructive and respectful</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>
+                                {% if is_editing %}Update Review{% else %}Submit Review{% endif %}
+                            </button>
+                            <a href="{% url 'course_detail' course.id %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                            {% if is_editing %}
+                                <button type="button" class="btn btn-outline-danger ms-auto" 
+                                        onclick="confirmDelete()">
+                                    <i class="fas fa-trash me-2"></i>Delete Review
+                                </button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if is_editing %}
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Review</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete your review? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'delete_review' review.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Review</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete() {
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endif %}
+{% endblock %}

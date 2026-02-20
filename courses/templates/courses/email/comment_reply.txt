@@ -1,0 +1,11 @@
+Someone replied to your comment!
+
+{{ replier.get_full_name|default:replier.email }} replied to your comment on {{ reply_comment.lesson.title }}:
+
+"{{ reply_comment.content }}"
+
+View the discussion here:
+{{ lesson_url }}
+
+---
+You're receiving this because you commented on this lesson on AI Learning Platform.

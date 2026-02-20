@@ -576,3 +576,66 @@ class Certificate(models.Model):
         if not self.certificate_number:
             self.certificate_number = self.generate_certificate_number()
         super().save(*args, **kwargs)
+
+
+class LearningStreak(models.Model):
+    """
+    Tracks user's daily learning streaks.
+    """
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="learning_streak")
+    current_streak = models.IntegerField(default=0, help_text="Current consecutive days")
+    longest_streak = models.IntegerField(default=0, help_text="Longest streak ever achieved")
+    last_activity_date = models.DateField(null=True, blank=True, help_text="Last date with learning activity")
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.user.email}: {self.current_streak} days"
+    
+    def update_streak(self, activity_date=None):
+        """
+        Update streak based on activity date.
+        Call this whenever a user completes a lesson.
+        """
+        from datetime import date, timedelta
+        
+        today = activity_date or date.today()
+        
+        if not self.last_activity_date:
+            # First activity ever
+            self.current_streak = 1
+        elif self.last_activity_date == today - timedelta(days=1):
+            # Consecutive day
+            self.current_streak += 1
+        elif self.last_activity_date == today:
+            # Already recorded activity today
+            return
+        else:
+            # Streak broken
+            self.current_streak = 1
+        
+        # Update longest streak if needed
+        if self.current_streak > self.longest_streak:
+            self.longest_streak = self.current_streak
+        
+        self.last_activity_date = today
+        self.save()
+
+
+class LearningActivity(models.Model):
+    """
+    Daily learning activity for heatmap visualization.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="learning_activities")
+    date = models.DateField()
+    count = models.IntegerField(default=0, help_text="Number of lessons completed on this day")
+    xp_earned = models.IntegerField(default=0, help_text="XP earned on this day")
+    
+    class Meta:
+        unique_together = ("user", "date")
+        ordering = ["-date"]
+        indexes = [
+            models.Index(fields=['user', 'date']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.email}: {self.date} - {self.count} lessons"

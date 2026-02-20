@@ -4,9 +4,7 @@ ai_learning_platform:.
 ¦   .gitignore
 ¦   db.sqlite3
 ¦   manage.py
-¦   project_tree.txt
 ¦   requirements.txt
-¦   Tree.txt
 ¦   
 +---avatars
 ¦       modeified_image.jpg
@@ -26,8 +24,10 @@ ai_learning_platform:.
 ¦   ¦   forms.py
 ¦   ¦   gamification.py
 ¦   ¦   models.py
+¦   ¦   recommendations.py
 ¦   ¦   tests.py
 ¦   ¦   urls.py
+¦   ¦   utils.py
 ¦   ¦   views.py
 ¦   ¦   __init__.py
 ¦   ¦   
@@ -46,6 +46,13 @@ ai_learning_platform:.
 ¦   ¦   ¦   0012_course_price_course_stripe_price_id_and_more.py
 ¦   ¦   ¦   0013_alter_payment_stripe_payment_intent_id.py
 ¦   ¦   ¦   0014_refund.py
+¦   ¦   ¦   0015_add_achievement_code.py
+¦   ¦   ¦   0016_merge_0014_refund_0015_add_achievement_code.py
+¦   ¦   ¦   0017_add_achievement_criteria.py
+¦   ¦   ¦   0018_enhance_comment_model.py
+¦   ¦   ¦   0019_merge_20260216_1153.py
+¦   ¦   ¦   0020_add_review_model_clean.py
+¦   ¦   ¦   0021_add_review_model_final.py
 ¦   ¦   ¦   __init__.py
 ¦   ¦           
 ¦   +---static
@@ -54,6 +61,8 @@ ai_learning_platform:.
 ¦   ¦               components.css
 ¦   ¦               style.css
 ¦   ¦               utils.css
+¦   ¦       +---js
+¦   ¦               comments.js
 ¦   ¦               
 ¦   +---templates
 ¦   ¦   ¦   base.html
@@ -71,10 +80,23 @@ ai_learning_platform:.
 ¦   ¦           not_enrolled.html
 ¦   ¦           payment_receipt.html
 ¦   ¦           welcome.html
+¦   ¦           achievement_grid.html
+¦   ¦           comment_partial.html
+¦   ¦           next_course.html
+¦   ¦           recent_achievements.html
+¦   ¦           recommendations.html
+¦   ¦           review_form.html
+¦   ¦ 
+¦   ¦   	       +---email
+¦   ¦   			comment_reply.html
+¦   ¦			comment_reply.txt
 ¦   ¦           
 ¦   +---templatetags
 ¦   ¦   ¦   course_extras.py
 ¦   ¦   ¦   course_filters.py
+¦   ¦
+¦   +---tests
+¦   ¦   ¦   test_recommendations.py
 ¦           
 +---media
 ¦   +---avatars
@@ -102,10 +124,12 @@ ai_learning_platform:.
     ¦   ¦   0001_initial.py
     ¦   ¦   0002_alter_user_managers.py
     ¦   ¦   0003_user_avatar_user_bio_user_location_user_website_and_more.py
+    ¦   ¦   0004_alter_user_options_alter_user_avatar_alter_user_bio_and_more.py
     ¦   ¦   __init__.py
     ¦           
     +---templates
     ¦   +---users
+    ¦	        profile.html
     ¦           profile_edit.html
     ¦           signup.html
             

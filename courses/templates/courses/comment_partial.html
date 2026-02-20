@@ -1,0 +1,95 @@
+{% load static %}
+
+<div class="card comment-card mb-3" id="comment-{{ comment.id }}">
+    <div class="card-body">
+        <div class="d-flex">
+            <!-- User Avatar - use cached or simple version -->
+            <div class="flex-shrink-0 me-3">
+                {% if comment.user.avatar %}
+                    <img src="{{ comment.user.avatar.url }}" alt="{{ comment.user.email }}" 
+                         class="rounded-circle" width="40" height="40" loading="lazy">
+                {% else %}
+                    <div class="comment-avatar">
+                        {{ comment.user.email|first|upper }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Comment Content - simplified -->
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <strong class="comment-author">
+                            {% if comment.user.get_full_name %}
+                                {{ comment.user.get_full_name }}
+                            {% else %}
+                                {{ comment.user.email }}
+                            {% endif %}
+                        </strong>
+                        <small class="text-muted ms-2">
+                            {{ comment.created_at|timesince }} ago
+                            {% if comment.is_edited %}(edited){% endif %}
+                        </small>
+                    </div>
+                    
+                    <!-- Comment Actions -->
+                    <div class="btn-group btn-group-sm">
+                        {% if user == comment.user %}
+                            <button type="button" class="btn btn-outline-secondary edit-comment" 
+                                    data-comment-id="{{ comment.id }}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-danger delete-comment"
+                                    data-comment-id="{{ comment.id }}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        {% endif %}
+                        <button type="button" class="btn btn-outline-primary reply-btn"
+                                data-comment-id="{{ comment.id }}"
+                                data-author="{% if comment.user.get_full_name %}{{ comment.user.get_full_name }}{% else %}{{ comment.user.email }}{% endif %}">
+                            <i class="fas fa-reply"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Comment Text -->
+                <div class="comment-content mb-2">
+                    {{ comment.content|linebreaks }}
+                </div>
+                
+                <!-- Upvote Section - simplified -->
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-sm upvote-btn {% if comment.id in user_upvoted_comment_ids %}btn-primary{% else %}btn-outline-primary{% endif %}"
+                            data-comment-id="{{ comment.id }}">
+                        <i class="fas fa-arrow-up me-1"></i>
+                        <span class="upvote-count">{{ comment.upvotes.count }}</span>
+                    </button>
+                </div>
+                
+                <!-- Reply Form -->
+                <div class="reply-form mt-3" id="reply-form-{{ comment.id }}" style="display: none;">
+                    <form method="post" action="{% url 'add_comment' comment.lesson.id %}" class="reply-form-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                        <div class="input-group">
+                            <textarea name="content" class="form-control form-control-sm" 
+                                      rows="2" placeholder="Write your reply..." required></textarea>
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Replies - load lazily or cache -->
+                {% if comment.replies.exists %}
+                    <div class="replies mt-3">
+                        {% for reply in comment.replies.all %}
+                            {% include "courses/comment_partial.html" with comment=reply %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

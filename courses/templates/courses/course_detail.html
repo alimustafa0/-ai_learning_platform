@@ -1,7 +1,65 @@
 {% extends "base.html" %}
 {% load course_filters %}
+{% load static %}
 
 {% block title %}{{ course.title }} - AI Learning Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Star Rating Styles */
+    .star-rating {
+        color: #ffc107;
+        font-size: 1.1rem;
+    }
+    .star-rating .star-empty {
+        color: #e4e5e9;
+    }
+    .average-rating {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #ffc107;
+        line-height: 1;
+    }
+    .rating-bar {
+        height: 8px;
+        background-color: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .rating-bar-fill {
+        height: 100%;
+        background-color: #ffc107;
+        border-radius: 4px;
+    }
+    .review-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .review-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+    }
+    .helpful-btn.active {
+        background-color: var(--bs-primary);
+        color: white;
+        border-color: var(--bs-primary);
+    }
+    .rating-distribution {
+        max-width: 300px;
+    }
+    .review-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -21,7 +79,7 @@
                 <div class="card-body p-4">
                     <h1 class="display-5 fw-bold text-primary mb-3">{{ course.title }}</h1>
                     
-                    <!-- Course Meta -->
+                    <!-- Course Meta with Rating -->
                     <div class="d-flex flex-wrap gap-3 mb-4">
                         <span class="badge bg-light text-dark py-2 px-3">
                             <i class="fas fa-signal me-1"></i>Level {{ course.required_level }}
@@ -38,6 +96,12 @@
                                 <i class="fas fa-tag me-1"></i>${{ course.price }}
                             </span>
                         {% endif %}
+                        <!-- Average Rating Badge -->
+                        <span class="badge bg-warning text-dark py-2 px-3" data-bs-toggle="tooltip" 
+                              title="Based on {{ course.rating_count }} review{{ course.rating_count|pluralize }}">
+                            <i class="fas fa-star me-1"></i>
+                            {{ course.average_rating|floatformat:1 }} ({{ course.rating_count }})
+                        </span>
                     </div>
                     
                     <!-- Categories -->
@@ -63,7 +127,7 @@
             </div>
             
             <!-- Modules & Lessons -->
-            <div class="card border-0 shadow-sm">
+            <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white py-3">
                     <h4 class="mb-0 fw-bold">
                         <i class="fas fa-list-ul me-2 text-primary"></i>Course Curriculum
@@ -147,6 +211,177 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Reviews Section -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0 fw-bold">
+                        <i class="fas fa-star text-warning me-2"></i>Student Reviews
+                        <span class="badge bg-secondary ms-2">{{ course.rating_count }}</span>
+                    </h4>
+                    {% if request.user.is_authenticated and is_enrolled %}
+                        {% if user_review %}
+                            <a href="{% url 'add_review' course.id %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-edit me-1"></i>Edit Your Review
+                            </a>
+                        {% else %}
+                            <a href="{% url 'add_review' course.id %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus-circle me-1"></i>Write a Review
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                <div class="card-body p-4">
+                    {% if course.reviews.exists %}
+                        <!-- Rating Summary -->
+                        <div class="row mb-4">
+                            <div class="col-md-4 text-center">
+                                <div class="average-rating">{{ course.average_rating|floatformat:1 }}</div>
+                                <div class="star-rating mb-2">
+                                    {% for i in "12345"|make_list %}
+                                        {% if forloop.counter <= course.average_rating|floatformat:0 %}
+                                            <i class="fas fa-star"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <div class="text-muted small">{{ course.rating_count }} total reviews</div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="rating-distribution">
+                                    {% for i in "54321"|make_list %}
+                                        {% with rating_value=i|add:0 %}
+                                            <div class="d-flex align-items-center mb-2">
+                                                <span class="me-2 small">{{ rating_value }} <i class="fas fa-star text-warning"></i></span>
+                                                <div class="flex-grow-1 rating-bar">
+                                                    {% with count=distribution|get_item:rating_value %}
+                                                        <div class="rating-bar-fill" style="width: {% widthratio count course.rating_count 100 %}%;"></div>
+                                                    {% endwith %}
+                                                </div>
+                                                <span class="ms-2 small text-muted">{{ distribution|get_item:rating_value }}</span>
+                                            </div>
+                                        {% endwith %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Reviews List -->
+                        <div class="reviews-list">
+                            {% for review in course.reviews.all %}
+                                <div class="review-card card border-0 bg-light mb-3" id="review-{{ review.id }}">
+                                    <div class="card-body">
+                                        <div class="d-flex">
+                                            <!-- User Avatar -->
+                                            <div class="flex-shrink-0 me-3">
+                                                {% if review.user.avatar %}
+                                                    <img src="{{ review.user.avatar.url }}" alt="{{ review.user.email }}" 
+                                                         class="rounded-circle" width="48" height="48">
+                                                {% else %}
+                                                    <div class="review-avatar">
+                                                        {{ review.user.email|first|upper }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <!-- Review Content -->
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <div>
+                                                        <strong>
+                                                            {% if review.user.get_full_name %}
+                                                                {{ review.user.get_full_name }}
+                                                            {% else %}
+                                                                {{ review.user.email }}
+                                                            {% endif %}
+                                                        </strong>
+                                                        <span class="text-muted small ms-2">
+                                                            {{ review.created_at|date:"M d, Y" }}
+                                                            {% if review.is_edited %}
+                                                                <span class="badge bg-light text-dark">edited</span>
+                                                            {% endif %}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <!-- Review Actions -->
+                                                    {% if request.user == review.user %}
+                                                        <div class="btn-group btn-group-sm">
+                                                            <a href="{% url 'add_review' course.id %}" 
+                                                               class="btn btn-outline-secondary"
+                                                               data-bs-toggle="tooltip" title="Edit review">
+                                                                <i class="fas fa-edit"></i>
+                                                            </a>
+                                                            <button type="button" class="btn btn-outline-danger" 
+                                                                    onclick="deleteReview({{ review.id }})"
+                                                                    data-bs-toggle="tooltip" title="Delete review">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <!-- Rating Stars -->
+                                                <div class="star-rating mb-2">
+                                                    {% for i in "12345"|make_list %}
+                                                        {% if forloop.counter <= review.rating %}
+                                                            <i class="fas fa-star text-warning"></i>
+                                                        {% else %}
+                                                            <i class="far fa-star text-warning"></i>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                                
+                                                <!-- Review Comment -->
+                                                {% if review.comment %}
+                                                    <p class="mb-2">{{ review.comment|linebreaks }}</p>
+                                                {% endif %}
+                                                
+                                                <!-- FIXED: Helpful Button - Hidden for own reviews -->
+                                                {% if user.is_authenticated %}
+                                                    {% if review.user == user %}
+                                                        <!-- Don't show helpful button for own review -->
+                                                        <span class="text-muted small">
+                                                            <i class="far fa-thumbs-up me-1"></i>
+                                                            {{ review.total_helpful }} people found this helpful
+                                                        </span>
+                                                    {% else %}
+                                                        <button class="btn btn-sm helpful-btn {% if review.id in user_helpful_review_ids %}btn-primary{% else %}btn-outline-primary{% endif %}"
+                                                                data-review-id="{{ review.id }}">
+                                                            <i class="far fa-thumbs-up me-1"></i>
+                                                            Helpful <span class="helpful-count">{{ review.total_helpful }}</span>
+                                                        </button>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <button class="btn btn-sm btn-outline-primary" disabled
+                                                            title="Login to vote">
+                                                        <i class="far fa-thumbs-up me-1"></i>
+                                                        Helpful <span class="helpful-count">{{ review.total_helpful }}</span>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <!-- No Reviews Yet -->
+                        <div class="text-center py-5">
+                            <div class="display-1 text-muted mb-3">
+                                <i class="far fa-star"></i>
+                            </div>
+                            <h5 class="fw-bold mb-2">No reviews yet</h5>
+                            <p class="text-muted mb-4">Be the first to share your experience with this course!</p>
+                            {% if request.user.is_authenticated and is_enrolled %}
+                                <a href="{% url 'add_review' course.id %}" class="btn btn-primary">
+                                    <i class="fas fa-pen me-2"></i>Write a Review
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
         
         <!-- Sidebar Column -->
@@ -161,17 +396,31 @@
                     
                     {% if request.user.is_authenticated %}
                         {% if is_enrolled %}
+                            <!-- Course Progress -->
                             <div class="text-center mb-4">
                                 <div class="display-1 text-success mb-3">
                                     <i class="fas fa-check-circle"></i>
                                 </div>
                                 <h6 class="fw-bold text-success">You are enrolled!</h6>
-                                <p class="text-muted small">Start learning at your own pace.</p>
+                                <p class="text-muted small mb-3">Progress: {{ completed_count }}/{{ total_lessons }} lessons</p>
+                                <div class="progress mb-3" style="height: 8px;">
+                                    <div class="progress-bar" style="width: {{ progress_percentage }}%;"></div>
+                                </div>
                             </div>
+                            
+                            <!-- Action Buttons -->
                             <div class="d-grid gap-2">
                                 <a href="{% url 'resume_course' course.id %}" class="btn btn-primary btn-lg">
                                     <i class="fas fa-play-circle me-2"></i>Resume Course
                                 </a>
+                                
+                                <!-- FIXED: Certificate Button - Only shows if course is 100% complete -->
+                                {% if is_enrolled and completed_count == total_lessons and total_lessons > 0 %}
+                                    <a href="{% url 'generate_certificate' course.id %}" class="btn btn-success btn-lg mt-2">
+                                        <i class="fas fa-certificate me-2"></i>Download Certificate
+                                    </a>
+                                {% endif %}
+                                
                                 <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
                                     <i class="fas fa-tachometer-alt me-2"></i>Dashboard
                                 </a>
@@ -262,15 +511,42 @@
                         <span class="text-muted">Total Lessons:</span>
                         <span class="fw-bold">{{ total_lessons|default:0 }}</span>
                     </div>
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Students Enrolled:</span>
                         <span class="fw-bold">{{ course.enrollments.count }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Total Reviews:</span>
+                        <span class="fw-bold">{{ course.rating_count }}</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Delete Review Modal -->
+<div class="modal fade" id="deleteReviewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Review</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete your review? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="" id="deleteReviewForm" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Review</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -280,5 +556,56 @@
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl)
     });
+    
+    // FIXED: Handle helpful votes
+    document.querySelectorAll('.helpful-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            {% if not user.is_authenticated %}
+                window.location.href = "{% url 'login' %}?next={{ request.path }}";
+                return;
+            {% endif %}
+            
+            const reviewId = this.dataset.reviewId;
+            const button = this;
+            
+            fetch(`/reviews/${reviewId}/helpful/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const countSpan = button.querySelector('.helpful-count');
+                    countSpan.textContent = data.total_helpful;
+                    
+                    if (data.user_helpful) {
+                        button.classList.remove('btn-outline-primary');
+                        button.classList.add('btn-primary');
+                    } else {
+                        button.classList.remove('btn-primary');
+                        button.classList.add('btn-outline-primary');
+                    }
+                } else if (data.status === 'error') {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        });
+    });
+    
+    // Handle delete review
+    function deleteReview(reviewId) {
+        const form = document.getElementById('deleteReviewForm');
+        form.action = `/reviews/${reviewId}/delete/`;
+        new bootstrap.Modal(document.getElementById('deleteReviewModal')).show();
+    }
 </script>
 {% endblock %}

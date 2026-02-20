@@ -60,11 +60,42 @@ def course_detail(request, course_id):
         
         # Get user's review if it exists
         user_review = course.reviews.filter(user=request.user).first()
+        
+        # Get completed lessons for this course
+        completed_lessons = []
+        completed_count = 0
+        total_lessons = 0
+        progress_percentage = 0
+        
+        if is_enrolled:
+            completed_lessons = LessonCompletion.objects.filter(
+                user=request.user,
+                lesson__module__course=course
+            ).values_list('lesson_id', flat=True)
+            
+            completed_count = len(completed_lessons)
+            total_lessons = Lesson.objects.filter(module__course=course).count()
+            
+            if total_lessons > 0:
+                progress_percentage = int((completed_count / total_lessons) * 100)
+        
+        # Get IDs of reviews this user found helpful
+        user_helpful_review_ids = []
+        if request.user.is_authenticated:
+            user_helpful_review_ids = Review.objects.filter(
+                helpful_votes=request.user
+            ).values_list('id', flat=True)
+            
     else:
-        # For anonymous users, set level to 0 and not enrolled
+        # For anonymous users
         user_level_number = 0
         is_enrolled = False
         user_review = None
+        completed_lessons = []
+        completed_count = 0
+        total_lessons = Lesson.objects.filter(module__course=course).count()
+        progress_percentage = 0
+        user_helpful_review_ids = []
 
     # Level lock check (only if required_level > 1)
     if user_level_number < course.required_level:
@@ -73,17 +104,6 @@ def course_detail(request, course_id):
             "required_level": course.required_level,
             "user_level_number": user_level_number,
         })
-    
-    # Get total lessons count
-    total_lessons = Lesson.objects.filter(module__course=course).count()
-    
-    # Get completed lessons for enrolled users
-    completed_lessons = []
-    if request.user.is_authenticated and is_enrolled:
-        completed_lessons = LessonCompletion.objects.filter(
-            user=request.user,
-            lesson__module__course=course
-        ).values_list('lesson_id', flat=True)
     
     # Get rating distribution
     distribution = course.rating_distribution()
@@ -94,8 +114,11 @@ def course_detail(request, course_id):
         "is_enrolled": is_enrolled,
         "total_lessons": total_lessons,
         "completed_lessons": completed_lessons,
+        "completed_count": completed_count,  # Add this
+        "progress_percentage": progress_percentage,  # Add this
         "user_review": user_review,
-        "distribution": distribution,  # Add this line
+        "distribution": distribution,
+        "user_helpful_review_ids": user_helpful_review_ids,  # Add this for helpful button
     })
 
 @login_required
@@ -296,7 +319,8 @@ def dashboard(request):
     from .recommendations import get_course_recommendations
 
     recommendations = get_course_recommendations(request.user, limit=3)
-    # Calculate user stats FIRST (independent of enrollments)
+    
+    # Calculate user stats
     total_xp = XPEvent.objects.filter(user=request.user).aggregate(total=Sum('points'))['total'] or 0
     current_level, next_level = get_level_progress(total_xp)
     
@@ -308,11 +332,10 @@ def dashboard(request):
         xp_range = next_level_xp - level_xp
         level_progress_percent = int((xp_into_level / xp_range) * 100) if xp_range > 0 else 0
     else:
-        # user is MAX level
         next_level_title = "MAX"
         level_progress_percent = 100
     
-    # Get all achievements for display
+    # Get all achievements
     all_achievements = Achievement.objects.all()
     unlocked_ids = UserAchievement.objects.filter(
         user=request.user
@@ -326,6 +349,8 @@ def dashboard(request):
     # Get enrollments and course progress
     enrollments = request.user.enrollments.select_related("course")
     course_data = []
+    in_progress_courses = []
+    completed_courses = []
     
     for enrollment in enrollments:
         course = enrollment.course
@@ -345,16 +370,52 @@ def dashboard(request):
         
         is_completed = completed_count == total_lessons and total_lessons > 0
         
-        course_data.append({
+        # Get the next lesson to continue
+        next_lesson = None
+        if not is_completed:
+            # Find the first incomplete lesson
+            lessons = Lesson.objects.filter(
+                module__course=course
+            ).order_by("module__order", "order")
+            
+            completed_ids = LessonCompletion.objects.filter(
+                user=request.user,
+                lesson__module__course=course
+            ).values_list('lesson_id', flat=True)
+            
+            for lesson in lessons:
+                if lesson.id not in completed_ids:
+                    next_lesson = lesson
+                    break
+        
+        course_info = {
             "course": course,
             "total_lessons": total_lessons,
             "completed_count": completed_count,
             "progress_percentage": progress_percentage,
             "completed": is_completed,
-        })
-
+            "next_lesson": next_lesson,
+            "enrolled_at": enrollment.enrolled_at,
+        }
+        
+        course_data.append(course_info)
+        
+        # Separate into in-progress and completed
+        if is_completed:
+            completed_courses.append(course_info)
+        else:
+            in_progress_courses.append(course_info)
+    
+    # Sort in-progress courses by enrollment date (most recent first)
+    in_progress_courses.sort(key=lambda x: x['enrolled_at'], reverse=True)
+    
     # Get payment history
-    payment_history = Payment.objects.filter(user=request.user).order_by('-created_at')[:10]
+    payment_history = Payment.objects.filter(user=request.user).order_by('-created_at')[:5]
+    
+    # Get recent activity (last 5 completed lessons)
+    recent_activity = LessonCompletion.objects.filter(
+        user=request.user
+    ).select_related('lesson', 'lesson__module__course').order_by('-completed_at')[:5]
     
     return render(request, "courses/dashboard.html", {
         "total_xp": total_xp,
@@ -364,11 +425,14 @@ def dashboard(request):
         "next_level_title": next_level_title,
         "all_achievements": all_achievements,
         "unlocked_ids": unlocked_ids,
-        "course_data": course_data,  # Renamed from 'data' for clarity
+        "course_data": course_data,
+        "in_progress_courses": in_progress_courses,
+        "completed_courses": completed_courses,
         "payment_history": payment_history,
         "recommendations": recommendations,
         "achievement_progress": achievement_progress,
         "recent_achievements": recent_achievements,
+        "recent_activity": recent_activity,
     })
 
 @login_required

@@ -4,6 +4,68 @@
 
 {% block title %}{{ lesson.title }} - {{ course.title }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .comment-card {
+        border-left: 3px solid transparent;
+        transition: border-left-color 0.2s ease;
+        margin-bottom: 1rem;
+    }
+    .comment-card:hover {
+        border-left-color: var(--bs-primary);
+    }
+    .replies {
+        border-left: 2px solid #e9ecef;
+        padding-left: 1.5rem;
+        margin-left: 3rem;
+    }
+    .comment-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+    .upvote-btn.active {
+        background-color: var(--bs-primary);
+        color: white;
+        border-color: var(--bs-primary);
+    }
+    .reply-form {
+        transition: all 0.3s ease;
+    }
+    .mention {
+        background-color: #e3f2fd;
+        color: #0d47a1;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 500;
+        text-decoration: none;
+    }
+    .mention:hover {
+        background-color: #bbdefb;
+        text-decoration: underline;
+    }
+    .loading-spinner {
+        width: 1.5rem;
+        height: 1.5rem;
+        border: 2px solid #e9ecef;
+        border-top-color: var(--bs-primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        display: inline-block;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid py-4">
     <div class="row">
@@ -245,76 +307,88 @@
             
             <!-- Comments Section -->
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white py-3">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                     <h5 class="fw-bold mb-0">
                         <i class="fas fa-comments me-2 text-primary"></i>
-                        Discussion ({{ comments.count }})
+                        Discussion
+                        <span class="badge bg-secondary ms-2" id="total-comment-count">{{ total_comments }}</span>
                     </h5>
+                    <div>
+                        <span class="text-muted small">
+                            <i class="fas fa-info-circle me-1"></i>
+                            {{ comment_form.content.help_text }}
+                        </span>
+                    </div>
                 </div>
                 <div class="card-body p-4">
                     <!-- Comment Form -->
-                    <form method="post" class="mb-4">
+                    <form method="post" action="{% url 'add_comment' lesson.id %}" class="main-comment-form mb-5">
                         {% csrf_token %}
-                        <input type="hidden" name="comment_submit" value="1">
+                        <input type="hidden" name="parent_id" id="parent_id" value="">
                         <div class="mb-3">
-                            <label for="id_content" class="form-label fw-bold">Add a comment:</label>
-                            {{ comment_form.content }}
+                            <label for="id_content" class="form-label fw-bold">Add a comment or question:</label>
+                            <div class="position-relative">
+                                {{ comment_form.content }}
+                                <div class="mt-1 text-muted small">
+                                    <i class="fas fa-at me-1"></i> Use @username to mention someone
+                                </div>
+                            </div>
                             {% if comment_form.content.errors %}
                                 <div class="text-danger small mt-1">{{ comment_form.content.errors }}</div>
                             {% endif %}
                         </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane me-2"></i>Post Comment
-                        </button>
+                        <div class="d-flex align-items-center">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>Post Comment
+                            </button>
+                            <button type="button" class="btn btn-link btn-sm text-muted ms-2 cancel-reply" style="display: none;">
+                                <i class="fas fa-times me-1"></i>Cancel reply
+                            </button>
+                        </div>
+                        <div class="reply-indicator mt-2 text-primary small fw-bold" style="display: none;">
+                            <i class="fas fa-reply me-1"></i>Replying to a comment...
+                        </div>
                     </form>
                     
-                    <!-- Comments List -->
-                    <div class="comments-list">
+                    <!-- Comments List Container -->
+                    <div class="comments-list" id="comments-list">
                         {% if comments %}
                             {% for comment in comments %}
-                                <div class="comment mb-3">
-                                    <div class="comment-meta">
-                                        <div class="d-flex align-items-center">
-                                            <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-2"
-                                                 style="width: 36px; height: 36px;">
-                                                <span class="fw-bold text-primary small">
-                                                    {{ comment.user.email|first|upper }}
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <strong class="comment-author">
-                                                    {% if comment.user.get_full_name %}
-                                                        {{ comment.user.get_full_name }}
-                                                    {% else %}
-                                                        {{ comment.user.email }}
-                                                    {% endif %}
-                                                </strong>
-                                                <span class="comment-date ms-2">
-                                                    {{ comment.created_at|timesince }} ago
-                                                    {% if comment.is_edited %}(edited){% endif %}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="comment-content mt-2 ps-5">
-                                        {{ comment.content|linebreaks }}
-                                    </div>
-                                </div>
+                                {% include "courses/comment_partial.html" with comment=comment user_upvoted_comment_ids=user_upvoted_comment_ids %}
                             {% endfor %}
                         {% else %}
-                            <div class="text-center py-4">
-                                <div class="text-muted">
-                                    <i class="fas fa-comment-dots fa-2x mb-3"></i>
-                                    <p class="mb-0">No comments yet. Be the first to share your thoughts!</p>
+                            <div class="text-center py-5" id="empty-comments">
+                                <div class="display-1 text-muted mb-3">
+                                    <i class="fas fa-comment-dots"></i>
                                 </div>
+                                <h5 class="fw-bold mb-2">No comments yet</h5>
+                                <p class="text-muted mb-4">Be the first to share your thoughts or ask a question!</p>
+                                <button class="btn btn-outline-primary" onclick="document.getElementById('id_content').focus()">
+                                    <i class="fas fa-pen me-2"></i>Start the Discussion
+                                </button>
                             </div>
                         {% endif %}
                     </div>
+                    
+                    <!-- Load More Button -->
+                    {% if comments.has_next %}
+                        <div class="text-center mt-4" id="load-more-container">
+                            <button class="btn btn-outline-primary" id="load-more-comments" 
+                                    data-lesson-id="{{ lesson.id }}"
+                                    data-next-page="{{ comments.next_page_number }}">
+                                <span class="spinner-border spinner-border-sm d-none" id="load-more-spinner" role="status" aria-hidden="true"></span>
+                                <span id="load-more-text">Load More Comments</span>
+                            </button>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- JavaScript for Comments -->
+<script src="{% static 'courses/js/comments.js' %}"></script>
 
 <style>
     .lesson-content {
@@ -332,11 +406,13 @@
         border-radius: 0.5rem;
         border: 1px solid #e9ecef;
     }
-    .comment {
-        padding: 1rem;
-        background: #f8f9fa;
-        border-radius: 0.5rem;
-        border-left: 4px solid var(--primary);
+    .lesson-content blockquote {
+        border-left: 4px solid var(--bs-primary);
+        padding-left: 1rem;
+        color: #6c757d;
+        font-style: italic;
     }
 </style>
+
+<!-- Remove the old inline script since we now have comments.js -->
 {% endblock %}

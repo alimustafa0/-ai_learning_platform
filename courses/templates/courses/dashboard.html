@@ -78,6 +78,80 @@
         </div>
     </div>
 
+    <!-- Continue Learning Section - NEW -->
+    {% if in_progress_courses %}
+        <div class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold">
+                    <i class="fas fa-play-circle text-primary me-2"></i>
+                    Continue Learning
+                </h3>
+                <a href="{% url 'course_list' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-plus-circle me-1"></i>Browse More
+                </a>
+            </div>
+            
+            <div class="row g-4">
+                {% for item in in_progress_courses|slice:":3" %}
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100 hover-lift">
+                            <div class="card-body p-4">
+                                <!-- Course Level Badge -->
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <span class="badge bg-primary bg-opacity-10 text-primary">
+                                        Level {{ item.course.required_level }}
+                                    </span>
+                                    <span class="text-muted small">
+                                        <i class="fas fa-book-open me-1"></i>
+                                        {{ item.completed_count }}/{{ item.total_lessons }}
+                                    </span>
+                                </div>
+                                
+                                <!-- Course Title -->
+                                <h5 class="fw-bold mb-2">
+                                    <a href="{% url 'course_detail' item.course.id %}" 
+                                    class="text-decoration-none text-dark">
+                                        {{ item.course.title }}
+                                    </a>
+                                </h5>
+                                
+                                <!-- Progress Bar -->
+                                <div class="progress mb-3" style="height: 6px;">
+                                    <div class="progress-bar bg-primary" 
+                                        style="width: {{ item.progress_percentage }}%;"></div>
+                                </div>
+                                
+                                <!-- Next Lesson Info -->
+                                {% if item.next_lesson %}
+                                    <p class="small text-muted mb-3">
+                                        <i class="fas fa-arrow-right me-1 text-primary"></i>
+                                        Next: {{ item.next_lesson.title|truncatechars:30 }}
+                                    </p>
+                                {% endif %}
+                                
+                                <!-- Continue Button -->
+                                <a href="{% url 'resume_course' item.course.id %}" 
+                                class="btn btn-primary w-100">
+                                    <i class="fas fa-play-circle me-2"></i>Continue
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Show More Link if more than 3 in-progress courses -->
+            {% if in_progress_courses|length > 3 %}
+                <div class="text-center mt-3">
+                    <a href="#all-courses" class="text-decoration-none">
+                        View all {{ in_progress_courses|length }} in-progress courses
+                        <i class="fas fa-arrow-down ms-1"></i>
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+
     <!-- Level Progress -->
     <div class="card border-0 shadow-sm mb-5">
         <div class="card-body p-4">
@@ -109,7 +183,7 @@
     </div>
 
     <!-- My Courses Section -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div id="all-courses" class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="fw-bold">
             <i class="fas fa-book-open me-2 text-primary"></i>
             My Courses
@@ -272,6 +346,42 @@
         </div>
     {% endif %}
     <!-- ===== END RECOMMENDATIONS SECTION ===== -->
+
+    <!-- Recent Activity Section - NEW -->
+    {% if recent_activity %}
+        <div class="card border-0 shadow-sm mb-5">
+            <div class="card-header bg-white py-3">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-history text-primary me-2"></i>
+                    Recent Activity
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for completion in recent_activity %}
+                        <div class="list-group-item d-flex align-items-center py-3">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="bg-success bg-opacity-10 rounded-circle p-2">
+                                    <i class="fas fa-check text-success"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <strong>{{ completion.lesson.title }}</strong>
+                                <div class="small text-muted">
+                                    {{ completion.lesson.module.course.title }}
+                                    <span class="mx-2">•</span>
+                                    {{ completion.completed_at|timesince }} ago
+                                </div>
+                            </div>
+                            <div>
+                                <span class="badge bg-primary">+10 XP</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
 
     <!-- Achievements Section -->
     <!-- Recent Achievements -->

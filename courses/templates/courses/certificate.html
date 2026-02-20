@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate of Completion</title>
+    <style>
+        @page {
+            size: landscape;
+            margin: 2cm;
+        }
+        body {
+            font-family: 'Inter', 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .certificate {
+            background: white;
+            width: 100%;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 60px 40px;
+            border-radius: 20px;
+            box-shadow: 0 30px 50px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .certificate::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            left: -50px;
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            opacity: 0.1;
+            border-radius: 50%;
+        }
+        .certificate::after {
+            content: '';
+            position: absolute;
+            bottom: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            opacity: 0.1;
+            border-radius: 50%;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        .header h1 {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .header h2 {
+            font-size: 24px;
+            color: #764ba2;
+            font-weight: 300;
+            margin-top: 0;
+        }
+        .seal {
+            width: 100px;
+            height: 100px;
+            margin: 20px auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
+        }
+        .content {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .content p {
+            font-size: 20px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+        .content .student-name {
+            font-size: 42px;
+            font-weight: bold;
+            color: #2d3748;
+            margin: 20px 0;
+            text-transform: uppercase;
+        }
+        .content .course-name {
+            font-size: 36px;
+            color: #667eea;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+        .content .date {
+            font-size: 20px;
+            color: #718096;
+            margin: 30px 0;
+        }
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #e2e8f0;
+        }
+        .signature {
+            text-align: center;
+        }
+        .signature-line {
+            width: 200px;
+            height: 2px;
+            background: #2d3748;
+            margin-bottom: 10px;
+        }
+        .signature p {
+            margin: 5px 0;
+            color: #4a5568;
+        }
+        .certificate-number {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #a0aec0;
+        }
+        .badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="certificate">
+        <div class="badge">AI Learning Platform</div>
+        <div class="header">
+            <h1>Certificate of Completion</h1>
+            <h2>Proudly Presented To</h2>
+        </div>
+        
+        
+        
+        <div class="content">
+            <div class="student-name">{{ user.get_full_name|default:user.email }}</div>
+            <p>has successfully completed the course</p>
+            <div class="course-name">{{ course.title }}</div>
+            <p>with a demonstrated understanding of the core concepts and practical applications.</p>
+            <div class="date">Awarded on {{ certificate.issued_at|date:"F j, Y" }}</div>
+        </div>
+        
+        <div class="footer">
+            <div class="signature">
+                <div class="signature-line"></div>
+                <p>Dr. Sarah Johnson</p>
+                <p style="font-size: 14px; color: #718096;">Chief Learning Officer</p>
+            </div>
+            <div class="signature">
+                <div class="signature-line"></div>
+                <p>Prof. Michael Chen</p>
+                <p style="font-size: 14px; color: #718096;">Academic Director</p>
+            </div>
+        </div>
+        
+        <div class="certificate-number">
+            Certificate ID: {{ certificate.certificate_number }}
+        </div>
+    </div>
+</body>
+</html>

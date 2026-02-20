@@ -8,11 +8,12 @@ from django.db.models import Sum
 class AchievementCode:
     # Lesson completion achievements
     FIRST_LESSON = 'first-lesson'
-    FIFTH_LESSON = 'fifth-lesson'
-    TENTH_LESSON = 'tenth-lesson'
-    TWENTY_FIFTH_LESSON = 'twenty-fifth-lesson'
-    FIFTIETH_LESSON = 'fiftieth-lesson'
-    HUNDREDTH_LESSON = 'hundredth-lesson'
+    SECOND_LESSON = 'second-lesson'      # Add this
+    FIFTH_LESSON = 'fifth-lesson'        # Add this
+    TENTH_LESSON = 'tenth-lesson'        # Add this
+    TWENTY_FIFTH_LESSON = 'twenty-fifth-lesson'  # Add this
+    FIFTIETH_LESSON = 'fiftieth-lesson'  # Add this
+    HUNDREDTH_LESSON = 'hundredth-lesson'  # Add this
     
     # Course completion achievements
     FIRST_COURSE = 'first-course'
@@ -40,10 +41,10 @@ class AchievementCode:
     HELPFUL_REVIEW = 'helpful-review'
     
     # Special achievements
-    EARLY_BIRD = 'early-bird'  # Complete lesson before 9 AM
-    NIGHT_OWL = 'night-owl'    # Complete lesson after 10 PM
-    WEEKEND_LEARNER = 'weekend-learner'  # Complete lessons on weekend
-    PERFECT_WEEK = 'perfect-week'  # Complete a lesson every day for a week
+    EARLY_BIRD = 'early-bird'
+    NIGHT_OWL = 'night-owl'
+    WEEKEND_LEARNER = 'weekend-learner'
+    PERFECT_WEEK = 'perfect-week'
 
 def get_achievement_by_code(code):
     """
@@ -168,12 +169,12 @@ def check_lesson_count_achievements(user, new_count=None, request=None):
     # Map of thresholds to achievement codes
     threshold_map = [
         (1, AchievementCode.FIRST_LESSON),
-        (2, AchievementCode.SECOND_LESSON),
-        (5, AchievementCode.FIVE_LESSONS),
-        (10, AchievementCode.TEN_LESSONS),
-        (25, AchievementCode.LESSON_MASTER),
-        (50, AchievementCode.LESSON_GURU),
-        (100, AchievementCode.LESSON_LEGEND),
+        (2, AchievementCode.SECOND_LESSON),      # Now this exists!
+        (5, AchievementCode.FIFTH_LESSON),
+        (10, AchievementCode.TENTH_LESSON),
+        (25, AchievementCode.TWENTY_FIFTH_LESSON),
+        (50, AchievementCode.FIFTIETH_LESSON),
+        (100, AchievementCode.HUNDREDTH_LESSON),
     ]
     
     # Check each threshold

@@ -19,7 +19,60 @@ class Command(BaseCommand):
                 'category': 'lessons',
                 'threshold': 1,
             },
-            # We'll add more step by step
+            {
+                'code': 'second-lesson',
+                'name': 'Getting Started',
+                'description': 'Complete 2 lessons',
+                'xp_reward': 30,
+                'icon': '📖',
+                'category': 'lessons',
+                'threshold': 2,
+            },
+            {
+                'code': 'fifth-lesson',
+                'name': 'Learning Streak',
+                'description': 'Complete 5 lessons',
+                'xp_reward': 50,
+                'icon': '🔖',
+                'category': 'lessons',
+                'threshold': 5,
+            },
+            {
+                'code': 'tenth-lesson',
+                'name': 'Double Digits',
+                'description': 'Complete 10 lessons',
+                'xp_reward': 75,
+                'icon': '🎯',
+                'category': 'lessons',
+                'threshold': 10,
+            },
+            {
+                'code': 'twenty-fifth-lesson',
+                'name': 'Dedicated Learner',
+                'description': 'Complete 25 lessons',
+                'xp_reward': 100,
+                'icon': '⭐',
+                'category': 'lessons',
+                'threshold': 25,
+            },
+            {
+                'code': 'fiftieth-lesson',
+                'name': 'Half Century',
+                'description': 'Complete 50 lessons',
+                'xp_reward': 200,
+                'icon': '🏅',
+                'category': 'lessons',
+                'threshold': 50,
+            },
+            {
+                'code': 'hundredth-lesson',
+                'name': 'Century Club',
+                'description': 'Complete 100 lessons',
+                'xp_reward': 500,
+                'icon': '🏆',
+                'category': 'lessons',
+                'threshold': 100,
+            },
         ]
         
         for ach_data in achievements:
@@ -32,4 +85,4 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(f"Already exists: {ach.name}")
         
-        self.stdout.write(self.style.SUCCESS('Done!'))
+        self.stdout.write(self.style.SUCCESS('Done creating lesson achievements!'))

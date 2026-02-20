@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from config import settings as setting
-from .models import Course, Enrollment, Lesson, LessonCompletion, Review, XPEvent, Achievement, UserAchievement, Payment, Comment
+from .models import Course, Enrollment, Lesson, LessonCompletion, Review, XPEvent, Achievement, UserAchievement, Payment, Comment, Certificate
 from .forms import CommentForm, ReviewForm
 from .gamification import get_level_progress
 from .achievements import check_lesson_count_achievements, check_course_completion_achievements
@@ -12,12 +12,14 @@ import stripe
 from django.conf import settings
 from django.urls import reverse
 from users.models import User
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from weasyprint import HTML
+import tempfile
 
 
 
@@ -399,16 +401,37 @@ def resume_course(request, course_id):
 
     return redirect("dashboard")
 
+
 @login_required
 def course_completed(request, course_id):
     course = get_object_or_404(Course, id=course_id)
 
-    # security
+    # Security check - must be enrolled
     is_enrolled = course.enrollments.filter(user=request.user).exists()
     if not is_enrolled:
         return render(request, "courses/not_enrolled.html", {"course": course})
+    
+    # Calculate total lessons and completed lessons
+    total_lessons = Lesson.objects.filter(module__course=course).count()
+    completed_lessons = LessonCompletion.objects.filter(
+        user=request.user,
+        lesson__module__course=course
+    ).count()
+    
+    # Calculate XP earned for this course (10 XP per lesson)
+    course_xp = completed_lessons * 10
+    
+    # Check if user already has a certificate for this course
+    from .models import Certificate
+    has_certificate = Certificate.objects.filter(user=request.user, course=course).exists()
 
-    return render(request, "courses/course_completed.html", {"course": course})
+    return render(request, "courses/course_completed.html", {
+        "course": course,
+        "total_lessons": total_lessons,
+        "completed_lessons": completed_lessons,
+        "course_xp": course_xp,
+        "has_certificate": has_certificate,
+    })
 
 @login_required
 def course_checkout(request, course_id):
@@ -1083,3 +1106,52 @@ def delete_review(request, review_id):
         messages.success(request, "Your review has been deleted.")
     
     return redirect('course_detail', course_id=course_id)
+
+
+@login_required
+def generate_certificate(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    
+    # Check if user completed the course
+    total_lessons = Lesson.objects.filter(module__course=course).count()
+    completed_lessons = LessonCompletion.objects.filter(
+        user=request.user,
+        lesson__module__course=course
+    ).count()
+    
+    if completed_lessons < total_lessons:
+        messages.error(request, "You must complete all lessons to get a certificate.")
+        return redirect('course_detail', course_id=course.id)
+    
+    # Get or create certificate
+    certificate, created = Certificate.objects.get_or_create(
+        user=request.user,
+        course=course
+    )
+    
+    # Increment download count
+    certificate.download_count += 1
+    certificate.save()
+    
+    # Render HTML
+    html_string = render_to_string('courses/certificate.html', {
+        'user': request.user,
+        'course': course,
+        'certificate': certificate
+    })
+    
+    # Generate PDF
+    html = HTML(string=html_string)
+    
+    # Create HTTP response with PDF - FIXED LINE BELOW
+    # Use course.id as fallback if slug doesn't exist
+    slug_value = course.slug if hasattr(course, 'slug') and course.slug else f"course-{course.id}"
+    filename = f"certificate_{slug_value}_{request.user.id}.pdf"
+    
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    # Write PDF to response
+    html.write_pdf(response)
+    
+    return response

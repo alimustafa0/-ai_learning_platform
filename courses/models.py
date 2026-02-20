@@ -21,6 +21,7 @@ class Category(models.Model):
 
 class Course(models.Model):
     title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True, null=True, blank=True, help_text="URL-friendly version of the title")
     description = models.TextField()
     is_published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -73,6 +74,13 @@ class Course(models.Model):
         if not user.is_authenticated:
             return None
         return self.reviews.filter(user=user).first()
+    
+    def save(self, *args, **kwargs):
+        # Auto-generate slug from title if not provided
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
 
 
 class Module(models.Model):
@@ -537,3 +545,34 @@ class Review(models.Model):
     def user_found_helpful(self, user):
         """Check if a user found this review helpful."""
         return self.helpful_votes.filter(id=user.id).exists()
+
+
+class Certificate(models.Model):
+    """
+    Certificates awarded to users upon course completion.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="certificates")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="certificates")
+    issued_at = models.DateTimeField(auto_now_add=True)
+    certificate_number = models.CharField(max_length=50, unique=True)
+    download_count = models.IntegerField(default=0)
+    
+    class Meta:
+        unique_together = ("user", "course")  # One certificate per user per course
+        ordering = ['-issued_at']
+    
+    def __str__(self):
+        return f"Certificate: {self.user.email} - {self.course.title}"
+    
+    def generate_certificate_number(self):
+        """Generate a unique certificate number"""
+        import hashlib
+        import time
+        unique_string = f"{self.user.id}-{self.course.id}-{time.time()}"
+        hash_object = hashlib.sha256(unique_string.encode())
+        return f"CERT-{hash_object.hexdigest()[:12].upper()}"
+    
+    def save(self, *args, **kwargs):
+        if not self.certificate_number:
+            self.certificate_number = self.generate_certificate_number()
+        super().save(*args, **kwargs)

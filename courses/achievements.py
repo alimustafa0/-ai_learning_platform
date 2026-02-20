@@ -109,19 +109,14 @@ def check_and_award_achievement(user, achievement_code, request=None):
 def check_course_completion_achievements(user, course, request=None):
     """
     Check for achievements related to course completion.
-    Optimized to use fewer queries.
+    Now checks for multiple course milestones (1st, 3rd, 5th, 10th course).
     """
-    from .models import LessonCompletion, Lesson
+    from .models import Course, LessonCompletion, Lesson
     
-    # Get total lessons count (cached per course)
-    cache_key = f'course_lesson_count_{course.id}'
-    total_lessons = cache.get(cache_key)
+    # Get total lessons count for this course
+    total_lessons = Lesson.objects.filter(module__course=course).count()
     
-    if not total_lessons:
-        total_lessons = Lesson.objects.filter(module__course=course).count()
-        cache.set(cache_key, total_lessons, 3600)
-    
-    # Get completed count in one query
+    # Check if user just completed this course
     completed_count = LessonCompletion.objects.filter(
         user=user,
         lesson__module__course=course
@@ -129,13 +124,52 @@ def check_course_completion_achievements(user, course, request=None):
     
     achievements_awarded = []
     
-    # First course completion
+    # If they just completed this course
     if completed_count == total_lessons and total_lessons > 0:
-        awarded, achievement = check_and_award_achievement(
-            user, AchievementCode.COURSE_COMPLETE, request
-        )
-        if awarded:
-            achievements_awarded.append(achievement)
+        # Count how many TOTAL courses they've completed
+        completed_courses_count = 0
+        
+        # Get all courses the user is enrolled in
+        enrolled_courses = Course.objects.filter(enrollments__user=user)
+        
+        for enrolled_course in enrolled_courses:
+            course_total = Lesson.objects.filter(module__course=enrolled_course).count()
+            course_completed = LessonCompletion.objects.filter(
+                user=user,
+                lesson__module__course=enrolled_course
+            ).count()
+            
+            if course_completed == course_total and course_total > 0:
+                completed_courses_count += 1
+        
+        # Check each threshold
+        if completed_courses_count >= 1:
+            awarded, achievement = check_and_award_achievement(
+                user, AchievementCode.FIRST_COURSE, request
+            )
+            if awarded:
+                achievements_awarded.append(achievement)
+        
+        if completed_courses_count >= 3:
+            awarded, achievement = check_and_award_achievement(
+                user, AchievementCode.THIRD_COURSE, request
+            )
+            if awarded:
+                achievements_awarded.append(achievement)
+        
+        if completed_courses_count >= 5:
+            awarded, achievement = check_and_award_achievement(
+                user, AchievementCode.FIFTH_COURSE, request
+            )
+            if awarded:
+                achievements_awarded.append(achievement)
+        
+        if completed_courses_count >= 10:
+            awarded, achievement = check_and_award_achievement(
+                user, AchievementCode.TENTH_COURSE, request
+            )
+            if awarded:
+                achievements_awarded.append(achievement)
     
     return achievements_awarded
 

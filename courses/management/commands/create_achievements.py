@@ -73,6 +73,42 @@ class Command(BaseCommand):
                 'category': 'lessons',
                 'threshold': 100,
             },
+            {
+                'code': 'first-course',
+                'name': 'Course Graduate',
+                'description': 'Complete your first course',
+                'xp_reward': 100,
+                'icon': '🎓',
+                'category': 'courses',
+                'threshold': 1,
+            },
+            {
+                'code': 'third-course',
+                'name': 'Trifecta',
+                'description': 'Complete 3 courses',
+                'xp_reward': 200,
+                'icon': '🏆',
+                'category': 'courses',
+                'threshold': 3,
+            },
+            {
+                'code': 'fifth-course',
+                'name': 'Course Collector',
+                'description': 'Complete 5 courses',
+                'xp_reward': 350,
+                'icon': '📚',
+                'category': 'courses',
+                'threshold': 5,
+            },
+            {
+                'code': 'tenth-course',
+                'name': 'Knowledge Seeker',
+                'description': 'Complete 10 courses',
+                'xp_reward': 500,
+                'icon': '🌟',
+                'category': 'courses',
+                'threshold': 10,
+            },
         ]
         
         for ach_data in achievements:

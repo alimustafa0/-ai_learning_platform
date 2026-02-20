@@ -3,8 +3,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from config import settings as setting
-from .models import Course, Enrollment, Lesson, LessonCompletion, XPEvent, Achievement, UserAchievement, Payment
-from .forms import CommentForm
+from .models import Course, Enrollment, Lesson, LessonCompletion, Review, XPEvent, Achievement, UserAchievement, Payment, Comment
+from .forms import CommentForm, ReviewForm
 from .gamification import get_level_progress
 from .achievements import check_lesson_count_achievements, check_course_completion_achievements
 import time
@@ -12,6 +12,13 @@ import stripe
 from django.conf import settings
 from django.urls import reverse
 from users.models import User
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 
 # Configure Stripe
@@ -48,10 +55,14 @@ def course_detail(request, course_id):
             user=request.user, 
             course=course
         ).exists()
+        
+        # Get user's review if it exists
+        user_review = course.reviews.filter(user=request.user).first()
     else:
         # For anonymous users, set level to 0 and not enrolled
         user_level_number = 0
         is_enrolled = False
+        user_review = None
 
     # Level lock check (only if required_level > 1)
     if user_level_number < course.required_level:
@@ -61,10 +72,28 @@ def course_detail(request, course_id):
             "user_level_number": user_level_number,
         })
     
+    # Get total lessons count
+    total_lessons = Lesson.objects.filter(module__course=course).count()
+    
+    # Get completed lessons for enrolled users
+    completed_lessons = []
+    if request.user.is_authenticated and is_enrolled:
+        completed_lessons = LessonCompletion.objects.filter(
+            user=request.user,
+            lesson__module__course=course
+        ).values_list('lesson_id', flat=True)
+    
+    # Get rating distribution
+    distribution = course.rating_distribution()
+    
     return render(request, "courses/course_detail.html", {
         "course": course,
         "user_level_number": user_level_number,
-        "is_enrolled": is_enrolled,  # <-- NEW: pass enrollment status
+        "is_enrolled": is_enrolled,
+        "total_lessons": total_lessons,
+        "completed_lessons": completed_lessons,
+        "user_review": user_review,
+        "distribution": distribution,  # Add this line
     })
 
 @login_required
@@ -106,7 +135,6 @@ def enroll_course(request, course_id):
 @login_required
 def lesson_detail(request, lesson_id):
     lesson = get_object_or_404(Lesson, id=lesson_id)
-
     html_content = lesson.content
 
     # previous lesson
@@ -122,25 +150,52 @@ def lesson_detail(request, lesson_id):
     ).order_by("order").first()
 
     course = lesson.module.course
-
     is_enrolled = course.enrollments.filter(user=request.user).exists()
 
     if not is_enrolled:
         return render(request, "courses/not_enrolled.html", {"course": course})
     
     is_completed = LessonCompletion.objects.filter(user=request.user, lesson=lesson).exists()
-
     completed_lessons = LessonCompletion.objects.filter(user=request.user, lesson__module__course=course).values_list("lesson_id", flat=True)
-
+    
     total_lessons = Lesson.objects.filter(module__course=course).count()
     completed_count = len(completed_lessons)
+    progress_percentage = int((completed_count / total_lessons) * 100) if total_lessons > 0 else 0
 
-    progress_percentage = 0
-    if total_lessons > 0:
-        progress_percentage = int((completed_count / total_lessons) * 100)
-
-    # === HANDLE COMMENTS ===
-    comments = lesson.comments.filter(parent=None).order_by('created_at')  # Top-level comments only
+    # ===== PAGINATED COMMENTS =====
+    # Get top-level comments only, ordered by creation date (newest first)
+    comments_list = lesson.comments.filter(parent=None).select_related(
+        'user'
+    ).prefetch_related(
+        'replies__user',
+        'replies__upvotes'
+    ).order_by('-created_at')
+    
+    # Paginate comments - show 5 per page initially
+    page = request.GET.get('comments_page', 1)
+    paginator = Paginator(comments_list, 5)  # Show 5 comments per page
+    
+    try:
+        comments = paginator.page(page)
+    except PageNotAnInteger:
+        comments = paginator.page(1)
+    except EmptyPage:
+        comments = paginator.page(paginator.num_pages)
+    
+    # Check which comments the user has upvoted (for all comments on this page)
+    user_upvoted_comment_ids = set()
+    if request.user.is_authenticated:
+        # Collect all comment IDs from current page and their replies
+        comment_ids = [c.id for c in comments]
+        for comment in comments:
+            comment_ids.extend([r.id for r in comment.replies.all()])
+        
+        user_upvoted = Comment.upvotes.through.objects.filter(
+            comment_id__in=comment_ids,
+            user_id=request.user.id
+        ).values_list('comment_id', flat=True)
+        user_upvoted_comment_ids = set(user_upvoted)
+    
     comment_form = CommentForm()
     
     if request.method == 'POST' and 'comment_submit' in request.POST:
@@ -153,24 +208,22 @@ def lesson_detail(request, lesson_id):
             messages.success(request, "Your comment has been posted!")
             return redirect('lesson_detail', lesson_id=lesson.id)
     
-    return render(
-        request,
-        "courses/lesson_detail.html",
-        {
-            "lesson": lesson,
-            "content": html_content,
-            "previous_lesson": previous_lesson,
-            "next_lesson": next_lesson,
-            "course": course,
-            "is_completed": is_completed,
-            "completed_lessons": completed_lessons,
-            "total_lessons": total_lessons,
-            "completed_count": completed_count,
-            "progress_percentage": progress_percentage,
-            "comments": comments,  # <-- NEW
-            "comment_form": comment_form,  # <-- NEW
-        },
-    )
+    return render(request, "courses/lesson_detail.html", {
+        "lesson": lesson,
+        "content": html_content,
+        "previous_lesson": previous_lesson,
+        "next_lesson": next_lesson,
+        "course": course,
+        "is_completed": is_completed,
+        "completed_lessons": completed_lessons,
+        "total_lessons": total_lessons,
+        "completed_count": completed_count,
+        "progress_percentage": progress_percentage,
+        "comments": comments,  # Now this is a Page object, not a queryset
+        "comment_form": comment_form,
+        "user_upvoted_comment_ids": user_upvoted_comment_ids,
+        "total_comments": lesson.comments.count(),
+    })
 
 @login_required
 def mark_lesson_complete(request, lesson_id):
@@ -690,3 +743,343 @@ def welcome(request):
         'total_users': total_users,
         'featured_courses': featured_courses,
     })
+
+
+@login_required
+def add_comment(request, lesson_id):
+    """
+    Add a comment to a lesson or reply to another comment.
+    Optimized for performance.
+    """
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.lesson = lesson
+            comment.user = request.user
+            
+            # Check if this is a reply
+            parent_id = request.POST.get('parent_id')
+            if parent_id and parent_id.strip() and parent_id != 'None':
+                try:
+                    # Use select_related to fetch the user in one query
+                    parent = Comment.objects.select_related('user').get(id=parent_id)
+                    comment.parent = parent
+                    
+                    # Send notification in background using Celery or async task
+                    # For now, let's do it in a non-blocking way
+                    if parent.user != request.user:
+                        from .utils import send_comment_notification_async
+                        # Use a thread to send email without blocking
+                        import threading
+                        email_thread = threading.Thread(
+                            target=send_comment_notification_async,
+                            args=(parent, comment, request.user)
+                        )
+                        email_thread.daemon = True
+                        email_thread.start()
+                        
+                except Comment.DoesNotExist:
+                    pass
+            
+            # Save the comment
+            comment.save()
+            
+            # Award XP - do this in a separate operation
+            XPEvent.objects.create(
+                user=request.user,
+                points=2,
+                reason=f"Posted a comment on lesson: {lesson.title[:50]}"
+            )
+            
+            # For AJAX requests - return minimal data
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                from django.template.loader import render_to_string
+                
+                # Pre-fetch related data to avoid N+1 queries in template
+                comment = Comment.objects.select_related(
+                    'user', 'parent'
+                ).prefetch_related(
+                    'upvotes', 'replies'
+                ).get(id=comment.id)
+                
+                # Render only what's needed
+                html = render_to_string('courses/comment_partial.html', {
+                    'comment': comment,
+                    'user': request.user,
+                }, request=request)
+                
+                return JsonResponse({
+                    'status': 'success',
+                    'html': html,
+                    'comment_id': comment.id,
+                    'message': 'Comment posted successfully!'
+                })
+            else:
+                messages.success(request, "Your comment has been posted!")
+                return redirect('lesson_detail', lesson_id=lesson.id)
+        else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'status': 'error',
+                    'errors': form.errors
+                }, status=400)
+    
+    return redirect('lesson_detail', lesson_id=lesson.id)
+
+@login_required
+@require_POST
+@ensure_csrf_cookie
+def upvote_comment(request, comment_id):
+    """
+    Toggle upvote on a comment.
+    """
+    comment = get_object_or_404(Comment, id=comment_id)
+    
+    if comment.user == request.user:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'You cannot upvote your own comment'
+        }, status=400)
+    
+    if comment.upvotes.filter(id=request.user.id).exists():
+        # Remove upvote
+        comment.upvotes.remove(request.user)
+        action = 'removed'
+    else:
+        # Add upvote
+        comment.upvotes.add(request.user)
+        action = 'added'
+        
+        # Award XP to comment author (small bonus for getting upvotes)
+        if comment.user != request.user:
+            # Check if this is the first upvote on this comment
+            if comment.upvotes.count() == 1:
+                XPEvent.objects.create(
+                    user=comment.user,
+                    points=1,
+                    reason=f"Your comment received an upvote"
+                )
+    
+    return JsonResponse({
+        'status': 'success',
+        'action': action,
+        'total_upvotes': comment.upvotes.count(),
+        'user_upvoted': comment.upvotes.filter(id=request.user.id).exists()
+    })
+
+@login_required
+def edit_comment(request, comment_id):
+    """
+    Edit a comment.
+    """
+    comment = get_object_or_404(Comment, id=comment_id, user=request.user)
+    
+    if request.method == 'POST':
+        form = CommentForm(request.POST, instance=comment)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.is_edited = True
+            comment.save()
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'status': 'success',
+                    'content': comment.content
+                })
+            
+            messages.success(request, "Your comment has been updated!")
+            return redirect('lesson_detail', lesson_id=comment.lesson.id)
+    else:
+        form = CommentForm(instance=comment)
+    
+    return render(request, 'courses/edit_comment.html', {
+        'form': form,
+        'comment': comment
+    })
+
+@login_required
+def delete_comment(request, comment_id):
+    """
+    Delete a comment.
+    """
+    comment = get_object_or_404(Comment, id=comment_id, user=request.user)
+    lesson_id = comment.lesson.id
+    
+    if request.method == 'POST':
+        comment.delete()
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Comment deleted successfully'
+            })
+        
+        messages.success(request, "Your comment has been deleted.")
+    
+    return redirect('lesson_detail', lesson_id=lesson_id)
+
+@login_required
+def load_more_comments(request, lesson_id):
+    """
+    AJAX endpoint to load more comments for a lesson.
+    """
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    
+    # Get page number from request
+    page = request.GET.get('page', 1)
+    
+    # Get comments with optimized queries
+    comments_list = lesson.comments.filter(parent=None).select_related(
+        'user'
+    ).prefetch_related(
+        'replies__user',
+        'replies__upvotes'
+    ).order_by('-created_at')
+    
+    paginator = Paginator(comments_list, 5)  # Match the per_page setting
+    
+    try:
+        comments_page = paginator.page(page)
+    except EmptyPage:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'No more comments'
+        }, status=404)
+    
+    # Check upvotes for this batch
+    comment_ids = [c.id for c in comments_page]
+    user_upvoted = set()
+    if request.user.is_authenticated:
+        user_upvoted = set(Comment.upvotes.through.objects.filter(
+            comment_id__in=comment_ids,
+            user_id=request.user.id
+        ).values_list('comment_id', flat=True))
+    
+    # Render each comment to HTML
+    from django.template.loader import render_to_string
+    comments_html = []
+    for comment in comments_page:
+        # Pass user_upvoted_comment_ids to the template via context
+        html = render_to_string('courses/comment_partial.html', {
+            'comment': comment,
+            'user': request.user,
+            'user_upvoted_comment_ids': user_upvoted,
+        }, request=request)
+        comments_html.append(html)
+    
+    return JsonResponse({
+        'status': 'success',
+        'comments': comments_html,
+        'has_next': comments_page.has_next(),
+        'next_page': comments_page.next_page_number() if comments_page.has_next() else None,
+        'current_page': comments_page.number,
+        'total_pages': paginator.num_pages,
+        'total_comments': paginator.count,
+    })
+
+@login_required
+def add_review(request, course_id):
+    """
+    Add or update a review for a course.
+    """
+    course = get_object_or_404(Course, id=course_id, is_published=True)
+    
+    # Check if user is enrolled
+    if not Enrollment.objects.filter(user=request.user, course=course).exists():
+        messages.error(request, "You must be enrolled in this course to review it.")
+        return redirect('course_detail', course_id=course.id)
+    
+    # Check if user already reviewed
+    existing_review = Review.objects.filter(course=course, user=request.user).first()
+    
+    if request.method == 'POST':
+        form = ReviewForm(request.POST, instance=existing_review)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.course = course
+            review.user = request.user
+            review.save()
+            
+            messages.success(request, "Thank you for your review!")
+            
+            # Award XP for reviewing (small bonus)
+            if not existing_review:  # Only for new reviews, not edits
+                XPEvent.objects.create(
+                    user=request.user,
+                    points=5,
+                    reason=f"Reviewed course: {course.title[:50]}"
+                )
+            
+            return redirect('course_detail', course_id=course.id)
+    else:
+        form = ReviewForm(instance=existing_review)
+    
+    return render(request, 'courses/review_form.html', {
+        'course': course,
+        'form': form,
+        'is_editing': existing_review is not None,
+        'review': existing_review,  # Add this line to pass the review to template
+    })
+
+@login_required
+@require_POST
+@ensure_csrf_cookie
+def helpful_review(request, review_id):
+    """
+    Toggle helpful vote on a review.
+    """
+    review = get_object_or_404(Review, id=review_id)
+    
+    # Add debug prints
+    print(f"Review user ID: {review.user.id}, Request user ID: {request.user.id}")
+    print(f"Review user email: {review.user.email}, Request user email: {request.user.email}")
+    
+    if review.user == request.user:
+        print("User tried to vote on their own review")
+        return JsonResponse({
+            'status': 'error',
+            'message': 'You cannot vote on your own review'
+        }, status=400)
+    
+    if review.helpful_votes.filter(id=request.user.id).exists():
+        # Remove vote
+        review.helpful_votes.remove(request.user)
+        action = 'removed'
+        print("Vote removed")
+    else:
+        # Add vote
+        review.helpful_votes.add(request.user)
+        action = 'added'
+        print("Vote added")
+        
+        # Award XP to reviewer (small bonus for getting helpful votes)
+        if review.helpful_votes.count() == 5:  # Milestone: 5 helpful votes
+            XPEvent.objects.create(
+                user=review.user,
+                points=10,
+                reason=f"Your review for {review.course.title[:30]} is helping others!"
+            )
+    
+    return JsonResponse({
+        'status': 'success',
+        'action': action,
+        'total_helpful': review.helpful_votes.count(),
+        'user_helpful': review.helpful_votes.filter(id=request.user.id).exists()
+    })
+
+@login_required
+def delete_review(request, review_id):
+    """
+    Delete a review.
+    """
+    review = get_object_or_404(Review, id=review_id, user=request.user)
+    course_id = review.course.id
+    
+    if request.method == 'POST':
+        review.delete()
+        messages.success(request, "Your review has been deleted.")
+    
+    return redirect('course_detail', course_id=course_id)

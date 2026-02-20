@@ -6,15 +6,44 @@ from django.db.models import Sum
 
 
 class AchievementCode:
+    # Lesson completion achievements
     FIRST_LESSON = 'first-lesson'
-    SECOND_LESSON = 'second-lesson'
-    FIVE_LESSONS = 'five-lessons'
-    TEN_LESSONS = 'ten-lessons'
-    LESSON_MASTER = 'lesson-master'
-    LESSON_GURU = 'lesson-guru'
-    LESSON_LEGEND = 'lesson-legend'
-    COURSE_COMPLETE = 'course-complete'
-    EARLY_BIRD = 'early-bird'
+    FIFTH_LESSON = 'fifth-lesson'
+    TENTH_LESSON = 'tenth-lesson'
+    TWENTY_FIFTH_LESSON = 'twenty-fifth-lesson'
+    FIFTIETH_LESSON = 'fiftieth-lesson'
+    HUNDREDTH_LESSON = 'hundredth-lesson'
+    
+    # Course completion achievements
+    FIRST_COURSE = 'first-course'
+    THIRD_COURSE = 'third-course'
+    FIFTH_COURSE = 'fifth-course'
+    TENTH_COURSE = 'tenth-course'
+    
+    # Streak achievements
+    THREE_DAY_STREAK = 'three-day-streak'
+    WEEK_STREAK = 'week-streak'
+    TWO_WEEK_STREAK = 'two-week-streak'
+    MONTH_STREAK = 'month-streak'
+    TWO_MONTH_STREAK = 'two-month-streak'
+    
+    # XP achievements
+    HUNDRED_XP = 'hundred-xp'
+    FIVE_HUNDRED_XP = 'five-hundred-xp'
+    THOUSAND_XP = 'thousand-xp'
+    FIVE_THOUSAND_XP = 'five-thousand-xp'
+    
+    # Social achievements
+    FIRST_COMMENT = 'first-comment'
+    TEN_COMMENTS = 'ten-comments'
+    FIRST_UPVOTE_RECEIVED = 'first-upvote-received'
+    HELPFUL_REVIEW = 'helpful-review'
+    
+    # Special achievements
+    EARLY_BIRD = 'early-bird'  # Complete lesson before 9 AM
+    NIGHT_OWL = 'night-owl'    # Complete lesson after 10 PM
+    WEEKEND_LEARNER = 'weekend-learner'  # Complete lessons on weekend
+    PERFECT_WEEK = 'perfect-week'  # Complete a lesson every day for a week
 
 def get_achievement_by_code(code):
     """

@@ -43,6 +43,36 @@ class Course(models.Model):
     
     def is_free(self):
         return self.price == 0
+    
+    def average_rating(self):
+        """Calculate average rating for this course."""
+        reviews = self.reviews.all()
+        if not reviews:
+            return 0
+        return sum(r.rating for r in reviews) / len(reviews)
+    
+    def rating_count(self):
+        """Get total number of ratings."""
+        return self.reviews.count()
+    
+    def rating_distribution(self):
+        """Get distribution of ratings (1-5 stars)."""
+        distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+        for review in self.reviews.all():
+            distribution[review.rating] += 1
+        return distribution
+    
+    def has_user_reviewed(self, user):
+        """Check if a user has reviewed this course."""
+        if not user.is_authenticated:
+            return False
+        return self.reviews.filter(user=user).exists()
+    
+    def get_user_review(self, user):
+        """Get user's review if it exists."""
+        if not user.is_authenticated:
+            return None
+        return self.reviews.filter(user=user).first()
 
 
 class Module(models.Model):
@@ -80,6 +110,10 @@ class Lesson(models.Model):
     class Meta:
         ordering = ["order"]
         unique_together = ("module", "order")
+        indexes = [
+            models.Index(fields=['module', 'order']),
+            models.Index(fields=['is_free_preview']),
+        ]
 
     def __str__(self):
         return f"{self.order}. {self.title}"
@@ -374,9 +408,21 @@ class Comment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_edited = models.BooleanField(default=False)
+
+    upvotes = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="upvoted_comments",
+        blank=True,
+        help_text="Users who upvoted this comment"
+    )
+    
+    is_answered = models.BooleanField(
+        default=False,
+        help_text="For question/answer context"
+    )
     
     class Meta:
-        ordering = ['created_at']
+        ordering = ['-is_answered', '-created_at']  # Show answered questions first
     
     def __str__(self):
         return f"Comment by {self.user.email} on {self.lesson.title}"
@@ -384,6 +430,18 @@ class Comment(models.Model):
     def is_reply(self):
         """Check if this comment is a reply to another comment."""
         return self.parent is not None
+    
+    def total_upvotes(self):
+        """Get total number of upvotes."""
+        return self.upvotes.count()
+    
+    def get_replies(self):
+        """Get all replies to this comment."""
+        return self.replies.all()
+    
+    def user_has_upvoted(self, user):
+        """Check if a specific user has upvoted this comment."""
+        return self.upvotes.filter(id=user.id).exists()
     
 class Refund(models.Model):
     """
@@ -428,3 +486,54 @@ class Refund(models.Model):
             self.amount = self.payment.amount
         super().save(*args, **kwargs)
 
+class Review(models.Model):
+    """
+    User reviews and ratings for courses.
+    Only enrolled users can review.
+    """
+    RATING_CHOICES = [
+        (1, '1 Star'),
+        (2, '2 Stars'),
+        (3, '3 Stars'),
+        (4, '4 Stars'),
+        (5, '5 Stars'),
+    ]
+    
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="reviews"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="course_reviews"
+    )
+    rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES)
+    comment = models.TextField(blank=True, help_text="Optional written review")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_edited = models.BooleanField(default=False)
+    
+    # Track helpful votes
+    helpful_votes = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="helpful_reviews",
+        blank=True,
+        help_text="Users who found this review helpful"
+    )
+    
+    class Meta:
+        unique_together = ("course", "user")  # One review per user per course
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.course.title} - {self.rating}★"
+    
+    def total_helpful(self):
+        """Get total number of helpful votes."""
+        return self.helpful_votes.count()
+    
+    def user_found_helpful(self, user):
+        """Check if a user found this review helpful."""
+        return self.helpful_votes.filter(id=user.id).exists()

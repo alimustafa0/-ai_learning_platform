@@ -1,0 +1,132 @@
+{% load static %}
+
+<div class="heatmap-container">
+    <style>
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat({{ weeks }}, 1fr);
+            gap: 3px;
+            margin: 10px 0;
+        }
+        .heatmap-cell {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            background-color: #ebedf0;
+            transition: transform 0.1s ease;
+            cursor: pointer;
+        }
+        .heatmap-cell:hover {
+            transform: scale(1.3);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .heatmap-cell[data-level="1"] { background-color: #9be9a8; }
+        .heatmap-cell[data-level="2"] { background-color: #40c463; }
+        .heatmap-cell[data-level="3"] { background-color: #30a14e; }
+        .heatmap-cell[data-level="4"] { background-color: #216e39; }
+        
+        .heatmap-tooltip {
+            position: absolute;
+            background: #1f2937;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: opacity 0.2s;
+        }
+        .heatmap-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px 5px 0;
+            border-style: solid;
+            border-color: #1f2937 transparent transparent;
+        }
+        .month-label {
+            font-size: 10px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+    </style>
+    
+    <div class="d-flex align-items-center mb-2">
+        <div class="flex-grow-1">
+            <span class="small text-muted">
+                <i class="fas fa-calendar-alt me-1"></i>
+                Last {{ weeks }} weeks
+            </span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="small text-muted">Less</span>
+            <div class="heatmap-cell" style="background-color: #ebedf0;"></div>
+            <div class="heatmap-cell" data-level="1"></div>
+            <div class="heatmap-cell" data-level="2"></div>
+            <div class="heatmap-cell" data-level="3"></div>
+            <div class="heatmap-cell" data-level="4"></div>
+            <span class="small text-muted">More</span>
+        </div>
+    </div>
+    
+    <div class="heatmap-grid position-relative">
+        {% for week in calendar %}
+            <div class="d-flex flex-column gap-1">
+                {% for day in week %}
+                    {% if day %}
+                        <div class="heatmap-cell"
+                             data-level="{% if day.count > 0 %}{% widthratio day.count max_count 4 %}{% else %}0{% endif %}"
+                             data-date="{{ day.date|date:'Y-m-d' }}"
+                             data-count="{{ day.count }}"
+                             data-xp="{{ day.xp }}"
+                             title="{{ day.date|date:'M d, Y' }}: {{ day.count }} lessons, {{ day.xp }} XP">
+                        </div>
+                    {% else %}
+                        <div style="width: 12px; height: 12px;"></div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const cells = document.querySelectorAll('.heatmap-cell[data-date]');
+            let tooltip = null;
+            
+            cells.forEach(cell => {
+                cell.addEventListener('mouseenter', function(e) {
+                    const date = this.dataset.date;
+                    const count = this.dataset.count;
+                    const xp = this.dataset.xp;
+                    
+                    if (tooltip) tooltip.remove();
+                    
+                    tooltip = document.createElement('div');
+                    tooltip.className = 'heatmap-tooltip';
+                    tooltip.innerHTML = `
+                        <strong>${date}</strong><br>
+                        ${count} lesson${count != 1 ? 's' : ''}<br>
+                        ${xp} XP earned
+                    `;
+                    
+                    document.body.appendChild(tooltip);
+                    
+                    const rect = this.getBoundingClientRect();
+                    tooltip.style.left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2) + 'px';
+                    tooltip.style.top = rect.top - tooltip.offsetHeight - 10 + 'px';
+                });
+                
+                cell.addEventListener('mouseleave', function() {
+                    if (tooltip) {
+                        tooltip.remove();
+                        tooltip = null;
+                    }
+                });
+            });
+        });
+    </script>
+</div>

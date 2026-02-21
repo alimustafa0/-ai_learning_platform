@@ -72,22 +72,7 @@ class XPEventAdmin(admin.ModelAdmin):
     list_filter = ("reason",)
     search_fields = ("user__email",)
 
-admin.register(Achievement)
-class AchievementAdmin(admin.ModelAdmin):
-    list_display = ['name', 'code', 'category', 'threshold', 'xp_reward', 'icon']
-    list_filter = ['category', 'xp_reward']
-    search_fields = ['name', 'code', 'description']
-    ordering = ['category', 'threshold']
-    prepopulated_fields = {'code': ('name',)}  # Auto-generate code from name
-    
-    fieldsets = (
-        ('Basic Information', {
-            'fields': ('name', 'code', 'description', 'icon')
-        }),
-        ('Achievement Criteria', {
-            'fields': ('category', 'threshold', 'xp_reward')
-        }),
-    )
+admin.site.register(Achievement)
 
 @admin.register(UserAchievement)
 class UserAchievementAdmin(admin.ModelAdmin):

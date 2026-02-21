@@ -6,7 +6,7 @@ from config import settings as setting
 from .models import Course, Enrollment, Lesson, LessonCompletion, Review, XPEvent, Achievement, UserAchievement, Payment, Comment, Certificate, LearningStreak, LearningActivity
 from .forms import CommentForm, ReviewForm
 from .gamification import get_level_progress
-from .achievements import check_lesson_count_achievements, check_course_completion_achievements
+from .achievements import check_early_bird_achievements, check_lesson_count_achievements, check_course_completion_achievements
 import time
 import stripe
 from django.conf import settings
@@ -20,7 +20,7 @@ from django.template.loader import render_to_string
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from weasyprint import HTML
 import tempfile
-from datetime import date
+from datetime import date, datetime
 
 
 
@@ -280,11 +280,12 @@ def mark_lesson_complete(request, lesson_id):
         )
         
         # ===== UPDATED: Update streak and activity with request =====
+        from datetime import date
         today = date.today()
         
         # Get or create streak
         streak, _ = LearningStreak.objects.get_or_create(user=request.user)
-        streak.update_streak(today, request)  # Pass request for messages
+        streak.update_streak(today, request)  # This will call check_streak_achievements
         
         # Update daily activity
         activity, _ = LearningActivity.objects.get_or_create(
@@ -294,6 +295,10 @@ def mark_lesson_complete(request, lesson_id):
         activity.count += 1
         activity.xp_earned += 10
         activity.save()
+
+        # Check for Early Bird achievement
+        from datetime import datetime
+        check_early_bird_achievements(request.user, datetime.now(), request)
 
     # Calculate total completed lessons count
     total_completed = LessonCompletion.objects.filter(user=request.user).count()

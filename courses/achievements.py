@@ -256,7 +256,7 @@ def get_achievement_progress(user):
     Calculate progress for all achievements for a user.
     Returns list of achievements with current progress and status.
     """
-    from .models import LessonCompletion, Course, XPEvent
+    from .models import LessonCompletion, Course, XPEvent, LearningStreak
     
     achievements = Achievement.objects.all().order_by('category', 'threshold')
     user_achievements = set(
@@ -269,6 +269,13 @@ def get_achievement_progress(user):
     total_courses = Course.objects.filter(enrollments__user=user).count()
     total_xp = XPEvent.objects.filter(user=user).aggregate(total=Sum('points'))['total'] or 0
     
+    # Get user's current streak
+    try:
+        streak = LearningStreak.objects.get(user=user)
+        current_streak = streak.current_streak
+    except LearningStreak.DoesNotExist:
+        current_streak = 0
+    
     progress_data = []
     
     for achievement in achievements:
@@ -279,6 +286,8 @@ def get_achievement_progress(user):
             current = total_courses
         elif achievement.category == 'xp':
             current = total_xp
+        elif achievement.category == 'streak':
+            current = current_streak  # Use the streak value
         else:
             current = 0
         
@@ -294,7 +303,7 @@ def get_achievement_progress(user):
             'current': current,
             'threshold': achievement.threshold,
             'percentage': percentage,
-            'remaining': max(0, achievement.threshold - current) if not achievement.id in user_achievements else 0,
+            'remaining': max(0, achievement.threshold - current) if achievement.id not in user_achievements else 0,
         })
     
     return progress_data
@@ -306,7 +315,6 @@ def get_recent_achievements(user, limit=5):
 def check_streak_achievements(user, current_streak, request=None):
     """
     Check for achievements based on streak milestones.
-    This function checks ALL achievements with streak-related categories.
     """
     from .models import Achievement, UserAchievement, XPEvent
     
@@ -314,69 +322,72 @@ def check_streak_achievements(user, current_streak, request=None):
     print(f"User: {user.email}")
     print(f"Current streak: {current_streak}")
     
-    # Find all achievements that might be streak-related
-    # Look for achievements with category containing 'streak' (case insensitive)
-    streak_categories = ['streak', 'Learning Streak', 'Streak', 'learning streak']
-    
-    possible_achievements = Achievement.objects.filter(
-        threshold__lte=current_streak
-    ).filter(
-        category__in=streak_categories
-    )
-    
-    print(f"Found {possible_achievements.count()} possible streak achievements")
-    for ach in possible_achievements:
-        print(f"  - {ach.name} (threshold: {ach.threshold}, category: {ach.category})")
-    
-    # Also include achievements with threshold=1 that might be first streak
-    if current_streak >= 1:
-        first_streak_achievements = Achievement.objects.filter(
-            threshold=1,
-            category__in=streak_categories + ['', None]  # Include empty categories too
-        )
-        possible_achievements = possible_achievements | first_streak_achievements
-        print(f"After adding first-streak: {possible_achievements.distinct().count()} total")
+    # Define streak milestones and their achievement codes
+    streak_milestones = [
+        (3, AchievementCode.THREE_DAY_STREAK, '3-Day Streak', 30),
+        (7, AchievementCode.WEEK_STREAK, 'Week Warrior', 70),
+        (14, AchievementCode.TWO_WEEK_STREAK, 'Two-Week Dedication', 150),
+        (30, AchievementCode.MONTH_STREAK, 'Monthly Master', 300),
+        (60, AchievementCode.TWO_MONTH_STREAK, 'Two-Month Champion', 500),
+    ]
     
     achievements_awarded = []
     
-    for achievement in possible_achievements.distinct():
-        print(f"\nChecking achievement: {achievement.name}")
-        print(f"  - Threshold: {achievement.threshold}")
-        print(f"  - Current streak: {current_streak}")
-        print(f"  - Condition met: {current_streak >= achievement.threshold}")
+    for threshold, code, name, xp in streak_milestones:
+        print(f"Checking threshold: {threshold} days (code: {code})")
         
-        # Check if user already has this achievement
-        already_has = UserAchievement.objects.filter(
-            user=user,
-            achievement=achievement
-        ).exists()
-        
-        print(f"  - Already has: {already_has}")
-        
-        if not already_has and current_streak >= achievement.threshold:
-            print(f"  >>> AWARDING ACHIEVEMENT! <<<")
+        if current_streak >= threshold:
+            print(f"  ✓ User qualifies for {name}")
             
-            # Award the achievement
-            UserAchievement.objects.create(user=user, achievement=achievement)
-            
-            # Award XP
-            XPEvent.objects.create(
-                user=user,
-                points=achievement.xp_reward,
-                reason=f"Achievement: {achievement.name}",
-            )
-            
-            if request:
-                messages.success(
-                    request,
-                    f"🔥 Achievement Unlocked: {achievement.name}! +{achievement.xp_reward} XP",
-                    extra_tags='achievement'
+            # Check if achievement exists, create if not
+            try:
+                achievement = Achievement.objects.get(code=code)
+                print(f"  ✓ Achievement found in database")
+            except Achievement.DoesNotExist:
+                print(f"  ✗ Achievement not found, creating...")
+                achievement = Achievement.objects.create(
+                    code=code,
+                    name=name,
+                    description=f'Maintain a {threshold}-day learning streak',
+                    xp_reward=xp,
+                    icon='🔥' if threshold < 14 else '⚡' if threshold < 30 else '👑',
+                    category='streak',
+                    threshold=threshold
                 )
+                print(f"  ✓ Created achievement: {name}")
             
-            achievements_awarded.append(achievement)
-            print(f"Awarded streak achievement: {achievement.name} to {user.email}")
+            # Check if user already has this achievement
+            already_has = UserAchievement.objects.filter(
+                user=user,
+                achievement=achievement
+            ).exists()
+            
+            if not already_has:
+                print(f"  ✓ Awarding achievement to user")
+                # Award the achievement
+                UserAchievement.objects.create(user=user, achievement=achievement)
+                
+                # Award XP
+                XPEvent.objects.create(
+                    user=user,
+                    points=achievement.xp_reward,
+                    reason=f"Achievement: {achievement.name}",
+                )
+                
+                if request:
+                    messages.success(
+                        request,
+                        f"🔥 Achievement Unlocked: {achievement.name}! +{achievement.xp_reward} XP",
+                        extra_tags='achievement'
+                    )
+                
+                achievements_awarded.append(achievement)
+            else:
+                print(f"  - User already has this achievement")
+        else:
+            print(f"  - Does not qualify for {threshold} days (need {threshold}, have {current_streak})")
     
-    print(f"=== FINISHED CHECKING: awarded {len(achievements_awarded)} achievements ===\n")
+    print(f"=== STREAK CHECK COMPLETE ===\n")
     return achievements_awarded
 
 

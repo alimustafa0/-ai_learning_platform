@@ -78,6 +78,114 @@
         </div>
     </div>
 
+    <!-- Learning Activity Heatmap - NEW -->
+    {% load heatmap_tags %}
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-calendar-alt text-primary me-2"></i>
+                    Learning Activity
+                </h5>
+                <div>
+                    <span class="badge bg-primary">Last 6 months</span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            {% render_heatmap request.user %}
+            
+            <!-- Stats Summary -->
+            <div class="row g-3 mt-3">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-2">
+                                <i class="fas fa-calendar-check text-primary"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Active Days</small>
+                            <strong>{{ request.user.learning_activities.count }}</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-2">
+                                <i class="fas fa-bolt text-success"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Total Lessons</small>
+                            <strong>{{ request.user.completed_lessons.count }}</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-2">
+                                <i class="fas fa-star text-warning"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Current Streak</small>
+                            <strong>{{ request.user.learning_streak.current_streak }} days</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% with streak=request.user.learning_streak %}
+        {% if streak %}
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                    <i class="fas fa-fire fa-2x text-warning"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="text-muted mb-1">Learning Streak</h6>
+                                <h2 class="fw-bold mb-0">
+                                    {{ streak.current_streak }} 
+                                    <small class="fs-6 text-muted">days</small>
+                                </h2>
+                                <p class="small text-muted mb-0">
+                                    Longest: {{ streak.longest_streak }} days
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Streak Milestone Indicator -->
+                        {% if streak.current_streak >= 7 %}
+                            <div class="mt-3 pt-2 border-top">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="small text-muted">Next milestone:</span>
+                                    {% if streak.current_streak < 30 %}
+                                        <span class="small fw-bold text-primary">30 days</span>
+                                    {% elif streak.current_streak < 100 %}
+                                        <span class="small fw-bold text-primary">100 days</span>
+                                    {% elif streak.current_streak < 365 %}
+                                        <span class="small fw-bold text-primary">365 days</span>
+                                    {% else %}
+                                        <span class="small fw-bold text-success">Legend!</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endwith %}
+
     <!-- Continue Learning Section - NEW -->
     {% if in_progress_courses %}
         <div class="mb-5">

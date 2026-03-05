@@ -86,6 +86,14 @@ def course_detail(request, course_id):
             user_helpful_review_ids = Review.objects.filter(
                 helpful_votes=request.user
             ).values_list('id', flat=True)
+
+        # Get users the current user follows
+        following_ids = set()
+        if request.user.is_authenticated:
+            from users.models import Follow
+            following_ids = set(Follow.objects.filter(
+                follower=request.user
+            ).values_list('following_id', flat=True))
             
     else:
         # For anonymous users
@@ -97,6 +105,7 @@ def course_detail(request, course_id):
         total_lessons = Lesson.objects.filter(module__course=course).count()
         progress_percentage = 0
         user_helpful_review_ids = []
+        following_ids = set()
 
     # Level lock check (only if required_level > 1)
     if user_level_number < course.required_level:
@@ -104,6 +113,7 @@ def course_detail(request, course_id):
             "course": course,
             "required_level": course.required_level,
             "user_level_number": user_level_number,
+            "following_ids": following_ids,
         })
     
     # Get rating distribution
@@ -221,6 +231,13 @@ def lesson_detail(request, lesson_id):
             user_id=request.user.id
         ).values_list('comment_id', flat=True)
         user_upvoted_comment_ids = set(user_upvoted)
+
+    following_ids = set()
+    if request.user.is_authenticated:
+        from users.models import Follow
+        following_ids = set(Follow.objects.filter(
+            follower=request.user
+        ).values_list('following_id', flat=True))
     
     comment_form = CommentForm()
     
@@ -249,6 +266,7 @@ def lesson_detail(request, lesson_id):
         "comment_form": comment_form,
         "user_upvoted_comment_ids": user_upvoted_comment_ids,
         "total_comments": lesson.comments.count(),
+        "following_ids": following_ids,
     })
 
 @login_required

@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ profile_user.get_full_name|default:profile_user.email }}'s Profile{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Profile Sidebar -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <!-- Avatar -->
+                    <div class="position-relative d-inline-block mb-3">
+                        {% if profile_user.avatar %}
+                            <img src="{{ profile_user.avatar.url }}" alt="{{ profile_user.email }}" 
+                                 class="rounded-circle border border-3 border-primary" 
+                                 style="width: 120px; height: 120px; object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto"
+                                 style="width: 120px; height: 120px; font-size: 3rem;">
+                                {{ profile_user.email|first|upper }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Name -->
+                    <h4 class="fw-bold mb-1">{{ profile_user.get_full_name }}</h4>
+                    <p class="text-muted mb-2">{{ profile_user.email }}</p>
+                    
+                    <!-- Location -->
+                    {% if profile_user.location %}
+                        <p class="text-muted small mb-2">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ profile_user.location }}
+                        </p>
+                    {% endif %}
+                    
+                    <!-- Bio -->
+                    {% if profile_user.bio %}
+                        <p class="mb-3">{{ profile_user.bio }}</p>
+                    {% endif %}
+                    
+                    <!-- Website -->
+                    {% if profile_user.website %}
+                        <p class="mb-3">
+                            <a href="{{ profile_user.website }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-globe me-1"></i>Website
+                            </a>
+                        </p>
+                    {% endif %}
+                    
+                    <!-- Follow Stats -->
+                    <div class="d-flex justify-content-around mb-3">
+                        <div class="text-center">
+                            <h5 class="fw-bold mb-0">{{ followers_count }}</h5>
+                            <small class="text-muted">Followers</small>
+                        </div>
+                        <div class="text-center">
+                            <h5 class="fw-bold mb-0">{{ following_count }}</h5>
+                            <small class="text-muted">Following</small>
+                        </div>
+                        <div class="text-center">
+                            <h5 class="fw-bold mb-0">{{ level_number }}</h5>
+                            <small class="text-muted">Level</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Follow Button -->
+                    {% if user.is_authenticated and not is_own_profile %}
+                        <button class="btn {% if is_following %}btn-outline-primary{% else %}btn-primary{% endif %} w-100 mb-3 profile-follow-btn"
+                                data-user-id="{{ profile_user.id }}">
+                            <i class="fas {% if is_following %}fa-user-minus{% else %}fa-user-plus{% endif %} me-2"></i>
+                            <span>{% if is_following %}Unfollow{% else %}Follow{% endif %}</span>
+                        </button>
+                    {% endif %}
+                    
+                    {% if is_own_profile %}
+                        <a href="{% url 'profile_edit' %}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-edit me-2"></i>Edit Profile
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Stats Card -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Learning Stats</h6>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Total XP:</span>
+                        <span class="fw-bold">{{ total_xp }}</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Level:</span>
+                        <span class="fw-bold">{{ level_number }} - {{ level_title }}</span>
+                    </div>
+                    
+                    {% if streak %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Current Streak:</span>
+                            <span class="fw-bold text-warning">
+                                <i class="fas fa-fire me-1"></i>{{ streak.current_streak }} days
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Longest Streak:</span>
+                            <span class="fw-bold">{{ streak.longest_streak }} days</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Recent Activity -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-history me-2 text-primary"></i>Recent Activity
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_activity %}
+                        <div class="list-group list-group-flush">
+                            {% for completion in recent_activity %}
+                                <div class="list-group-item d-flex align-items-center py-3">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="bg-primary bg-opacity-10 rounded-circle p-2">
+                                            <i class="fas fa-check-circle text-primary"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <strong>Completed a lesson</strong> in 
+                                        <a href="{% url 'course_detail' completion.lesson.module.course.id %}" 
+                                           class="text-decoration-none">
+                                            {{ completion.lesson.module.course.title }}
+                                        </a>
+                                        <div class="text-muted small">
+                                            <i class="far fa-clock me-1"></i>{{ completion.completed_at|timesince }} ago
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted mb-0">No recent activity</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Achievements -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-trophy me-2 text-primary"></i>Recent Achievements
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if achievements %}
+                        <div class="row g-3">
+                            {% for ua in achievements %}
+                                <div class="col-md-4">
+                                    <div class="card bg-light border-0 text-center p-3">
+                                        <div class="display-4 mb-2">{{ ua.achievement.icon|default:"🏆" }}</div>
+                                        <h6 class="fw-bold mb-1">{{ ua.achievement.name }}</h6>
+                                        <small class="text-muted">{{ ua.unlocked_at|date:"M d, Y" }}</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No achievements yet</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Courses In Progress -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-book-open me-2 text-primary"></i>Courses
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if courses_data %}
+                        <div class="row g-3">
+                            {% for item in courses_data %}
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-light">
+                                        <div class="card-body">
+                                            <h6 class="fw-bold mb-2">{{ item.course.title }}</h6>
+                                            
+                                            {% if item.completed %}
+                                                <span class="badge bg-success mb-2">
+                                                    <i class="fas fa-check-circle me-1"></i>Completed
+                                                </span>
+                                            {% else %}
+                                                <div class="progress mb-2" style="height: 6px;">
+                                                    <div class="progress-bar bg-primary" 
+                                                         style="width: {{ item.progress }}%;"></div>
+                                                </div>
+                                                <small class="text-muted">{{ item.progress }}% complete</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No courses yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.follow-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            
+            fetch(`/follow/${userId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Update button
+                    if (data.is_following) {
+                        this.classList.remove('btn-primary');
+                        this.classList.add('btn-outline-primary');
+                        this.innerHTML = '<i class="fas fa-user-minus me-2"></i>Unfollow';
+                    } else {
+                        this.classList.remove('btn-outline-primary');
+                        this.classList.add('btn-primary');
+                        this.innerHTML = '<i class="fas fa-user-plus me-2"></i>Follow';
+                    }
+                    
+                    // Update counts
+                    const followersSpan = document.querySelector('.followers-count');
+                    if (followersSpan) {
+                        followersSpan.textContent = data.followers_count;
+                    }
+                    
+                    // Show success message
+                    alert(data.message);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

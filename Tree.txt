@@ -13,6 +13,7 @@
 │   
 ├───courses
 │   │   admin.py
+│   │   admin.py
 │   │   apps.py
 │   │   context_processors.py
 │   │   gamification.py

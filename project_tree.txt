@@ -31,6 +31,14 @@ ai_learning_platform:.
 ¦   ¦   views.py
 ¦   ¦   __init__.py
 ¦   ¦   
+¦   +---management
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---commands
+¦   ¦           __init__.py
+¦   ¦           create_achievements.py
+¦   ¦           init_streaks.py
+¦   ¦   
 ¦   +---migrations
 ¦   ¦   ¦   0001_initial.py
 ¦   ¦   ¦   0002_enrollment.py
@@ -53,6 +61,10 @@ ai_learning_platform:.
 ¦   ¦   ¦   0019_merge_20260216_1153.py
 ¦   ¦   ¦   0020_add_review_model_clean.py
 ¦   ¦   ¦   0021_add_review_model_final.py
+¦   ¦   ¦   0022_add_lesson_indexes.py
+¦   ¦   ¦   0023_add_certificate_model.py
+¦   ¦   ¦   0024_add_slug_to_course.py
+¦   ¦   ¦   0025_add_streak_and_activity.py
 ¦   ¦   ¦   __init__.py
 ¦   ¦           
 ¦   +---static
@@ -63,17 +75,20 @@ ai_learning_platform:.
 ¦   ¦               utils.css
 ¦   ¦       +---js
 ¦   ¦               comments.js
+¦   ¦               follow.js
 ¦   ¦               
 ¦   +---templates
 ¦   ¦   ¦   base.html
 ¦   ¦   ¦   
 ¦   ¦   +---courses
+¦   ¦           certificate.html
 ¦   ¦           course_checkout.html
 ¦   ¦           course_completed.html
 ¦   ¦           course_detail.html
 ¦   ¦           course_list.html
 ¦   ¦           dashboard.html
 ¦   ¦           email_receipt.html
+¦   ¦           heatmap.html
 ¦   ¦           leaderboard.html
 ¦   ¦           lesson_detail.html
 ¦   ¦           level_locked.html
@@ -94,6 +109,7 @@ ai_learning_platform:.
 ¦   +---templatetags
 ¦   ¦   ¦   course_extras.py
 ¦   ¦   ¦   course_filters.py
+¦   ¦   ¦   heatmap_tags.py
 ¦   ¦
 ¦   +---tests
 ¦   ¦   ¦   test_recommendations.py
@@ -125,6 +141,7 @@ ai_learning_platform:.
     ¦   ¦   0002_alter_user_managers.py
     ¦   ¦   0003_user_avatar_user_bio_user_location_user_website_and_more.py
     ¦   ¦   0004_alter_user_options_alter_user_avatar_alter_user_bio_and_more.py
+    ¦   ¦   0005_add_follow_model.py
     ¦   ¦   __init__.py
     ¦           
     +---templates
@@ -132,4 +149,10 @@ ai_learning_platform:.
     ¦	        profile.html
     ¦           profile_edit.html
     ¦           signup.html
+    ¦           activity_feed.html
+    ¦           followers_list.html
+    ¦           following_list.html
+    ¦           public_profile.html
+
+
             

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Following - AI Learning Platform{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <h1 class="h3 fw-bold mb-0">
+                    <i class="fas fa-users text-primary me-2"></i>Following
+                </h1>
+                <span class="badge bg-primary ms-3 px-3 py-2">{{ count }} Following</span>
+            </div>
+
+            <!-- Following List -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    {% if users %}
+                        <div class="row g-3">
+                            {% for followed_user in users %}
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-light hover-lift">
+                                        <div class="card-body d-flex align-items-center">
+                                            <!-- Avatar -->
+                                            <div class="flex-shrink-0 me-3">
+                                                <a href="{% url 'public_profile' followed_user.email %}">
+                                                    {% if followed_user.avatar %}
+                                                        <img src="{{ followed_user.avatar.url }}" 
+                                                             alt="{{ followed_user.email }}" 
+                                                             class="rounded-circle" 
+                                                             width="64" height="64"
+                                                             style="object-fit: cover;">
+                                                    {% else %}
+                                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                                                             style="width: 64px; height: 64px; font-size: 1.5rem;">
+                                                            {{ followed_user.email|first|upper }}
+                                                        </div>
+                                                    {% endif %}
+                                                </a>
+                                            </div>
+                                            
+                                            <!-- Info -->
+                                            <div class="flex-grow-1">
+                                                <h6 class="fw-bold mb-1">
+                                                    <a href="{% url 'public_profile' followed_user.email %}" 
+                                                       class="text-decoration-none text-dark">
+                                                        {{ followed_user.get_full_name|default:followed_user.email }}
+                                                    </a>
+                                                </h6>
+                                                {% if followed_user.location %}
+                                                    <small class="text-muted d-block mb-2">
+                                                        <i class="fas fa-map-marker-alt me-1"></i>{{ followed_user.location }}
+                                                    </small>
+                                                {% endif %}
+                                                
+                                                <!-- Unfollow button - Now uses profile-follow-btn class -->
+                                                <button class="btn btn-sm btn-outline-danger profile-follow-btn" 
+                                                        data-user-id="{{ followed_user.id }}">
+                                                    <i class="fas fa-user-minus me-1"></i>
+                                                    <span>Unfollow</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <!-- Empty State -->
+                        <div class="text-center py-5">
+                            <div class="display-1 text-muted mb-3">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <h4 class="fw-bold mb-2">Not Following Anyone</h4>
+                            <p class="text-muted mb-4">
+                                Follow other learners to see their activity in your feed.
+                            </p>
+                            <a href="{% url 'course_list' %}" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i>Explore Learners
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Remove the old script - now using unified follow.js -->
+<style>
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hover-lift:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1) !important;
+    }
+</style>
+{% endblock %}

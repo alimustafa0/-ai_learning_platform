@@ -19,7 +19,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'ckeditor',
+    'django_ckeditor_5',
     'django_ratelimit',
 ]
 
@@ -214,6 +214,18 @@ CACHES = {
         'LOCATION': config('REDIS_URL', default='redis://localhost:6379'),
     }
 }
+
+CKEDITOR_5_CONFIGS = {
+    'default': {
+        'toolbar': ['heading', '|', 'bold', 'italic', 'link',
+                   'bulletedList', 'numberedList', 'blockQuote', '|',
+                   'undo', 'redo', '|',
+                   'insertTable', 'tableColumn', 'tableRow', 'mergeTableCells'],
+        'height': '300px',
+        'width': '100%',
+    },
+}
+
 
 # Stripe Configuration
 STRIPE_PUBLISHABLE_KEY = config("STRIPE_PUBLISHABLE_KEY", default="")

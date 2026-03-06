@@ -1,7 +1,7 @@
 from django.contrib import admin
-from . import models
+from django.db import models
+from django_ckeditor_5.widgets import CKEditor5Widget
 from .models import Course, Module, Lesson, Enrollment, LessonCompletion, XPEvent, Achievement, UserAchievement, Category, Comment, Payment, Refund, LearningStreak, LearningActivity
-from ckeditor.widgets import CKEditorWidget
 
 
 @admin.register(Category)
@@ -15,8 +15,8 @@ class LessonInline(admin.TabularInline):
     model = Lesson
     extra = 1
     ordering = ("order",)
-    formfield_overrides = {  # <-- ADD this
-        models.RichTextField: {'widget': CKEditorWidget},
+    formfield_overrides = {
+        models.TextField: {'widget': CKEditor5Widget(config_name='default')},
     }
 
 

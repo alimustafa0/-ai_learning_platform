@@ -56,5 +56,6 @@ class ReviewForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['rating'].error_messages = {
-            'required': 'Please select a rating'
+            'required': 'Please select a rating',
+            'invalid_choice': 'Please select a valid rating (1-5)'
         }

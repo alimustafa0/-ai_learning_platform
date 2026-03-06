@@ -892,6 +892,7 @@ def welcome(request):
 
 
 @login_required
+@ratelimit(key='user', rate='10/m', method='POST', block=True)
 def add_comment(request, lesson_id):
     """
     Add a comment to a lesson or reply to another comment.
@@ -975,9 +976,9 @@ def add_comment(request, lesson_id):
 
     return redirect('lesson_detail', lesson_id=lesson.id)
 
-@ratelimit(key='user', rate='10/m', method='POST')
 @login_required
 @require_POST
+@ratelimit(key='user', rate='10/m', method='POST')
 @ensure_csrf_cookie
 def upvote_comment(request, comment_id):
     """
@@ -1128,6 +1129,7 @@ def load_more_comments(request, lesson_id):
     })
 
 @login_required
+@ratelimit(key='user', rate='5/m', method='POST', block=True)
 def add_review(request, course_id):
     """
     Add or update a review for a course.

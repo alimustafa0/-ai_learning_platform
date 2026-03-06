@@ -27,3 +27,4 @@ weasyprint==68.1
 webencodings==0.5.1
 whitenoise==6.6.0
 zopfli==0.4.1
+django-ratelimit==4.1.0

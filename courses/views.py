@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum
+from django.db.models import Sum, Prefetch
 from config import settings as setting
 from .models import Course, Enrollment, Lesson, LessonCompletion, Review, XPEvent, Achievement, UserAchievement, Payment, Comment, Certificate, LearningStreak, LearningActivity
 from .forms import CommentForm, ReviewForm
@@ -9,6 +9,7 @@ from .gamification import get_level_progress
 from .achievements import check_early_bird_achievements, check_lesson_count_achievements, check_course_completion_achievements
 import time
 import stripe
+from django_ratelimit.decorators import ratelimit
 from django.conf import settings
 from django.urls import reverse
 from users.models import User
@@ -20,6 +21,7 @@ from django.template.loader import render_to_string
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from weasyprint import HTML
 import tempfile
+from django.core.cache import cache
 from datetime import date, datetime
 
 
@@ -387,7 +389,18 @@ def dashboard(request):
     recent_achievements = get_recent_achievements(request.user)
 
     # Get enrollments and course progress
-    enrollments = request.user.enrollments.select_related("course")
+    enrollments = request.user.enrollments.select_related('course').prefetch_related(
+        Prefetch(
+            'course__modules__lessons',
+            queryset=Lesson.objects.all(),
+            to_attr='all_lessons'
+        ),
+        Prefetch(
+            'course__lessons__completions',
+            queryset=LessonCompletion.objects.filter(user=request.user),
+            to_attr='user_completions'
+        )
+    )
     course_data = []
     in_progress_courses = []
     completed_courses = []
@@ -771,7 +784,7 @@ def payment_success(request, course_id):
                     payment.send_receipt_email()
                 except Exception as email_error:
                     # Don't crash the payment flow if email fails
-                    print(f"Receipt email failed (non-critical): {email_error}")
+                    pass
                     # You could log this to a proper logging system
 
             messages.success(request, f"🎉 Payment successful! You are now enrolled in '{course.title}'.")
@@ -813,6 +826,12 @@ def leaderboard(request):
     Display user leaderboard based on XP.
     """
     from django.db.models import Sum
+
+    cache_key = 'leaderboard_top_50'
+    leaderboard_data = cache.get(cache_key)
+    if not leaderboard_data:
+        # ... expensive query
+        cache.set(cache_key, leaderboard_data, 300)  # 5 minutes
 
     # Get users with their XP totals using aggregation (more efficient)
     users_with_xp = User.objects.annotate(
@@ -956,6 +975,7 @@ def add_comment(request, lesson_id):
 
     return redirect('lesson_detail', lesson_id=lesson.id)
 
+@ratelimit(key='user', rate='10/m', method='POST')
 @login_required
 @require_POST
 @ensure_csrf_cookie
@@ -1122,6 +1142,7 @@ def add_review(request, course_id):
     # Check if user already reviewed
     existing_review = Review.objects.filter(course=course, user=request.user).first()
 
+
     if request.method == 'POST':
         form = ReviewForm(request.POST, instance=existing_review)
         if form.is_valid():
@@ -1130,17 +1151,23 @@ def add_review(request, course_id):
             review.user = request.user
             review.save()
 
+
             messages.success(request, "Thank you for your review!")
 
             # Award XP for reviewing (small bonus)
             if not existing_review:  # Only for new reviews, not edits
-                XPEvent.objects.create(
+                xp = XPEvent.objects.create(
                     user=request.user,
                     points=5,
                     reason=f"Reviewed course: {course.title[:50]}"
                 )
 
+            else:
+                pass
+
             return redirect('course_detail', course_id=course.id)
+        else:
+            pass
     else:
         form = ReviewForm(instance=existing_review)
 
@@ -1148,7 +1175,7 @@ def add_review(request, course_id):
         'course': course,
         'form': form,
         'is_editing': existing_review is not None,
-        'review': existing_review,  # Add this line to pass the review to template
+        'review': existing_review,
     })
 
 @login_required
@@ -1160,12 +1187,8 @@ def helpful_review(request, review_id):
     """
     review = get_object_or_404(Review, id=review_id)
 
-    # Add debug prints
-    print(f"Review user ID: {review.user.id}, Request user ID: {request.user.id}")
-    print(f"Review user email: {review.user.email}, Request user email: {request.user.email}")
 
     if review.user == request.user:
-        print("User tried to vote on their own review")
         return JsonResponse({
             'status': 'error',
             'message': 'You cannot vote on your own review'
@@ -1175,12 +1198,10 @@ def helpful_review(request, review_id):
         # Remove vote
         review.helpful_votes.remove(request.user)
         action = 'removed'
-        print("Vote removed")
     else:
         # Add vote
         review.helpful_votes.add(request.user)
         action = 'added'
-        print("Vote added")
 
         # Award XP to reviewer (small bonus for getting helpful votes)
         if review.helpful_votes.count() == 5:  # Milestone: 5 helpful votes

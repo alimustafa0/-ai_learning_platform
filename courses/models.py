@@ -387,6 +387,10 @@ class Payment(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['stripe_checkout_session_id']),
+        ]
 
     def __str__(self):
         return f"{self.user.email} - {self.course.title} - ${self.amount}"
@@ -431,6 +435,10 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ['-is_answered', '-created_at']  # Show answered questions first
+        indexes = [
+            models.Index(fields=['lesson', 'parent']),
+            models.Index(fields=['user']),
+        ]
 
     def __str__(self):
         return f"Comment by {self.user.email} on {self.lesson.title}"
@@ -484,6 +492,10 @@ class Refund(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['payment', 'status']),  # Changed from 'user' to 'payment'
+            models.Index(fields=['stripe_refund_id']),   # Changed from 'stripe_checkout_session_id'
+        ]
 
     def __str__(self):
         return f"Refund for {self.payment} - ${self.amount}"

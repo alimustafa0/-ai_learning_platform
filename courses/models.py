@@ -10,14 +10,14 @@ class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True, help_text="URL-friendly version of the name")
     description = models.TextField(blank=True)
-    
+
     class Meta:
         verbose_name_plural = "Categories"
         ordering = ['name']
-    
+
     def __str__(self):
         return self.name
-    
+
 
 class Course(models.Model):
     title = models.CharField(max_length=255)
@@ -30,8 +30,8 @@ class Course(models.Model):
     categories = models.ManyToManyField(Category, blank=True, related_name="courses")
 
     price = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
+        max_digits=10,
+        decimal_places=2,
         default=0.00,
         help_text="Price in USD. 0.00 = free course"
     )
@@ -41,40 +41,40 @@ class Course(models.Model):
 
     def __str__(self):
         return self.title
-    
+
     def is_free(self):
         return self.price == 0
-    
+
     def average_rating(self):
         """Calculate average rating for this course."""
         reviews = self.reviews.all()
         if not reviews:
             return 0
         return sum(r.rating for r in reviews) / len(reviews)
-    
+
     def rating_count(self):
         """Get total number of ratings."""
         return self.reviews.count()
-    
+
     def rating_distribution(self):
         """Get distribution of ratings (1-5 stars)."""
         distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
         for review in self.reviews.all():
             distribution[review.rating] += 1
         return distribution
-    
+
     def has_user_reviewed(self, user):
         """Check if a user has reviewed this course."""
         if not user.is_authenticated:
             return False
         return self.reviews.filter(user=user).exists()
-    
+
     def get_user_review(self, user):
         """Get user's review if it exists."""
         if not user.is_authenticated:
             return None
         return self.reviews.filter(user=user).first()
-    
+
     def save(self, *args, **kwargs):
         # Auto-generate slug from title if not provided
         if not self.slug:
@@ -180,11 +180,11 @@ class XPEvent(models.Model):
     def __str__(self):
         return f"{self.user.email} +{self.points} XP for {self.reason}"
 
-    
+
 class Achievement(models.Model):
     name = models.CharField(max_length=255)
     code = models.SlugField(
-        max_length=50, 
+        max_length=50,
         unique=True,
         help_text="Unique identifier for use in code (e.g., 'first_lesson', 'course_complete')"
     )
@@ -207,10 +207,10 @@ class Achievement(models.Model):
         default=0,
         help_text="Number required to unlock (e.g., 5 lessons, 100 XP)"
     )
-    
+
     def __str__(self):
         return self.name
-    
+
     class Meta:
         ordering = ['category', 'threshold']
 
@@ -224,7 +224,7 @@ class UserAchievement(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.achievement.name}"
-    
+
 
 class Payment(models.Model):
     """
@@ -238,22 +238,22 @@ class Payment(models.Model):
         """
         import stripe
         from django.conf import settings
-        
+
         # Validate amount
         if amount <= 0:
             raise ValueError("Refund amount must be positive")
-        
+
         if amount > self.amount:
             amount = self.amount
-        
+
         # Check if already refunded (total refunds)
         total_refunded = sum(refund.amount for refund in self.refunds.filter(status='succeeded'))
         if total_refunded >= self.amount:
             raise ValueError("Payment already fully refunded")
-        
+
         if total_refunded + amount > self.amount:
             amount = self.amount - total_refunded
-        
+
         try:
             # Create refund in Stripe
             stripe_refund = stripe.Refund.create(
@@ -261,7 +261,7 @@ class Payment(models.Model):
                 amount=int(amount * 100),  # Convert to cents
                 reason='requested_by_customer'  # or 'duplicate', 'fraudulent'
             )
-            
+
             # Create refund record
             refund = Refund.objects.create(
                 payment=self,
@@ -271,15 +271,15 @@ class Payment(models.Model):
                 reason=reason,
                 status=stripe_refund.status
             )
-            
+
             # Update payment status if fully refunded
             new_total_refunded = total_refunded + amount
             if new_total_refunded >= self.amount:
                 self.status = 'refunded'
                 self.save()
-            
+
             return refund, True, stripe_refund
-            
+
         except stripe.error.StripeError as e:
             # Create failed refund record
             refund = Refund.objects.create(
@@ -294,7 +294,7 @@ class Payment(models.Model):
     def generate_receipt_number(self):
         """Generate a unique receipt number."""
         return f"INV-{self.id:06d}-{self.created_at.strftime('%Y%m')}"
-    
+
     def get_receipt_data(self):
         """Return data for receipt/invoice."""
         return {
@@ -308,40 +308,40 @@ class Payment(models.Model):
             'status': self.get_status_display(),
             'transaction_id': self.stripe_payment_intent_id,
         }
-    
+
     def send_receipt_email(self):
         """Send receipt email to user."""
         from django.core.mail import send_mail
         from django.template.loader import render_to_string
         from django.conf import settings
-        
+
         receipt_data = self.get_receipt_data()
-        
+
         # Get site URL, default to localhost if not set
         site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
-        
+
         # Render email content
         subject = f"Receipt for {self.course.title} - AI Learning Platform"
         message = f"""
         Thank you for your purchase!
-        
+
         Receipt #{receipt_data['receipt_number']}
         Date: {receipt_data['date']}
         Course: {self.course.title}
         Amount: ${self.amount}
-        
+
         You can view your receipt online at:
         {site_url}/courses/payments/{self.id}/receipt/
-        
+
         Thank you for learning with us!
         """
-        
+
         html_message = render_to_string('courses/email_receipt.html', {
             'payment': self,
             'receipt': receipt_data,
             'site_url': site_url,
         })
-        
+
         try:
             send_mail(
                 subject,
@@ -384,10 +384,10 @@ class Payment(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         ordering = ['-created_at']
-    
+
     def __str__(self):
         return f"{self.user.email} - {self.course.title} - ${self.amount}"
 
@@ -423,34 +423,34 @@ class Comment(models.Model):
         blank=True,
         help_text="Users who upvoted this comment"
     )
-    
+
     is_answered = models.BooleanField(
         default=False,
         help_text="For question/answer context"
     )
-    
+
     class Meta:
         ordering = ['-is_answered', '-created_at']  # Show answered questions first
-    
+
     def __str__(self):
         return f"Comment by {self.user.email} on {self.lesson.title}"
-    
+
     def is_reply(self):
         """Check if this comment is a reply to another comment."""
         return self.parent is not None
-    
+
     def total_upvotes(self):
         """Get total number of upvotes."""
         return self.upvotes.count()
-    
+
     def get_replies(self):
         """Get all replies to this comment."""
         return self.replies.all()
-    
+
     def user_has_upvoted(self, user):
         """Check if a specific user has upvoted this comment."""
         return self.upvotes.filter(id=user.id).exists()
-    
+
 class Refund(models.Model):
     """
     Track refunds for payments.
@@ -481,13 +481,13 @@ class Refund(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         ordering = ['-created_at']
-    
+
     def __str__(self):
         return f"Refund for {self.payment} - ${self.amount}"
-    
+
     def save(self, *args, **kwargs):
         # Ensure refund amount doesn't exceed payment amount
         if self.amount > self.payment.amount:
@@ -506,7 +506,7 @@ class Review(models.Model):
         (4, '4 Stars'),
         (5, '5 Stars'),
     ]
-    
+
     course = models.ForeignKey(
         Course,
         on_delete=models.CASCADE,
@@ -522,7 +522,7 @@ class Review(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_edited = models.BooleanField(default=False)
-    
+
     # Track helpful votes
     helpful_votes = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
@@ -530,18 +530,18 @@ class Review(models.Model):
         blank=True,
         help_text="Users who found this review helpful"
     )
-    
+
     class Meta:
         unique_together = ("course", "user")  # One review per user per course
         ordering = ['-created_at']
-    
+
     def __str__(self):
         return f"{self.user.email} - {self.course.title} - {self.rating}★"
-    
+
     def total_helpful(self):
         """Get total number of helpful votes."""
         return self.helpful_votes.count()
-    
+
     def user_found_helpful(self, user):
         """Check if a user found this review helpful."""
         return self.helpful_votes.filter(id=user.id).exists()
@@ -556,14 +556,14 @@ class Certificate(models.Model):
     issued_at = models.DateTimeField(auto_now_add=True)
     certificate_number = models.CharField(max_length=50, unique=True)
     download_count = models.IntegerField(default=0)
-    
+
     class Meta:
         unique_together = ("user", "course")  # One certificate per user per course
         ordering = ['-issued_at']
-    
+
     def __str__(self):
         return f"Certificate: {self.user.email} - {self.course.title}"
-    
+
     def generate_certificate_number(self):
         """Generate a unique certificate number"""
         import hashlib
@@ -571,7 +571,7 @@ class Certificate(models.Model):
         unique_string = f"{self.user.id}-{self.course.id}-{time.time()}"
         hash_object = hashlib.sha256(unique_string.encode())
         return f"CERT-{hash_object.hexdigest()[:12].upper()}"
-    
+
     def save(self, *args, **kwargs):
         if not self.certificate_number:
             self.certificate_number = self.generate_certificate_number()
@@ -587,10 +587,10 @@ class LearningStreak(models.Model):
     longest_streak = models.IntegerField(default=0, help_text="Longest streak ever achieved")
     last_activity_date = models.DateField(null=True, blank=True, help_text="Last date with learning activity")
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     def __str__(self):
         return f"{self.user.email}: {self.current_streak} days"
-    
+
     def update_streak(self, activity_date=None, request=None):
         """
         Update streak based on activity date.
@@ -598,16 +598,16 @@ class LearningStreak(models.Model):
         """
         from datetime import date, timedelta
         from .achievements import check_streak_achievements  # Import here to avoid circular imports
-        
+
         today = activity_date or date.today()
         old_streak = self.current_streak
-        
+
         print(f"\n=== UPDATING STREAK ===")
         print(f"User: {self.user.email}")
         print(f"Old streak: {old_streak}")
         print(f"Last activity: {self.last_activity_date}")
         print(f"Today: {today}")
-        
+
         if not self.last_activity_date:
             # First activity ever
             self.current_streak = 1
@@ -627,21 +627,21 @@ class LearningStreak(models.Model):
             # Streak broken
             self.current_streak = 1
             print(f"Streak broken! Days gap. New streak: 1")
-        
+
         # Update longest streak if needed
         if self.current_streak > self.longest_streak:
             self.longest_streak = self.current_streak
             print(f"New longest streak: {self.longest_streak}")
-        
+
         self.last_activity_date = today
         self.save()
         print(f"Saved streak. New current: {self.current_streak}")
-        
+
         # Check for streak achievements
         if request:
             print(f"Calling check_streak_achievements...")
             check_streak_achievements(self.user, self.current_streak, request)
-        
+
         print(f"=== STREAK UPDATE COMPLETE ===\n")
 
 
@@ -653,13 +653,13 @@ class LearningActivity(models.Model):
     date = models.DateField()
     count = models.IntegerField(default=0, help_text="Number of lessons completed on this day")
     xp_earned = models.IntegerField(default=0, help_text="XP earned on this day")
-    
+
     class Meta:
         unique_together = ("user", "date")
         ordering = ["-date"]
         indexes = [
             models.Index(fields=['user', 'date']),
         ]
-    
+
     def __str__(self):
         return f"{self.user.email}: {self.date} - {self.count} lessons"

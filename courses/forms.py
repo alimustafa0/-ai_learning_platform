@@ -7,7 +7,7 @@ class CommentForm(forms.ModelForm):
     Form for creating and editing comments.
     """
     parent_id = forms.IntegerField(widget=forms.HiddenInput(), required=False)
-    
+
     class Meta:
         model = Comment
         fields = ['content']
@@ -21,17 +21,17 @@ class CommentForm(forms.ModelForm):
         labels = {
             'content': ''
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['content'].help_text = 'Markdown is supported'
-        
+
     def clean_content(self):
         content = self.cleaned_data['content']
         if len(content.strip()) < 3:
             raise forms.ValidationError("Comment must be at least 3 characters long.")
         return content
-    
+
 
 class ReviewForm(forms.ModelForm):
     """
@@ -52,7 +52,7 @@ class ReviewForm(forms.ModelForm):
             'rating': 'Your Rating',
             'comment': 'Your Review (Optional)'
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['rating'].error_messages = {

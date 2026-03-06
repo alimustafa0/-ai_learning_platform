@@ -13,7 +13,7 @@
                     Master AI, Python & Web Development
                 </h1>
                 <p class="lead mb-4 text-white-50">
-                    Transform your career with interactive courses, gamified learning, and a supportive community. 
+                    Transform your career with interactive courses, gamified learning, and a supportive community.
                     Earn XP, unlock achievements, and climb the leaderboard!
                 </p>
                 <div class="d-flex gap-3">
@@ -32,9 +32,12 @@
                 </div>
             </div>
             <div class="col-lg-6 animate__animated animate__fadeInRight">
-                <img src="{% static 'courses/img/hero-illustration.svg' %}" alt="Learning Illustration" class="img-fluid d-none d-lg-block">
+                <img src="{% static 'courses/img/hero-illustration.svg' %}"
+                    alt="Learning Illustration"
+                    class="img-fluid d-none d-lg-block"
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                 <!-- Fallback icon if image doesn't exist -->
-                <div class="text-center d-lg-block">
+                <div class="text-center d-lg-block" style="display: none;">
                     <i class="fas fa-graduation-cap fa-8x text-white-50"></i>
                 </div>
             </div>
@@ -90,7 +93,7 @@
         <h2 class="display-6 fw-bold text-primary">Why Learn With Us?</h2>
         <p class="lead text-muted">The most engaging way to master new skills</p>
     </div>
-    
+
     <div class="row g-4">
         <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100 hover-lift">
@@ -102,7 +105,7 @@
                     </div>
                     <h4 class="fw-bold mb-3">Gamified Learning</h4>
                     <p class="text-muted">
-                        Earn XP, level up, unlock achievements, and compete on leaderboards. 
+                        Earn XP, level up, unlock achievements, and compete on leaderboards.
                         Learning has never been this engaging!
                     </p>
                     <div class="mt-3">
@@ -112,7 +115,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100 hover-lift">
                 <div class="card-body text-center p-4">
@@ -123,7 +126,7 @@
                     </div>
                     <h4 class="fw-bold mb-3">Structured Courses</h4>
                     <p class="text-muted">
-                        From beginner to advanced, follow curated learning paths with 
+                        From beginner to advanced, follow curated learning paths with
                         courses, modules, and interactive lessons.
                     </p>
                     <div class="mt-3">
@@ -133,7 +136,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100 hover-lift">
                 <div class="card-body text-center p-4">
@@ -144,7 +147,7 @@
                     </div>
                     <h4 class="fw-bold mb-3">Community Support</h4>
                     <p class="text-muted">
-                        Ask questions, share insights, and learn together with comments 
+                        Ask questions, share insights, and learn together with comments
                         on every lesson and community forums.
                     </p>
                     <div class="mt-3">
@@ -169,7 +172,7 @@
             View All <i class="fas fa-arrow-right ms-2"></i>
         </a>
     </div>
-    
+
     <div class="row g-4">
         {% for course in featured_courses %}
             <div class="col-md-4">
@@ -192,10 +195,10 @@
                                 <span class="badge bg-light text-dark">Level {{ course.required_level }}</span>
                             </div>
                         </div>
-                        
+
                         <h5 class="fw-bold mb-2">{{ course.title }}</h5>
                         <p class="text-muted small mb-3">{{ course.description|truncatewords:20 }}</p>
-                        
+
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="h5 fw-bold text-primary mb-0">
                                 {% if course.is_free %}
@@ -204,7 +207,7 @@
                                     ${{ course.price }}
                                 {% endif %}
                             </span>
-                            <a href="{% url 'course_detail' course.id %}" 
+                            <a href="{% url 'course_detail' course.id %}"
                                class="btn btn-sm btn-outline-primary rounded-pill px-4">
                                 Learn More
                             </a>
@@ -225,7 +228,7 @@
                 Your Personalized Learning Journey
             </h2>
             <p class="lead text-muted mb-4">
-                Start from any level and progress at your own pace. Our adaptive system 
+                Start from any level and progress at your own pace. Our adaptive system
                 recommends courses based on your skill level and interests.
             </p>
             <ul class="list-unstyled">
@@ -288,16 +291,16 @@
         border-radius: 0 0 3rem 3rem;
         margin-top: -1.5rem;
     }
-    
+
     .hover-lift {
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    
+
     .hover-lift:hover {
         transform: translateY(-5px);
         box-shadow: 0 1rem 2rem rgba(0,0,0,0.1) !important;
     }
-    
+
     .feature-icon .rounded-circle {
         width: 80px;
         height: 80px;
@@ -305,13 +308,13 @@
         align-items: center;
         justify-content: center;
     }
-    
+
     @media (max-width: 768px) {
         .hero-section {
             border-radius: 0 0 1.5rem 1.5rem;
             text-align: center;
         }
-        
+
         .hero-section .btn {
             width: 100%;
             margin-bottom: 0.5rem;

@@ -41,14 +41,14 @@
                                 </a>
                             </h5>
                         </div>
-                        
+
                         <!-- Card Body -->
                         <div class="card-body">
                             <!-- Description -->
                             <p class="card-text text-muted mb-3">
                                 {{ course.description|truncatewords:25 }}
                             </p>
-                            
+
                             <!-- Categories -->
                             {% if course.categories.all %}
                                 <div class="mb-3">
@@ -59,10 +59,10 @@
                                     {% endfor %}
                                 </div>
                             {% endif %}
-                            
+
                             <!-- Divider -->
                             <hr class="my-3">
-                            
+
                             <!-- Price and Actions -->
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
@@ -77,15 +77,15 @@
                                         <small class="text-muted ms-1">USD</small>
                                     {% endif %}
                                 </div>
-                                
-                                <a href="{% url 'course_detail' course.id %}" 
+
+                                <a href="{% url 'course_detail' course.id %}"
                                    class="btn btn-outline-primary btn-sm rounded-pill px-4">
                                     View Course
                                     <i class="fas fa-arrow-right ms-1"></i>
                                 </a>
                             </div>
                         </div>
-                        
+
                         <!-- Card Footer with Progress (if enrolled) -->
                         {% if request.user.is_authenticated %}
                             {% with enrollment=request.user.enrollments.all %}
@@ -126,7 +126,7 @@
             </div>
         </div>
     {% endif %}
-    
+
     <!-- Course Stats -->
     {% if courses %}
         <div class="row mt-5">
@@ -165,31 +165,31 @@
     .hover-lift {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    
+
     .hover-lift:hover {
         transform: translateY(-5px);
         box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
     }
-    
+
     .bg-gradient-primary {
         background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     }
-    
+
     .card-header.bg-gradient-primary {
         border-bottom: none;
         padding: 1.5rem 1.5rem 1rem;
     }
-    
+
     .course-card {
         border: none;
         transition: all 0.3s ease;
     }
-    
+
     .course-card .card-footer {
         background-color: rgba(0,0,0,0.02);
         padding: 0.75rem 1.5rem;
     }
-    
+
     .empty-state {
         padding: 3rem;
         background: white;
@@ -198,13 +198,13 @@
         max-width: 500px;
         margin: 0 auto;
     }
-    
+
     /* Responsive adjustments */
     @media (max-width: 768px) {
         .card-header h5 {
             font-size: 1.1rem;
         }
-        
+
         .empty-state {
             padding: 2rem;
         }

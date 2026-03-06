@@ -120,7 +120,7 @@
             <h1>🎓 AI Learning Platform</h1>
             <p>Payment Receipt</p>
         </div>
-        
+
         <!-- Content -->
         <div class="content">
             <div class="greeting">
@@ -131,11 +131,11 @@
                     Thank you for your purchase! Here's your receipt:
                 </p>
             </div>
-            
+
             <!-- Receipt Box -->
             <div class="receipt-box">
                 <h3 class="receipt-title">🧾 Receipt #{{ receipt.receipt_number }}</h3>
-                
+
                 <table class="receipt-details">
                     <tr>
                         <td class="label">Date:</td>
@@ -160,14 +160,14 @@
                         </td>
                     </tr>
                 </table>
-                
+
                 <div style="text-align: center;">
                     <a href="{{ site_url }}{% url 'payment_receipt' payment.id %}" class="button">
                         📄 View Full Receipt Online
                     </a>
                 </div>
             </div>
-            
+
             <!-- Course Access Info -->
             <div style="background: #eef2ff; padding: 20px; border-radius: 8px; margin-top: 20px;">
                 <p style="margin: 0 0 10px; font-weight: 600; color: #4f52e0;">
@@ -177,14 +177,14 @@
                     <strong>{{ receipt.course }}</strong> - Lifetime access
                 </p>
                 <p style="margin: 15px 0 0; color: #4b5563;">
-                    <a href="{{ site_url }}{% url 'course_detail' payment.course.id %}" 
+                    <a href="{{ site_url }}{% url 'course_detail' payment.course.id %}"
                        style="color: #6366f1; text-decoration: underline;">
                         Start learning now →
                     </a>
                 </p>
             </div>
         </div>
-        
+
         <!-- Footer -->
         <div class="footer">
             <p style="margin: 0 0 15px;">

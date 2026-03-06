@@ -10,24 +10,24 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         users = User.objects.all()
-        
+
         for user in users:
             streak, created = LearningStreak.objects.get_or_create(user=user)
-            
+
             # Get all lesson completions for this user
             completions = LessonCompletion.objects.filter(
                 user=user
             ).order_by('completed_at')
-            
+
             if completions.exists():
                 # Set last activity to most recent completion
                 streak.last_activity_date = completions.last().completed_at.date()
-                
+
                 # Calculate current streak (simplified)
                 # For a more accurate calculation, you'd need to check consecutive days
                 streak.current_streak = 1
                 streak.longest_streak = 1
-                
+
                 streak.save()
                 self.stdout.write(self.style.SUCCESS(f"Initialized streak for {user.email}"))
             else:

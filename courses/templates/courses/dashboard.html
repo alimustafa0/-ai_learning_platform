@@ -94,7 +94,7 @@
         </div>
         <div class="card-body p-4">
             {% render_heatmap request.user %}
-            
+
             <!-- Stats Summary -->
             <div class="row g-3 mt-3">
                 <div class="col-md-4">
@@ -154,7 +154,7 @@
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="text-muted mb-1">Learning Streak</h6>
                                 <h2 class="fw-bold mb-0">
-                                    {{ streak.current_streak }} 
+                                    {{ streak.current_streak }}
                                     <small class="fs-6 text-muted">days</small>
                                 </h2>
                                 <p class="small text-muted mb-0">
@@ -162,7 +162,7 @@
                                 </p>
                             </div>
                         </div>
-                        
+
                         <!-- Streak Milestone Indicator -->
                         {% if streak.current_streak >= 7 %}
                             <div class="mt-3 pt-2 border-top">
@@ -198,7 +198,7 @@
                     <i class="fas fa-plus-circle me-1"></i>Browse More
                 </a>
             </div>
-            
+
             <div class="row g-4">
                 {% for item in in_progress_courses|slice:":3" %}
                     <div class="col-md-4">
@@ -214,21 +214,21 @@
                                         {{ item.completed_count }}/{{ item.total_lessons }}
                                     </span>
                                 </div>
-                                
+
                                 <!-- Course Title -->
                                 <h5 class="fw-bold mb-2">
-                                    <a href="{% url 'course_detail' item.course.id %}" 
+                                    <a href="{% url 'course_detail' item.course.id %}"
                                     class="text-decoration-none text-dark">
                                         {{ item.course.title }}
                                     </a>
                                 </h5>
-                                
+
                                 <!-- Progress Bar -->
                                 <div class="progress mb-3" style="height: 6px;">
-                                    <div class="progress-bar bg-primary" 
+                                    <div class="progress-bar bg-primary"
                                         style="width: {{ item.progress_percentage }}%;"></div>
                                 </div>
-                                
+
                                 <!-- Next Lesson Info -->
                                 {% if item.next_lesson %}
                                     <p class="small text-muted mb-3">
@@ -236,9 +236,9 @@
                                         Next: {{ item.next_lesson.title|truncatechars:30 }}
                                     </p>
                                 {% endif %}
-                                
+
                                 <!-- Continue Button -->
-                                <a href="{% url 'resume_course' item.course.id %}" 
+                                <a href="{% url 'resume_course' item.course.id %}"
                                 class="btn btn-primary w-100">
                                     <i class="fas fa-play-circle me-2"></i>Continue
                                 </a>
@@ -247,7 +247,7 @@
                     </div>
                 {% endfor %}
             </div>
-            
+
             <!-- Show More Link if more than 3 in-progress courses -->
             {% if in_progress_courses|length > 3 %}
                 <div class="text-center mt-3">
@@ -270,9 +270,9 @@
                         Progress to Level {{ next_level_title }}
                     </h5>
                     <div class="progress" style="height: 12px;">
-                        <div class="progress-bar" role="progressbar" 
-                             style="width: {{ level_progress_percent }}%;" 
-                             aria-valuenow="{{ level_progress_percent }}" 
+                        <div class="progress-bar" role="progressbar"
+                             style="width: {{ level_progress_percent }}%;"
+                             aria-valuenow="{{ level_progress_percent }}"
                              aria-valuemin="0" aria-valuemax="100">
                         </div>
                     </div>
@@ -310,7 +310,7 @@
                             <!-- Course Header -->
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <h5 class="fw-bold mb-0">
-                                    <a href="{% url 'course_detail' item.course.id %}" 
+                                    <a href="{% url 'course_detail' item.course.id %}"
                                        class="text-decoration-none text-dark">
                                         {{ item.course.title }}
                                     </a>
@@ -321,38 +321,38 @@
                                     </span>
                                 {% endif %}
                             </div>
-                            
+
                             <!-- Progress Stats -->
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted small">Progress</span>
                                 <span class="fw-bold">{{ item.progress_percentage }}%</span>
                             </div>
-                            
+
                             <!-- Progress Bar -->
                             <div class="progress mb-3" style="height: 8px;">
-                                <div class="progress-bar bg-primary" 
-                                     style="width: {{ item.progress_percentage }}%;" 
+                                <div class="progress-bar bg-primary"
+                                     style="width: {{ item.progress_percentage }}%;"
                                      role="progressbar"></div>
                             </div>
-                            
+
                             <!-- Lesson Count -->
                             <p class="text-muted small mb-3">
                                 <i class="fas fa-check-circle text-success me-1"></i>
                                 {{ item.completed_count }} of {{ item.total_lessons }} lessons completed
                             </p>
-                            
+
                             <!-- Action Buttons -->
                             <div class="d-flex gap-2">
-                                <a href="{% url 'resume_course' item.course.id %}" 
+                                <a href="{% url 'resume_course' item.course.id %}"
                                    class="btn btn-primary btn-sm flex-grow-1">
                                     <i class="fas fa-play-circle me-1"></i>Resume
                                 </a>
-                                <a href="{% url 'course_detail' item.course.id %}" 
+                                <a href="{% url 'course_detail' item.course.id %}"
                                    class="btn btn-outline-secondary btn-sm">
                                     <i class="fas fa-info-circle"></i>
                                 </a>
                                 {% if item.completed %}
-                                    <a href="{% url 'course_completed' item.course.id %}" 
+                                    <a href="{% url 'course_completed' item.course.id %}"
                                        class="btn btn-outline-warning btn-sm">
                                         <i class="fas fa-certificate"></i>
                                     </a>
@@ -395,7 +395,7 @@
                     <i class="fas fa-magic me-1"></i>AI Powered
                 </span>
             </div>
-            
+
             <div class="row g-4">
                 {% for item in recommendations %}
                     <div class="col-md-4">
@@ -411,20 +411,20 @@
                                         {{ item.course.enrollments.count }}
                                     </span>
                                 </div>
-                                
+
                                 <!-- Course Title -->
                                 <h5 class="fw-bold mb-2">
-                                    <a href="{% url 'course_detail' item.course.id %}" 
+                                    <a href="{% url 'course_detail' item.course.id %}"
                                        class="text-decoration-none text-dark">
                                         {{ item.course.title }}
                                     </a>
                                 </h5>
-                                
+
                                 <!-- Course Description -->
                                 <p class="text-muted small mb-3">
                                     {{ item.course.description|truncatewords:15 }}
                                 </p>
-                                
+
                                 <!-- Reason Badge -->
                                 <div class="mb-3">
                                     <span class="badge {% if item.score == 3 %}bg-primary{% elif item.score == 2 %}bg-success{% else %}bg-info{% endif %} bg-opacity-10 text-dark px-3 py-2">
@@ -432,9 +432,9 @@
                                         {{ item.reason }}
                                     </span>
                                 </div>
-                                
+
                                 <!-- Action Button -->
-                                <a href="{% url 'course_detail' item.course.id %}" 
+                                <a href="{% url 'course_detail' item.course.id %}"
                                    class="btn btn-outline-primary btn-sm w-100">
                                     <i class="fas fa-eye me-1"></i>View Course
                                 </a>
@@ -443,7 +443,7 @@
                     </div>
                 {% endfor %}
             </div>
-            
+
             <!-- Optional: Refresh Recommendations Link -->
             <div class="text-center mt-3">
                 <small class="text-muted">
@@ -508,7 +508,7 @@
             {% render_achievements request.user %}
         </div>
     </div>
-    
+
 
     <!-- Payment History -->
     {% if payment_history %}
@@ -516,7 +516,7 @@
             <i class="fas fa-credit-card me-2 text-primary"></i>
             Payment History
         </h3>
-        
+
         <div class="card border-0 shadow-sm">
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -550,7 +550,7 @@
                                     </td>
                                     <td class="px-4 py-3">
                                         {% if payment.status == 'succeeded' %}
-                                            <a href="{% url 'payment_receipt' payment.id %}" 
+                                            <a href="{% url 'payment_receipt' payment.id %}"
                                                class="btn btn-sm btn-outline-primary">
                                                 <i class="fas fa-file-invoice me-1"></i>Receipt
                                             </a>

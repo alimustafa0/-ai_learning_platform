@@ -24,7 +24,7 @@
         .heatmap-cell[data-level="2"] { background-color: #40c463; }
         .heatmap-cell[data-level="3"] { background-color: #30a14e; }
         .heatmap-cell[data-level="4"] { background-color: #216e39; }
-        
+
         .heatmap-tooltip {
             position: absolute;
             background: #1f2937;
@@ -53,7 +53,7 @@
             margin-bottom: 4px;
         }
     </style>
-    
+
     <div class="d-flex align-items-center mb-2">
         <div class="flex-grow-1">
             <span class="small text-muted">
@@ -71,7 +71,7 @@
             <span class="small text-muted">More</span>
         </div>
     </div>
-    
+
     <div class="heatmap-grid position-relative">
         {% for week in calendar %}
             <div class="d-flex flex-column gap-1">
@@ -91,20 +91,20 @@
             </div>
         {% endfor %}
     </div>
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const cells = document.querySelectorAll('.heatmap-cell[data-date]');
             let tooltip = null;
-            
+
             cells.forEach(cell => {
                 cell.addEventListener('mouseenter', function(e) {
                     const date = this.dataset.date;
                     const count = this.dataset.count;
                     const xp = this.dataset.xp;
-                    
+
                     if (tooltip) tooltip.remove();
-                    
+
                     tooltip = document.createElement('div');
                     tooltip.className = 'heatmap-tooltip';
                     tooltip.innerHTML = `
@@ -112,14 +112,14 @@
                         ${count} lesson${count != 1 ? 's' : ''}<br>
                         ${xp} XP earned
                     `;
-                    
+
                     document.body.appendChild(tooltip);
-                    
+
                     const rect = this.getBoundingClientRect();
                     tooltip.style.left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2) + 'px';
                     tooltip.style.top = rect.top - tooltip.offsetHeight - 10 + 'px';
                 });
-                
+
                 cell.addEventListener('mouseleave', function() {
                     if (tooltip) {
                         tooltip.remove();

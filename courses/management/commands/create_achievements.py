@@ -7,7 +7,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         self.stdout.write('Creating achievements...')
-        
+
         # Lesson completion achievements
         achievements = [
             {
@@ -155,7 +155,7 @@ class Command(BaseCommand):
                 'threshold': 60,
             },
         ]
-        
+
         for ach_data in achievements:
             ach, created = Achievement.objects.get_or_create(
                 code=ach_data['code'],
@@ -165,5 +165,5 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS(f"Created: {ach.name}"))
             else:
                 self.stdout.write(f"Already exists: {ach.name}")
-        
+
         self.stdout.write(self.style.SUCCESS('Done creating lesson achievements!'))

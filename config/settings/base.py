@@ -80,7 +80,7 @@ if config('ENVIRONMENT') == 'production' and config('DATABASE_URL', default=None
 if not TESTING:
     # Add persistent connections for better performance
     DATABASES['default']['CONN_MAX_AGE'] = 600  # 10 minutes
-    
+
     # Ensure we're using UTF-8 for SQLite (supports emoji!)
     if 'sqlite3' in DATABASES['default']['ENGINE']:
         from django.db.backends.signals import connection_created
@@ -91,7 +91,7 @@ if not TESTING:
                 cursor.execute('PRAGMA foreign_keys = ON;')
                 cursor.execute('PRAGMA encoding = "UTF-8";')
         connection_created.connect(activate_foreign_keys)
-        
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {

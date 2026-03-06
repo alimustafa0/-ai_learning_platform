@@ -1,3 +1,4 @@
 -r base.txt
 dj-database-url==2.1.0
 django-extensions==3.2.3
+pre-commit==3.7.1

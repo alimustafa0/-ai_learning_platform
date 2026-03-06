@@ -155,9 +155,9 @@
             <h1>Certificate of Completion</h1>
             <h2>Proudly Presented To</h2>
         </div>
-        
-        
-        
+
+
+
         <div class="content">
             <div class="student-name">{{ user.get_full_name|default:user.email }}</div>
             <p>has successfully completed the course</p>
@@ -165,7 +165,7 @@
             <p>with a demonstrated understanding of the core concepts and practical applications.</p>
             <div class="date">Awarded on {{ certificate.issued_at|date:"F j, Y" }}</div>
         </div>
-        
+
         <div class="footer">
             <div class="signature">
                 <div class="signature-line"></div>
@@ -178,7 +178,7 @@
                 <p style="font-size: 14px; color: #718096;">Academic Director</p>
             </div>
         </div>
-        
+
         <div class="certificate-number">
             Certificate ID: {{ certificate.certificate_number }}
         </div>

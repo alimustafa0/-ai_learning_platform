@@ -5,17 +5,17 @@ ai_learning_platform:.
 ¦   db.sqlite3
 ¦   manage.py
 ¦   requirements.txt
-¦   
+¦
 +---avatars
 ¦       modeified_image.jpg
-¦       
+¦
 +---config
 ¦   ¦   asgi.py
 ¦   ¦   settings.py
 ¦   ¦   urls.py
 ¦   ¦   wsgi.py
 ¦   ¦   __init__.py
-¦           
+¦
 +---courses
 ¦   ¦   achievements.py
 ¦   ¦   admin.py
@@ -30,15 +30,15 @@ ai_learning_platform:.
 ¦   ¦   utils.py
 ¦   ¦   views.py
 ¦   ¦   __init__.py
-¦   ¦   
+¦   ¦
 ¦   +---management
 ¦   ¦   ¦   __init__.py
-¦   ¦   ¦   
+¦   ¦   ¦
 ¦   ¦   +---commands
 ¦   ¦           __init__.py
 ¦   ¦           create_achievements.py
 ¦   ¦           init_streaks.py
-¦   ¦   
+¦   ¦
 ¦   +---migrations
 ¦   ¦   ¦   0001_initial.py
 ¦   ¦   ¦   0002_enrollment.py
@@ -66,7 +66,7 @@ ai_learning_platform:.
 ¦   ¦   ¦   0024_add_slug_to_course.py
 ¦   ¦   ¦   0025_add_streak_and_activity.py
 ¦   ¦   ¦   __init__.py
-¦   ¦           
+¦   ¦
 ¦   +---static
 ¦   ¦   +---courses
 ¦   ¦       +---css
@@ -76,10 +76,10 @@ ai_learning_platform:.
 ¦   ¦       +---js
 ¦   ¦               comments.js
 ¦   ¦               follow.js
-¦   ¦               
+¦   ¦
 ¦   +---templates
 ¦   ¦   ¦   base.html
-¦   ¦   ¦   
+¦   ¦   ¦
 ¦   ¦   +---courses
 ¦   ¦           certificate.html
 ¦   ¦           course_checkout.html
@@ -101,11 +101,11 @@ ai_learning_platform:.
 ¦   ¦           recent_achievements.html
 ¦   ¦           recommendations.html
 ¦   ¦           review_form.html
-¦   ¦ 
+¦   ¦
 ¦   ¦   	       +---email
 ¦   ¦   			comment_reply.html
 ¦   ¦			comment_reply.txt
-¦   ¦           
+¦   ¦
 ¦   +---templatetags
 ¦   ¦   ¦   course_extras.py
 ¦   ¦   ¦   course_filters.py
@@ -113,7 +113,7 @@ ai_learning_platform:.
 ¦   ¦
 ¦   +---tests
 ¦   ¦   ¦   test_recommendations.py
-¦           
+¦
 +---media
 ¦   +---avatars
 ¦           111.jpg
@@ -121,11 +121,11 @@ ai_learning_platform:.
 ¦           modeified_image_zNanPjG.jpg
 ¦           photo.jpg
 ¦           WhatsApp_Image_2025-03-14_at_23.55.28_9605e039.jpg
-¦           
+¦
 +---templates
 ¦   +---registration
 ¦           login.html
-¦           
+¦
 +---users
     ¦   admin.py
     ¦   apps.py
@@ -135,7 +135,7 @@ ai_learning_platform:.
     ¦   urls.py
     ¦   views.py
     ¦   __init__.py
-    ¦   
+    ¦
     +---migrations
     ¦   ¦   0001_initial.py
     ¦   ¦   0002_alter_user_managers.py
@@ -143,7 +143,7 @@ ai_learning_platform:.
     ¦   ¦   0004_alter_user_options_alter_user_avatar_alter_user_bio_and_more.py
     ¦   ¦   0005_add_follow_model.py
     ¦   ¦   __init__.py
-    ¦           
+    ¦
     +---templates
     ¦   +---users
     ¦	        profile.html
@@ -153,6 +153,3 @@ ai_learning_platform:.
     ¦           followers_list.html
     ¦           following_list.html
     ¦           public_profile.html
-
-
-            

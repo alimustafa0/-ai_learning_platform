@@ -19,7 +19,7 @@
                     <h3 class="fw-bold mb-0">Create Account</h3>
                     <p class="text-white-50 mb-0">Start your learning journey today</p>
                 </div>
-                
+
                 <div class="card-body p-5">
                     <!-- Form Errors -->
                     {% if form.errors %}
@@ -37,11 +37,11 @@
                             </div>
                         </div>
                     {% endif %}
-                    
+
                     <!-- Sign Up Form -->
                     <form method="post" novalidate>
                         {% csrf_token %}
-                        
+
                         <!-- Email Field -->
                         <div class="mb-4">
                             <label for="id_email" class="form-label fw-bold text-muted">
@@ -62,7 +62,7 @@
                                 We'll never share your email with anyone else.
                             </div>
                         </div>
-                        
+
                         <!-- Password Field -->
                         <div class="mb-4">
                             <label for="id_password1" class="form-label fw-bold text-muted">
@@ -73,8 +73,8 @@
                                     <i class="fas fa-key text-muted"></i>
                                 </span>
                                 {{ form.password1 }}
-                                <button class="btn btn-light border" 
-                                        type="button" 
+                                <button class="btn btn-light border"
+                                        type="button"
                                         onclick="togglePassword('id_password1', 'togglePasswordIcon1')"
                                         style="border-left: none !important;">
                                     <i class="fas fa-eye" id="togglePasswordIcon1"></i>
@@ -96,7 +96,7 @@
                                 </div>
                             {% endif %}
                         </div>
-                        
+
                         <!-- Password Confirmation -->
                         <div class="mb-4">
                             <label for="id_password2" class="form-label fw-bold text-muted">
@@ -107,8 +107,8 @@
                                     <i class="fas fa-check text-muted"></i>
                                 </span>
                                 {{ form.password2 }}
-                                <button class="btn btn-light border" 
-                                        type="button" 
+                                <button class="btn btn-light border"
+                                        type="button"
                                         onclick="togglePassword('id_password2', 'togglePasswordIcon2')"
                                         style="border-left: none !important;">
                                     <i class="fas fa-eye" id="togglePasswordIcon2"></i>
@@ -123,25 +123,25 @@
                                 Enter the same password as before, for verification.
                             </div>
                         </div>
-                        
+
                         <!-- Terms & Conditions -->
                         <div class="mb-4">
                             <div class="form-check">
                                 <input type="checkbox" class="form-check-input" id="terms" required>
                                 <label class="form-check-label text-muted small" for="terms">
-                                    I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> and 
+                                    I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> and
                                     <a href="#" class="text-decoration-none">Privacy Policy</a>
                                 </label>
                             </div>
                         </div>
-                        
+
                         <!-- Submit Button -->
                         <div class="d-grid">
                             <button type="submit" class="btn btn-success btn-lg">
                                 <i class="fas fa-user-plus me-2"></i>Create Account
                             </button>
                         </div>
-                        
+
                         <!-- Bonus XP Badge -->
                         <div class="text-center mt-3">
                             <span class="badge bg-warning text-dark p-2">
@@ -150,11 +150,11 @@
                             </span>
                         </div>
                     </form>
-                    
+
                     <!-- Login Link -->
                     <div class="text-center mt-4 pt-3 border-top">
                         <p class="text-muted mb-0">
-                            Already have an account? 
+                            Already have an account?
                             <a href="{% url 'login' %}" class="fw-bold text-decoration-none">
                                 Log in here <i class="fas fa-arrow-right ms-1"></i>
                             </a>
@@ -162,7 +162,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Benefits Card -->
             <div class="card border-0 shadow-sm mt-4">
                 <div class="card-body p-4">
@@ -200,7 +200,7 @@
     function togglePassword(inputId, iconId) {
         const passwordInput = document.getElementById(inputId);
         const toggleIcon = document.getElementById(iconId);
-        
+
         if (passwordInput.type === 'password') {
             passwordInput.type = 'text';
             toggleIcon.classList.remove('fa-eye');
@@ -211,7 +211,7 @@
             toggleIcon.classList.add('fa-eye');
         }
     }
-    
+
     // Add Bootstrap classes to form fields
     document.addEventListener('DOMContentLoaded', function() {
         // Style email field
@@ -220,14 +220,14 @@
             emailField.classList.add('form-control', 'border-start-0', 'ps-0');
             emailField.placeholder = 'your@email.com';
         }
-        
+
         // Style password fields
         const password1 = document.getElementById('id_password1');
         if (password1) {
             password1.classList.add('form-control', 'border-start-0', 'ps-0');
             password1.placeholder = '••••••••';
         }
-        
+
         const password2 = document.getElementById('id_password2');
         if (password2) {
             password2.classList.add('form-control', 'border-start-0', 'ps-0');
@@ -240,35 +240,35 @@
     .bg-gradient-success {
         background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
     }
-    
+
     .form-control:focus {
         border-color: var(--secondary);
         box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
     }
-    
+
     .input-group-text {
         background: white;
         border-right: none;
     }
-    
+
     .input-group .form-control {
         border-left: none;
     }
-    
+
     .input-group .form-control:focus + .btn {
         border-color: var(--secondary);
         box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
     }
-    
+
     .btn-light.border {
         background: white;
         border-color: #dee2e6 !important;
     }
-    
+
     .btn-light.border:hover {
         background: #f8f9fa;
     }
-    
+
     .form-text ul {
         margin-top: 5px;
         padding-left: 20px;

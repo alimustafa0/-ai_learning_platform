@@ -9,20 +9,20 @@
         <h2 style="color: #007bff;">
             <i class="fas fa-reply"></i> Someone replied to your comment
         </h2>
-        
+
         <p><strong>{{ replier.get_full_name|default:replier.email }}</strong> replied to your comment on <strong>{{ reply_comment.lesson.title }}</strong>:</p>
-        
+
         <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
             <p style="margin: 0;">{{ reply_comment.content|linebreaks }}</p>
         </div>
-        
+
         <div style="margin: 30px 0;">
-            <a href="{{ lesson_url }}" 
+            <a href="{{ lesson_url }}"
                style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
                 View Discussion
             </a>
         </div>
-        
+
         <p style="color: #666; font-size: 0.9em;">
             You're receiving this because you commented on this lesson.
         </p>

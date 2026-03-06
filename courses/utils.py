@@ -15,21 +15,21 @@ def send_comment_notification_async(parent_comment, reply_comment, replier):
     try:
         if not parent_comment.user.email:
             return
-        
+
         subject = f"Someone replied to your comment on {reply_comment.lesson.title}"
-        
+
         lesson_url = settings.SITE_URL + reverse('lesson_detail', args=[reply_comment.lesson.id])
-        
+
         context = {
             'parent_comment': parent_comment,
             'reply_comment': reply_comment,
             'replier': replier,
             'lesson_url': lesson_url,
         }
-        
+
         html_message = render_to_string('courses/email/comment_reply.html', context)
         plain_message = render_to_string('courses/email/comment_reply.txt', context)
-        
+
         # Send email - this might still be slow but it's in a thread now
         send_mail(
             subject,

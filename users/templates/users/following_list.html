@@ -28,9 +28,9 @@
                                             <div class="flex-shrink-0 me-3">
                                                 <a href="{% url 'public_profile' followed_user.email %}">
                                                     {% if followed_user.avatar %}
-                                                        <img src="{{ followed_user.avatar.url }}" 
-                                                             alt="{{ followed_user.email }}" 
-                                                             class="rounded-circle" 
+                                                        <img src="{{ followed_user.avatar.url }}"
+                                                             alt="{{ followed_user.email }}"
+                                                             class="rounded-circle"
                                                              width="64" height="64"
                                                              style="object-fit: cover;">
                                                     {% else %}
@@ -41,11 +41,11 @@
                                                     {% endif %}
                                                 </a>
                                             </div>
-                                            
+
                                             <!-- Info -->
                                             <div class="flex-grow-1">
                                                 <h6 class="fw-bold mb-1">
-                                                    <a href="{% url 'public_profile' followed_user.email %}" 
+                                                    <a href="{% url 'public_profile' followed_user.email %}"
                                                        class="text-decoration-none text-dark">
                                                         {{ followed_user.get_full_name|default:followed_user.email }}
                                                     </a>
@@ -55,9 +55,9 @@
                                                         <i class="fas fa-map-marker-alt me-1"></i>{{ followed_user.location }}
                                                     </small>
                                                 {% endif %}
-                                                
+
                                                 <!-- Unfollow button - Now uses profile-follow-btn class -->
-                                                <button class="btn btn-sm btn-outline-danger profile-follow-btn" 
+                                                <button class="btn btn-sm btn-outline-danger profile-follow-btn"
                                                         data-user-id="{{ followed_user.id }}">
                                                     <i class="fas fa-user-minus me-1"></i>
                                                     <span>Unfollow</span>

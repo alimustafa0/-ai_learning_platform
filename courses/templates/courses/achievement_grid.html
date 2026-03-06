@@ -9,26 +9,26 @@
                     <div class="achievement-icon-wrapper mb-3">
                         <span class="achievement-icon display-4">{{ item.achievement.icon|default:"🏆" }}</span>
                     </div>
-                    
+
                     <!-- Achievement Name -->
                     <h6 class="fw-bold mb-2">{{ item.achievement.name }}</h6>
-                    
+
                     <!-- Achievement Description -->
                     {% if item.achievement.description %}
                         <p class="small text-muted mb-3">{{ item.achievement.description }}</p>
                     {% endif %}
-                    
+
                     <!-- Progress Bar (for locked achievements) -->
                     {% if not item.unlocked and item.threshold > 0 %}
                         <div class="progress mb-2" style="height: 6px;">
-                            <div class="progress-bar {% if item.percentage > 50 %}bg-success{% else %}bg-info{% endif %}" 
+                            <div class="progress-bar {% if item.percentage > 50 %}bg-success{% else %}bg-info{% endif %}"
                                  style="width: {{ item.percentage }}%;"></div>
                         </div>
                         <small class="text-muted">
                             {{ item.current }}/{{ item.threshold }}
                         </small>
                     {% endif %}
-                    
+
                     <!-- Status Badge -->
                     {% if item.unlocked %}
                         <span class="badge bg-success mt-2">
@@ -44,7 +44,7 @@
                             {% endif %}
                         </span>
                     {% endif %}
-                    
+
                     <!-- XP Reward -->
                     <div class="xp-badge mt-2">
                         <small class="text-warning">

@@ -21,11 +21,11 @@ class CustomUserCreationForm(UserCreationForm):
         required=True,
         widget=forms.TextInput(attrs={'placeholder': 'Last Name'})
     )
-    
+
     class Meta:
         model = User
         fields = ("email", "first_name", "last_name", "password1", "password2")
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Add Bootstrap classes to all fields
@@ -41,21 +41,21 @@ class UserProfileForm(forms.ModelForm):
     """
     Form for users to update their profile information.
     """
-    
+
     # Add website validation
     website = forms.URLField(
         required=False,
         validators=[URLValidator()],
         widget=forms.URLInput(attrs={'placeholder': 'https://example.com'})
     )
-    
+
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'bio', 'avatar', 'website', 'location']
         widgets = {
             'bio': forms.Textarea(attrs={'rows': 3}),
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Add Bootstrap classes to all fields
@@ -64,45 +64,45 @@ class UserProfileForm(forms.ModelForm):
             # Add placeholders based on field names
             if not field.widget.attrs.get('placeholder'):
                 field.widget.attrs['placeholder'] = field.label or field_name.replace('_', ' ').title()
-    
+
     def clean_avatar(self):
         """Validate avatar file uploads"""
         avatar = self.cleaned_data.get('avatar')
-        
+
         if not avatar:
             return avatar
-        
+
         # Check file size (max 2MB)
         if avatar.size > 2 * 1024 * 1024:
             raise ValidationError('Image file too large (max 2MB)')
-        
+
         # Check file extension
         ext = os.path.splitext(avatar.name)[1].lower()
         valid_extensions = ['.jpg', '.jpeg', '.png', '.gif']
         if ext not in valid_extensions:
             raise ValidationError(f'Unsupported file extension. Allowed: {", ".join(valid_extensions)}')
-        
+
         # Check content type (basic check)
         valid_mime_types = ['image/jpeg', 'image/png', 'image/gif']
         if hasattr(avatar, 'content_type') and avatar.content_type not in valid_mime_types:
             raise ValidationError('Please upload a valid image file (JPEG, PNG, or GIF)')
-        
+
         return avatar
-    
+
     def clean_website(self):
         """Additional website validation"""
         website = self.cleaned_data.get('website')
-        
+
         if website:
             # Ensure URL has protocol
             if not website.startswith(('http://', 'https://')):
                 website = 'https://' + website
-                
+
             # Validate using Django's URLValidator
             validator = URLValidator()
             try:
                 validator(website)
             except ValidationError:
                 raise ValidationError('Please enter a valid URL')
-        
+
         return website

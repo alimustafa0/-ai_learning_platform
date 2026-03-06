@@ -58,7 +58,7 @@
                     </li>
                 </ol>
             </nav>
-            
+
             <!-- Main Card -->
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
@@ -66,17 +66,17 @@
                         <i class="fas fa-star text-warning me-2"></i>
                         {% if is_editing %}Edit Your Review{% else %}Write a Review{% endif %}
                     </h2>
-                    
+
                     <!-- Course Info Preview -->
                     <div class="review-preview mb-4">
                         <h5 class="fw-bold mb-2">{{ course.title }}</h5>
                         <p class="mb-0 opacity-75 small">Share your experience to help other learners</p>
                     </div>
-                    
+
                     <!-- Review Form -->
                     <form method="post">
                         {% csrf_token %}
-                        
+
                         <!-- Rating Field -->
                         <div class="mb-4">
                             <label class="form-label fw-bold">Your Rating</label>
@@ -93,7 +93,7 @@
                                 <div class="text-danger small mt-1">{{ form.rating.errors }}</div>
                             {% endif %}
                         </div>
-                        
+
                         <!-- Comment Field -->
                         <div class="mb-4">
                             <label for="{{ form.comment.id_for_label }}" class="form-label fw-bold">
@@ -107,7 +107,7 @@
                                 <div class="text-danger small mt-1">{{ form.comment.errors }}</div>
                             {% endif %}
                         </div>
-                        
+
                         <!-- Tips -->
                         <div class="alert alert-info mb-4">
                             <i class="fas fa-lightbulb me-2"></i>
@@ -119,7 +119,7 @@
                                 <li>Keep it constructive and respectful</li>
                             </ul>
                         </div>
-                        
+
                         <!-- Form Actions -->
                         <div class="d-flex gap-3">
                             <button type="submit" class="btn btn-primary">
@@ -130,7 +130,7 @@
                                 Cancel
                             </a>
                             {% if is_editing %}
-                                <button type="button" class="btn btn-outline-danger ms-auto" 
+                                <button type="button" class="btn btn-outline-danger ms-auto"
                                         onclick="confirmDelete()">
                                     <i class="fas fa-trash me-2"></i>Delete Review
                                 </button>

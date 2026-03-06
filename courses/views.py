@@ -52,34 +52,34 @@ def course_detail(request, course_id):
         total_xp = XPEvent.objects.filter(user=request.user).aggregate(total=Sum('points'))['total'] or 0
         current_level, next_level = get_level_progress(total_xp)
         user_level_number = current_level[0]
-        
+
         # Check if user is enrolled in this course
         is_enrolled = Enrollment.objects.filter(
-            user=request.user, 
+            user=request.user,
             course=course
         ).exists()
-        
+
         # Get user's review if it exists
         user_review = course.reviews.filter(user=request.user).first()
-        
+
         # Get completed lessons for this course
         completed_lessons = []
         completed_count = 0
         total_lessons = 0
         progress_percentage = 0
-        
+
         if is_enrolled:
             completed_lessons = LessonCompletion.objects.filter(
                 user=request.user,
                 lesson__module__course=course
             ).values_list('lesson_id', flat=True)
-            
+
             completed_count = len(completed_lessons)
             total_lessons = Lesson.objects.filter(module__course=course).count()
-            
+
             if total_lessons > 0:
                 progress_percentage = int((completed_count / total_lessons) * 100)
-        
+
         # Get IDs of reviews this user found helpful
         user_helpful_review_ids = []
         if request.user.is_authenticated:
@@ -94,7 +94,7 @@ def course_detail(request, course_id):
             following_ids = set(Follow.objects.filter(
                 follower=request.user
             ).values_list('following_id', flat=True))
-            
+
     else:
         # For anonymous users
         user_level_number = 0
@@ -115,10 +115,10 @@ def course_detail(request, course_id):
             "user_level_number": user_level_number,
             "following_ids": following_ids,
         })
-    
+
     # Get rating distribution
     distribution = course.rating_distribution()
-    
+
     return render(request, "courses/course_detail.html", {
         "course": course,
         "user_level_number": user_level_number,
@@ -140,12 +140,12 @@ def enroll_course(request, course_id):
     For paid courses: redirect to checkout.
     """
     course = get_object_or_404(Course, id=course_id, is_published=True)
-    
+
     # Check if already enrolled
     if Enrollment.objects.filter(user=request.user, course=course).exists():
         messages.info(request, f"You are already enrolled in '{course.title}'.")
         return redirect('course_detail', course_id=course.id)
-    
+
     # Check if course is free
     if course.is_free():
         # Free course: enroll directly
@@ -153,7 +153,7 @@ def enroll_course(request, course_id):
             user=request.user,
             course=course
         )
-        
+
         if created:
             messages.success(request, f"You have successfully enrolled in '{course.title}'!")
             # Award XP for enrollment
@@ -190,10 +190,10 @@ def lesson_detail(request, lesson_id):
 
     if not is_enrolled:
         return render(request, "courses/not_enrolled.html", {"course": course})
-    
+
     is_completed = LessonCompletion.objects.filter(user=request.user, lesson=lesson).exists()
     completed_lessons = LessonCompletion.objects.filter(user=request.user, lesson__module__course=course).values_list("lesson_id", flat=True)
-    
+
     total_lessons = Lesson.objects.filter(module__course=course).count()
     completed_count = len(completed_lessons)
     progress_percentage = int((completed_count / total_lessons) * 100) if total_lessons > 0 else 0
@@ -206,18 +206,18 @@ def lesson_detail(request, lesson_id):
         'replies__user',
         'replies__upvotes'
     ).order_by('-created_at')
-    
+
     # Paginate comments - show 5 per page initially
     page = request.GET.get('comments_page', 1)
     paginator = Paginator(comments_list, 5)  # Show 5 comments per page
-    
+
     try:
         comments = paginator.page(page)
     except PageNotAnInteger:
         comments = paginator.page(1)
     except EmptyPage:
         comments = paginator.page(paginator.num_pages)
-    
+
     # Check which comments the user has upvoted (for all comments on this page)
     user_upvoted_comment_ids = set()
     if request.user.is_authenticated:
@@ -225,7 +225,7 @@ def lesson_detail(request, lesson_id):
         comment_ids = [c.id for c in comments]
         for comment in comments:
             comment_ids.extend([r.id for r in comment.replies.all()])
-        
+
         user_upvoted = Comment.upvotes.through.objects.filter(
             comment_id__in=comment_ids,
             user_id=request.user.id
@@ -238,9 +238,9 @@ def lesson_detail(request, lesson_id):
         following_ids = set(Follow.objects.filter(
             follower=request.user
         ).values_list('following_id', flat=True))
-    
+
     comment_form = CommentForm()
-    
+
     if request.method == 'POST' and 'comment_submit' in request.POST:
         comment_form = CommentForm(request.POST)
         if comment_form.is_valid():
@@ -250,7 +250,7 @@ def lesson_detail(request, lesson_id):
             comment.save()
             messages.success(request, "Your comment has been posted!")
             return redirect('lesson_detail', lesson_id=lesson.id)
-    
+
     return render(request, "courses/lesson_detail.html", {
         "lesson": lesson,
         "content": html_content,
@@ -296,15 +296,15 @@ def mark_lesson_complete(request, lesson_id):
             points=10,
             reason=f"Completed lesson: {lesson.title}",
         )
-        
+
         # ===== UPDATED: Update streak and activity with request =====
         from datetime import date
         today = date.today()
-        
+
         # Get or create streak
         streak, _ = LearningStreak.objects.get_or_create(user=request.user)
         streak.update_streak(today, request)  # This will call check_streak_achievements
-        
+
         # Update daily activity
         activity, _ = LearningActivity.objects.get_or_create(
             user=request.user,
@@ -320,10 +320,10 @@ def mark_lesson_complete(request, lesson_id):
 
     # Calculate total completed lessons count
     total_completed = LessonCompletion.objects.filter(user=request.user).count()
-    
+
     # Check for lesson count achievements (1st, 5th, 10th lesson etc.)
     check_lesson_count_achievements(request.user, total_completed, request)
-    
+
     # Check for course completion achievements
     check_course_completion_achievements(request.user, course, request)
 
@@ -334,7 +334,7 @@ def mark_lesson_complete(request, lesson_id):
     # 5. Compare: Did we Level Up?
     if level_after[0] > level_before[0]:
         messages.success(
-            request, 
+            request,
             f"🎉 LEVEL UP! You reached Level {level_after[0]} - {level_after[1]}!"
         )
 
@@ -359,13 +359,13 @@ def dashboard(request):
     from .recommendations import get_course_recommendations
 
     recommendations = get_course_recommendations(request.user, limit=3)
-    
+
     # Calculate user stats
     total_xp = XPEvent.objects.filter(user=request.user).aggregate(total=Sum('points'))['total'] or 0
     current_level, next_level = get_level_progress(total_xp)
-    
+
     level_number, level_title, level_xp = current_level
-    
+
     if next_level:
         next_level_number, next_level_title, next_level_xp = next_level
         xp_into_level = total_xp - level_xp
@@ -374,7 +374,7 @@ def dashboard(request):
     else:
         next_level_title = "MAX"
         level_progress_percent = 100
-    
+
     # Get all achievements
     all_achievements = Achievement.objects.all()
     unlocked_ids = UserAchievement.objects.filter(
@@ -385,31 +385,31 @@ def dashboard(request):
     from .achievements import get_achievement_progress, get_recent_achievements
     achievement_progress = get_achievement_progress(request.user)
     recent_achievements = get_recent_achievements(request.user)
-    
+
     # Get enrollments and course progress
     enrollments = request.user.enrollments.select_related("course")
     course_data = []
     in_progress_courses = []
     completed_courses = []
-    
+
     for enrollment in enrollments:
         course = enrollment.course
-        
+
         total_lessons = Lesson.objects.filter(
             module__course=course
         ).count()
-        
+
         completed_count = LessonCompletion.objects.filter(
             user=request.user,
             lesson__module__course=course
         ).count()
-        
+
         progress_percentage = 0
         if total_lessons > 0:
             progress_percentage = int((completed_count / total_lessons) * 100)
-        
+
         is_completed = completed_count == total_lessons and total_lessons > 0
-        
+
         # Get the next lesson to continue
         next_lesson = None
         if not is_completed:
@@ -417,17 +417,17 @@ def dashboard(request):
             lessons = Lesson.objects.filter(
                 module__course=course
             ).order_by("module__order", "order")
-            
+
             completed_ids = LessonCompletion.objects.filter(
                 user=request.user,
                 lesson__module__course=course
             ).values_list('lesson_id', flat=True)
-            
+
             for lesson in lessons:
                 if lesson.id not in completed_ids:
                     next_lesson = lesson
                     break
-        
+
         course_info = {
             "course": course,
             "total_lessons": total_lessons,
@@ -437,26 +437,26 @@ def dashboard(request):
             "next_lesson": next_lesson,
             "enrolled_at": enrollment.enrolled_at,
         }
-        
+
         course_data.append(course_info)
-        
+
         # Separate into in-progress and completed
         if is_completed:
             completed_courses.append(course_info)
         else:
             in_progress_courses.append(course_info)
-    
+
     # Sort in-progress courses by enrollment date (most recent first)
     in_progress_courses.sort(key=lambda x: x['enrolled_at'], reverse=True)
-    
+
     # Get payment history
     payment_history = Payment.objects.filter(user=request.user).order_by('-created_at')[:5]
-    
+
     # Get recent activity (last 5 completed lessons)
     recent_activity = LessonCompletion.objects.filter(
         user=request.user
     ).select_related('lesson', 'lesson__module__course').order_by('-completed_at')[:5]
-    
+
     return render(request, "courses/dashboard.html", {
         "total_xp": total_xp,
         "level_number": level_number,
@@ -514,17 +514,17 @@ def course_completed(request, course_id):
     is_enrolled = course.enrollments.filter(user=request.user).exists()
     if not is_enrolled:
         return render(request, "courses/not_enrolled.html", {"course": course})
-    
+
     # Calculate total lessons and completed lessons
     total_lessons = Lesson.objects.filter(module__course=course).count()
     completed_lessons = LessonCompletion.objects.filter(
         user=request.user,
         lesson__module__course=course
     ).count()
-    
+
     # Calculate XP earned for this course (10 XP per lesson)
     course_xp = completed_lessons * 10
-    
+
     # Check if user already has a certificate for this course
     from .models import Certificate
     has_certificate = Certificate.objects.filter(user=request.user, course=course).exists()
@@ -543,17 +543,17 @@ def course_checkout(request, course_id):
     Display checkout page for a paid course.
     """
     course = get_object_or_404(Course, id=course_id, is_published=True)
-    
+
     # Check if already enrolled
     if Enrollment.objects.filter(user=request.user, course=course).exists():
         messages.info(request, f"You are already enrolled in '{course.title}'.")
         return redirect('course_detail', course_id=course.id)
-    
+
     # Check if course is actually paid
     if course.is_free():
         messages.info(request, f"'{course.title}' is free. Redirecting to enrollment...")
         return redirect('enroll_course', course_id=course.id)
-    
+
     return render(request, 'courses/course_checkout.html', {
         'course': course,
         'stripe_public_key': setting.STRIPE_PUBLISHABLE_KEY,
@@ -566,21 +566,21 @@ def course_checkout(request, course_id):
 #     """
 #     if request.method != 'POST':
 #         return redirect('course_checkout', course_id=course_id)
-    
+
 #     course = get_object_or_404(Course, id=course_id, is_published=True)
-    
+
 #     # Check if already enrolled
 #     if Enrollment.objects.filter(user=request.user, course=course).exists():
 #         messages.info(request, f"You are already enrolled in '{course.title}'.")
 #         return redirect('course_detail', course_id=course.id)
-    
+
 #     # Check if course is free (shouldn't happen but as safety)
 #     if course.is_free():
 #         return redirect('enroll_course', course_id=course.id)
-    
+
 #     # Simulate payment processing
 #     # In a real implementation, this would communicate with Stripe
-    
+
 #     # Create a payment record
 #     payment = Payment.objects.create(
 #         user=request.user,
@@ -591,13 +591,13 @@ def course_checkout(request, course_id):
 #         currency="USD",
 #         status="succeeded"
 #     )
-    
+
 #     # Enroll the user
 #     enrollment, created = Enrollment.objects.get_or_create(
 #         user=request.user,
 #         course=course
 #     )
-    
+
 #     if created:
 #         # Award XP for enrollment (even paid courses get XP)
 #         XPEvent.objects.create(
@@ -605,14 +605,14 @@ def course_checkout(request, course_id):
 #             points=25,
 #             reason=f"Enrolled in paid course: {course.title}",
 #         )
-        
+
 #         # Award XP for payment (bonus for supporting platform)
 #         XPEvent.objects.create(
 #             user=request.user,
 #             points=50,
 #             reason=f"Purchased course: {course.title}",
 #         )
-    
+
 #     messages.success(request, f"🎉 Payment successful! You are now enrolled in '{course.title}'.")
 #     return redirect('course_detail', course_id=course.id)
 
@@ -622,23 +622,23 @@ def create_checkout_session(request, course_id):
     Create a Stripe Checkout Session for course purchase.
     """
     course = get_object_or_404(Course, id=course_id, is_published=True)
-    
+
     # Check if already enrolled
     if Enrollment.objects.filter(user=request.user, course=course).exists():
         messages.info(request, f"You are already enrolled in '{course.title}'.")
         return redirect('course_detail', course_id=course.id)
-    
+
     # Check if course is free
     if course.is_free():
         return redirect('enroll_course', course_id=course.id)
-    
+
     # Check for existing pending payment
     existing_payment = Payment.objects.filter(
         user=request.user,
         course=course,
         status='pending'
     ).first()
-    
+
     if existing_payment:
         # Try to retrieve existing session
         try:
@@ -647,7 +647,7 @@ def create_checkout_session(request, course_id):
         except:
             # Session expired or invalid, continue to create new one
             pass
-    
+
     try:
         # Build URLs
         success_url = request.build_absolute_uri(
@@ -656,7 +656,7 @@ def create_checkout_session(request, course_id):
         cancel_url = request.build_absolute_uri(
             reverse('course_detail', kwargs={'course_id': course.id})
         )
-        
+
         # Create Stripe Checkout Session
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
@@ -680,10 +680,10 @@ def create_checkout_session(request, course_id):
             },
             customer_email=request.user.email,
         )
-        
+
         # Generate unique payment intent ID
         payment_intent_id = checkout_session.payment_intent or f"pending_{checkout_session.id}"
-        
+
         # Create a pending payment record
         Payment.objects.create(
             user=request.user,
@@ -694,40 +694,40 @@ def create_checkout_session(request, course_id):
             currency="USD",
             status="pending"
         )
-        
+
         # Redirect to Stripe Checkout
         return redirect(checkout_session.url)
-        
+
     except Exception as e:
         messages.error(request, f"Payment error: {str(e)}")
         return redirect('course_checkout', course_id=course.id)
-    
+
 @login_required
 def payment_success(request, course_id):
     """
     Handle successful payment and enroll user.
     """
     session_id = request.GET.get('session_id')
-    
+
     if not session_id:
         messages.error(request, "Invalid payment session.")
         return redirect('course_detail', course_id=course_id)
-    
+
     try:
         # Retrieve the session from Stripe
         session = stripe.checkout.Session.retrieve(session_id)
-        
+
         # Verify the session belongs to this user/course
         if str(session.metadata.get('user_id')) != str(request.user.id):
             messages.error(request, "This payment session doesn't belong to you.")
             return redirect('course_detail', course_id=course_id)
-        
+
         if str(session.metadata.get('course_id')) != str(course_id):
             messages.error(request, "Payment session course mismatch.")
             return redirect('course_detail', course_id=course_id)
-        
+
         course = get_object_or_404(Course, id=course_id)
-        
+
         # Find or create payment record
         payment, created = Payment.objects.get_or_create(
             stripe_checkout_session_id=session_id,
@@ -740,19 +740,19 @@ def payment_success(request, course_id):
                 'status': 'pending'
             }
         )
-        
+
         # Update payment status
         if session.payment_status == 'paid':
             payment.status = 'succeeded'
             payment.stripe_payment_intent_id = session.payment_intent or payment.stripe_payment_intent_id
             payment.save()
-            
+
             # Enroll the user if not already
             enrollment, enrolled = Enrollment.objects.get_or_create(
                 user=request.user,
                 course=course
             )
-            
+
             if enrolled:
                 # Award XP
                 XPEvent.objects.create(
@@ -765,7 +765,7 @@ def payment_success(request, course_id):
                     points=50,
                     reason=f"Purchased course: {course.title}",
                 )
-                
+
                 # Try to send receipt email (optional)
                 try:
                     payment.send_receipt_email()
@@ -773,15 +773,15 @@ def payment_success(request, course_id):
                     # Don't crash the payment flow if email fails
                     print(f"Receipt email failed (non-critical): {email_error}")
                     # You could log this to a proper logging system
-            
+
             messages.success(request, f"🎉 Payment successful! You are now enrolled in '{course.title}'.")
         else:
             payment.status = 'pending'
             payment.save()
             messages.warning(request, "Payment is still processing. Please wait a moment.")
-        
+
         return redirect('course_detail', course_id=course_id)
-        
+
     except stripe.error.StripeError as e:
         messages.error(request, f"Stripe error: {str(e)}")
         return redirect('course_detail', course_id=course_id)
@@ -795,14 +795,14 @@ def payment_receipt(request, payment_id):
     Display payment receipt/invoice.
     """
     payment = get_object_or_404(Payment, id=payment_id, user=request.user)
-    
+
     # Verify user owns this payment
     if payment.user != request.user and not request.user.is_staff:
         messages.error(request, "You don't have permission to view this receipt.")
         return redirect('dashboard')
-    
+
     receipt_data = payment.get_receipt_data()
-    
+
     return render(request, 'courses/payment_receipt.html', {
         'payment': payment,
         'receipt': receipt_data,
@@ -813,18 +813,18 @@ def leaderboard(request):
     Display user leaderboard based on XP.
     """
     from django.db.models import Sum
-    
+
     # Get users with their XP totals using aggregation (more efficient)
     users_with_xp = User.objects.annotate(
         total_xp=Sum('xp_events__points')
     ).filter(total_xp__gt=0).order_by('-total_xp')[:50]
-    
+
     # Prepare data for template
     leaderboard_data = []
     for i, user in enumerate(users_with_xp, 1):
         total_xp = user.total_xp or 0
         current_level, _ = get_level_progress(total_xp)
-        
+
         leaderboard_data.append({
             'user': user,
             'total_xp': total_xp,
@@ -833,22 +833,22 @@ def leaderboard(request):
             'achievement_count': UserAchievement.objects.filter(user=user).count(),
             'rank': i,
         })
-    
+
     # Get current user's position and XP
     current_user_rank = None
     current_user_xp = 0
-    
+
     if request.user.is_authenticated:
         current_user_xp = XPEvent.objects.filter(user=request.user).aggregate(
             Sum("points")
         )["points__sum"] or 0
-        
+
         # Find user's rank
         for i, user in enumerate(users_with_xp, 1):
             if user.id == request.user.id:
                 current_user_rank = i
                 break
-    
+
     return render(request, 'courses/leaderboard.html', {
         'leaderboard': leaderboard_data,
         'current_user_rank': current_user_rank,
@@ -861,10 +861,10 @@ def welcome(request):
     # Get some stats for the homepage
     total_courses = Course.objects.filter(is_published=True).count()
     total_users = User.objects.count()
-    
+
     # Get featured courses
     featured_courses = Course.objects.filter(is_published=True)[:3]
-    
+
     return render(request, 'courses/welcome.html', {
         'total_courses': total_courses,
         'total_users': total_users,
@@ -879,14 +879,14 @@ def add_comment(request, lesson_id):
     Optimized for performance.
     """
     lesson = get_object_or_404(Lesson, id=lesson_id)
-    
+
     if request.method == 'POST':
         form = CommentForm(request.POST)
         if form.is_valid():
             comment = form.save(commit=False)
             comment.lesson = lesson
             comment.user = request.user
-            
+
             # Check if this is a reply
             parent_id = request.POST.get('parent_id')
             if parent_id and parent_id.strip() and parent_id != 'None':
@@ -894,7 +894,7 @@ def add_comment(request, lesson_id):
                     # Use select_related to fetch the user in one query
                     parent = Comment.objects.select_related('user').get(id=parent_id)
                     comment.parent = parent
-                    
+
                     # Send notification in background using Celery or async task
                     # For now, let's do it in a non-blocking way
                     if parent.user != request.user:
@@ -907,37 +907,37 @@ def add_comment(request, lesson_id):
                         )
                         email_thread.daemon = True
                         email_thread.start()
-                        
+
                 except Comment.DoesNotExist:
                     pass
-            
+
             # Save the comment
             comment.save()
-            
+
             # Award XP - do this in a separate operation
             XPEvent.objects.create(
                 user=request.user,
                 points=2,
                 reason=f"Posted a comment on lesson: {lesson.title[:50]}"
             )
-            
+
             # For AJAX requests - return minimal data
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 from django.template.loader import render_to_string
-                
+
                 # Pre-fetch related data to avoid N+1 queries in template
                 comment = Comment.objects.select_related(
                     'user', 'parent'
                 ).prefetch_related(
                     'upvotes', 'replies'
                 ).get(id=comment.id)
-                
+
                 # Render only what's needed
                 html = render_to_string('courses/comment_partial.html', {
                     'comment': comment,
                     'user': request.user,
                 }, request=request)
-                
+
                 return JsonResponse({
                     'status': 'success',
                     'html': html,
@@ -953,7 +953,7 @@ def add_comment(request, lesson_id):
                     'status': 'error',
                     'errors': form.errors
                 }, status=400)
-    
+
     return redirect('lesson_detail', lesson_id=lesson.id)
 
 @login_required
@@ -964,13 +964,13 @@ def upvote_comment(request, comment_id):
     Toggle upvote on a comment.
     """
     comment = get_object_or_404(Comment, id=comment_id)
-    
+
     if comment.user == request.user:
         return JsonResponse({
             'status': 'error',
             'message': 'You cannot upvote your own comment'
         }, status=400)
-    
+
     if comment.upvotes.filter(id=request.user.id).exists():
         # Remove upvote
         comment.upvotes.remove(request.user)
@@ -979,7 +979,7 @@ def upvote_comment(request, comment_id):
         # Add upvote
         comment.upvotes.add(request.user)
         action = 'added'
-        
+
         # Award XP to comment author (small bonus for getting upvotes)
         if comment.user != request.user:
             # Check if this is the first upvote on this comment
@@ -989,7 +989,7 @@ def upvote_comment(request, comment_id):
                     points=1,
                     reason=f"Your comment received an upvote"
                 )
-    
+
     return JsonResponse({
         'status': 'success',
         'action': action,
@@ -1003,25 +1003,25 @@ def edit_comment(request, comment_id):
     Edit a comment.
     """
     comment = get_object_or_404(Comment, id=comment_id, user=request.user)
-    
+
     if request.method == 'POST':
         form = CommentForm(request.POST, instance=comment)
         if form.is_valid():
             comment = form.save(commit=False)
             comment.is_edited = True
             comment.save()
-            
+
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
                     'status': 'success',
                     'content': comment.content
                 })
-            
+
             messages.success(request, "Your comment has been updated!")
             return redirect('lesson_detail', lesson_id=comment.lesson.id)
     else:
         form = CommentForm(instance=comment)
-    
+
     return render(request, 'courses/edit_comment.html', {
         'form': form,
         'comment': comment
@@ -1034,18 +1034,18 @@ def delete_comment(request, comment_id):
     """
     comment = get_object_or_404(Comment, id=comment_id, user=request.user)
     lesson_id = comment.lesson.id
-    
+
     if request.method == 'POST':
         comment.delete()
-        
+
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({
                 'status': 'success',
                 'message': 'Comment deleted successfully'
             })
-        
+
         messages.success(request, "Your comment has been deleted.")
-    
+
     return redirect('lesson_detail', lesson_id=lesson_id)
 
 @login_required
@@ -1054,10 +1054,10 @@ def load_more_comments(request, lesson_id):
     AJAX endpoint to load more comments for a lesson.
     """
     lesson = get_object_or_404(Lesson, id=lesson_id)
-    
+
     # Get page number from request
     page = request.GET.get('page', 1)
-    
+
     # Get comments with optimized queries
     comments_list = lesson.comments.filter(parent=None).select_related(
         'user'
@@ -1065,9 +1065,9 @@ def load_more_comments(request, lesson_id):
         'replies__user',
         'replies__upvotes'
     ).order_by('-created_at')
-    
+
     paginator = Paginator(comments_list, 5)  # Match the per_page setting
-    
+
     try:
         comments_page = paginator.page(page)
     except EmptyPage:
@@ -1075,7 +1075,7 @@ def load_more_comments(request, lesson_id):
             'status': 'error',
             'message': 'No more comments'
         }, status=404)
-    
+
     # Check upvotes for this batch
     comment_ids = [c.id for c in comments_page]
     user_upvoted = set()
@@ -1084,7 +1084,7 @@ def load_more_comments(request, lesson_id):
             comment_id__in=comment_ids,
             user_id=request.user.id
         ).values_list('comment_id', flat=True))
-    
+
     # Render each comment to HTML
     from django.template.loader import render_to_string
     comments_html = []
@@ -1096,7 +1096,7 @@ def load_more_comments(request, lesson_id):
             'user_upvoted_comment_ids': user_upvoted,
         }, request=request)
         comments_html.append(html)
-    
+
     return JsonResponse({
         'status': 'success',
         'comments': comments_html,
@@ -1113,15 +1113,15 @@ def add_review(request, course_id):
     Add or update a review for a course.
     """
     course = get_object_or_404(Course, id=course_id, is_published=True)
-    
+
     # Check if user is enrolled
     if not Enrollment.objects.filter(user=request.user, course=course).exists():
         messages.error(request, "You must be enrolled in this course to review it.")
         return redirect('course_detail', course_id=course.id)
-    
+
     # Check if user already reviewed
     existing_review = Review.objects.filter(course=course, user=request.user).first()
-    
+
     if request.method == 'POST':
         form = ReviewForm(request.POST, instance=existing_review)
         if form.is_valid():
@@ -1129,9 +1129,9 @@ def add_review(request, course_id):
             review.course = course
             review.user = request.user
             review.save()
-            
+
             messages.success(request, "Thank you for your review!")
-            
+
             # Award XP for reviewing (small bonus)
             if not existing_review:  # Only for new reviews, not edits
                 XPEvent.objects.create(
@@ -1139,11 +1139,11 @@ def add_review(request, course_id):
                     points=5,
                     reason=f"Reviewed course: {course.title[:50]}"
                 )
-            
+
             return redirect('course_detail', course_id=course.id)
     else:
         form = ReviewForm(instance=existing_review)
-    
+
     return render(request, 'courses/review_form.html', {
         'course': course,
         'form': form,
@@ -1159,18 +1159,18 @@ def helpful_review(request, review_id):
     Toggle helpful vote on a review.
     """
     review = get_object_or_404(Review, id=review_id)
-    
+
     # Add debug prints
     print(f"Review user ID: {review.user.id}, Request user ID: {request.user.id}")
     print(f"Review user email: {review.user.email}, Request user email: {request.user.email}")
-    
+
     if review.user == request.user:
         print("User tried to vote on their own review")
         return JsonResponse({
             'status': 'error',
             'message': 'You cannot vote on your own review'
         }, status=400)
-    
+
     if review.helpful_votes.filter(id=request.user.id).exists():
         # Remove vote
         review.helpful_votes.remove(request.user)
@@ -1181,7 +1181,7 @@ def helpful_review(request, review_id):
         review.helpful_votes.add(request.user)
         action = 'added'
         print("Vote added")
-        
+
         # Award XP to reviewer (small bonus for getting helpful votes)
         if review.helpful_votes.count() == 5:  # Milestone: 5 helpful votes
             XPEvent.objects.create(
@@ -1189,7 +1189,7 @@ def helpful_review(request, review_id):
                 points=10,
                 reason=f"Your review for {review.course.title[:30]} is helping others!"
             )
-    
+
     return JsonResponse({
         'status': 'success',
         'action': action,
@@ -1204,58 +1204,58 @@ def delete_review(request, review_id):
     """
     review = get_object_or_404(Review, id=review_id, user=request.user)
     course_id = review.course.id
-    
+
     if request.method == 'POST':
         review.delete()
         messages.success(request, "Your review has been deleted.")
-    
+
     return redirect('course_detail', course_id=course_id)
 
 
 @login_required
 def generate_certificate(request, course_id):
     course = get_object_or_404(Course, id=course_id)
-    
+
     # Check if user completed the course
     total_lessons = Lesson.objects.filter(module__course=course).count()
     completed_lessons = LessonCompletion.objects.filter(
         user=request.user,
         lesson__module__course=course
     ).count()
-    
+
     if completed_lessons < total_lessons:
         messages.error(request, "You must complete all lessons to get a certificate.")
         return redirect('course_detail', course_id=course.id)
-    
+
     # Get or create certificate
     certificate, created = Certificate.objects.get_or_create(
         user=request.user,
         course=course
     )
-    
+
     # Increment download count
     certificate.download_count += 1
     certificate.save()
-    
+
     # Render HTML
     html_string = render_to_string('courses/certificate.html', {
         'user': request.user,
         'course': course,
         'certificate': certificate
     })
-    
+
     # Generate PDF
     html = HTML(string=html_string)
-    
+
     # Create HTTP response with PDF - FIXED LINE BELOW
     # Use course.id as fallback if slug doesn't exist
     slug_value = course.slug if hasattr(course, 'slug') and course.slug else f"course-{course.id}"
     filename = f"certificate_{slug_value}_{request.user.id}.pdf"
-    
+
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    
+
     # Write PDF to response
     html.write_pdf(response)
-    
+
     return response

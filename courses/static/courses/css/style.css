@@ -10,12 +10,12 @@
     --primary-dark: #4f52e0;
     --primary-light: #818cf8;
     --primary-bg: #eef2ff;
-    
+
     /* Secondary Colors */
     --secondary: #10b981;
     --secondary-dark: #0e9f6e;
     --secondary-light: #34d399;
-    
+
     /* Neutral Colors */
     --dark: #1f2937;
     --gray-700: #374151;
@@ -27,7 +27,7 @@
     --gray-100: #f3f4f6;
     --light: #f9fafb;
     --white: #ffffff;
-    
+
     /* Status Colors */
     --success: #10b981;
     --success-light: #d1fae5;
@@ -37,10 +37,10 @@
     --danger-light: #fee2e2;
     --info: #3b82f6;
     --info-light: #dbeafe;
-    
+
     /* Typography */
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    
+
     /* Spacing */
     --spacing-xs: 0.25rem;
     --spacing-sm: 0.5rem;
@@ -48,14 +48,14 @@
     --spacing-lg: 1.5rem;
     --spacing-xl: 2rem;
     --spacing-xxl: 3rem;
-    
+
     /* Border Radius */
     --radius-sm: 0.25rem;
     --radius-md: 0.5rem;
     --radius-lg: 0.75rem;
     --radius-xl: 1rem;
     --radius-full: 9999px;
-    
+
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
@@ -394,11 +394,11 @@ h1, h2, h3, h4, h5, h6 {
     .achievements-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .lesson-sidebar {
         margin-bottom: var(--spacing-lg);
     }
-    
+
     h1 { font-size: 1.875rem; }
     h2 { font-size: 1.5rem; }
     h3 { font-size: 1.25rem; }

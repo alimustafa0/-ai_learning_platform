@@ -19,7 +19,7 @@ def signup(request):
     # If user is already authenticated, redirect them
     if request.user.is_authenticated:
         return redirect('course_list')
-    
+
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
@@ -31,7 +31,7 @@ def signup(request):
             return redirect('dashboard')
     else:
         form = CustomUserCreationForm()
-    
+
     return render(request, 'users/signup.html', {'form': form})
 
 @login_required
@@ -49,8 +49,8 @@ def profile_edit(request):
     """
     if request.method == 'POST':
         form = UserProfileForm(
-            request.POST, 
-            request.FILES, 
+            request.POST,
+            request.FILES,
             instance=request.user
         )
         if form.is_valid():
@@ -64,7 +64,7 @@ def profile_edit(request):
             messages.error(request, 'Please correct the errors below.')
     else:
         form = UserProfileForm(instance=request.user)
-    
+
     return render(request, 'users/profile_edit.html', {'form': form})
 
 def public_profile(request, username):
@@ -73,66 +73,66 @@ def public_profile(request, username):
     """
     # Get user by email (since username is None in your User model)
     user = get_object_or_404(User, email=username)
-    
+
     # Get user stats
     total_xp = XPEvent.objects.filter(user=user).aggregate(total=Sum('points'))['total'] or 0
     current_level, _ = get_level_progress(total_xp)
-    
+
     # Get achievements
     achievements = UserAchievement.objects.filter(user=user).select_related('achievement').order_by('-unlocked_at')[:6]
     unlocked_ids = [ua.achievement_id for ua in achievements]
-    
+
     # Get courses in progress - FIXED THIS PART
     enrollments = user.enrollments.select_related('course')
     courses_data = []
     for enrollment in enrollments:
         course = enrollment.course
-        
+
         # Get total lessons count for this course
         total_lessons = Lesson.objects.filter(module__course=course).count()
-        
+
         # Get completed lessons count for this user in this course
         completed = LessonCompletion.objects.filter(
             user=user,
             lesson__module__course=course
         ).count()
-        
+
         progress = 0
         if total_lessons > 0:
             progress = int((completed / total_lessons) * 100)
-        
+
         courses_data.append({
             'course': course,
             'progress': progress,
             'completed': completed == total_lessons and total_lessons > 0
         })
-    
+
     # Get streak info
     try:
         streak = LearningStreak.objects.get(user=user)
     except LearningStreak.DoesNotExist:
         streak = None
-    
+
     # Check if current user follows this profile
     is_following = False
     followers_count = 0
     following_count = 0
-    
+
     if request.user.is_authenticated:
         is_following = Follow.objects.filter(
             follower=request.user,
             following=user
         ).exists()
-    
+
     # Get follower/following counts
     followers_count = Follow.objects.filter(following=user).count()
     following_count = Follow.objects.filter(follower=user).count()
-    
+
     # Get recent activity (last 5 completed lessons)
     recent_activity = LessonCompletion.objects.filter(
         user=user
     ).select_related('lesson', 'lesson__module__course').order_by('-completed_at')[:5]
-    
+
     context = {
         'profile_user': user,
         'total_xp': total_xp,
@@ -148,7 +148,7 @@ def public_profile(request, username):
         'recent_activity': recent_activity,
         'is_own_profile': request.user.is_authenticated and request.user.id == user.id,
     }
-    
+
     return render(request, 'users/public_profile.html', context)
 
 @login_required
@@ -158,18 +158,18 @@ def toggle_follow(request, user_id):
     Follow or unfollow a user.
     """
     target_user = get_object_or_404(User, id=user_id)
-    
+
     if target_user == request.user:
         return JsonResponse({
             'status': 'error',
             'message': 'You cannot follow yourself'
         }, status=400)
-    
+
     follow, created = Follow.objects.get_or_create(
         follower=request.user,
         following=target_user
     )
-    
+
     if not created:
         # Already following, so unfollow
         follow.delete()
@@ -178,18 +178,18 @@ def toggle_follow(request, user_id):
     else:
         is_following = True
         message = f"You are now following {target_user.get_full_name() or target_user.email}"
-        
+
         # Award XP for following (small bonus)
         XPEvent.objects.create(
             user=request.user,
             points=1,
             reason=f"Followed {target_user.email[:30]}"
         )
-    
+
     # Get updated counts
     followers_count = Follow.objects.filter(following=target_user).count()
     following_count = Follow.objects.filter(follower=target_user).count()
-    
+
     return JsonResponse({
         'status': 'success',
         'is_following': is_following,
@@ -205,7 +205,7 @@ def following_list(request):
     """
     follows = Follow.objects.filter(follower=request.user).select_related('following')
     users = [follow.following for follow in follows]
-    
+
     return render(request, 'users/following_list.html', {
         'users': users,
         'count': len(users)
@@ -218,14 +218,14 @@ def followers_list(request):
     """
     follows = Follow.objects.filter(following=request.user).select_related('follower')
     users = [follow.follower for follow in follows]
-    
+
     # Get IDs of users that the current user is following
     following_ids = set()
     if request.user.is_authenticated:
         following_ids = set(Follow.objects.filter(
             follower=request.user
         ).values_list('following_id', flat=True))
-    
+
     return render(request, 'users/followers_list.html', {
         'users': users,
         'count': len(users),
@@ -239,29 +239,29 @@ def activity_feed(request):
     """
     # Get users this user follows
     following_ids = set(Follow.objects.filter(follower=request.user).values_list('following_id', flat=True))
-    
+
     # Get recent activities from followed users
     recent_completions = LessonCompletion.objects.filter(
         user_id__in=following_ids
     ).select_related(
         'user', 'lesson', 'lesson__module__course'
     ).order_by('-completed_at')[:20]
-    
+
     recent_achievements = UserAchievement.objects.filter(
         user_id__in=following_ids
     ).select_related(
         'user', 'achievement'
     ).order_by('-unlocked_at')[:20]
-    
+
     recent_reviews = Review.objects.filter(
         user_id__in=following_ids
     ).select_related(
         'user', 'course'
     ).order_by('-created_at')[:20]
-    
+
     # Combine and sort activities
     activities = []
-    
+
     for completion in recent_completions:
         activities.append({
             'type': 'lesson',
@@ -273,7 +273,7 @@ def activity_feed(request):
             'text': f"completed a lesson: {completion.lesson.title}",
             'course': completion.lesson.module.course,
         })
-    
+
     for achievement in recent_achievements:
         activities.append({
             'type': 'achievement',
@@ -284,7 +284,7 @@ def activity_feed(request):
             'icon': achievement.achievement.icon or '🏆',
             'text': f"unlocked achievement: {achievement.achievement.name}",
         })
-    
+
     for review in recent_reviews:
         activities.append({
             'type': 'review',
@@ -296,10 +296,10 @@ def activity_feed(request):
             'text': f"reviewed {review.course.title}",
             'rating': review.rating,
         })
-    
+
     # Sort by time (newest first)
     activities.sort(key=lambda x: x['time'], reverse=True)
-    
+
     return render(request, 'users/activity_feed.html', {
         'activities': activities[:30],
         'following_ids': following_ids,

@@ -31,17 +31,17 @@ class UserManager(BaseUserManager):
 class User(AbstractUser):
     username = None
     email = models.EmailField(unique=True)
-    
+
     # === PROFILE FIELDS ===
     bio = models.TextField(
-        max_length=500, 
-        blank=True, 
+        max_length=500,
+        blank=True,
         verbose_name="Biography",
         help_text="Tell us about yourself (max 500 characters)"
     )
     avatar = models.ImageField(
-        upload_to='avatars/', 
-        blank=True, 
+        upload_to='avatars/',
+        blank=True,
         null=True,
         verbose_name="Profile Picture"
     )
@@ -51,31 +51,36 @@ class User(AbstractUser):
         help_text="Optional: Your blog, portfolio, or social media link"
     )
     location = models.CharField(
-        max_length=100, 
+        max_length=100,
         blank=True,
         verbose_name="Location",
         help_text="City, Country"
     )
     # ======================
-    
+
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
     objects = UserManager()
-    
+
 
     class Meta:
         ordering = ['email', 'first_name', 'last_name']
         verbose_name = 'User'
         verbose_name_plural = 'Users'
-    
+        indexes = [
+            models.Index(fields=['email']),
+            models.Index(fields=['first_name', 'last_name']),
+            models.Index(fields=['date_joined']),
+        ]
+
     def get_full_name(self):
         """
         Return the first_name plus the last_name, with a space in between.
         """
         full_name = f"{self.first_name} {self.last_name}"
         return full_name.strip()
-    
+
     def get_short_name(self):
         """
         Return the short name for the user (first name).
@@ -90,7 +95,7 @@ class User(AbstractUser):
         if self.first_name or self.last_name:
             return f"{self.email} ({self.get_full_name()})"
         return self.email
-    
+
 class Follow(models.Model):
     """
     Tracks user follows (many-to-many self-referential).
@@ -110,6 +115,11 @@ class Follow(models.Model):
     class Meta:
         unique_together = ('follower', 'following')
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['follower']),
+            models.Index(fields=['following']),
+            models.Index(fields=['created_at']),
+        ]
 
     def __str__(self):
         return f"{self.follower.email} follows {self.following.email}"

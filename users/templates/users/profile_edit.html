@@ -19,7 +19,7 @@
                     <p class="text-muted mb-0">Update your personal information and public profile.</p>
                 </div>
             </div>
-            
+
             <!-- Messages -->
             {% if messages %}
                 {% for message in messages %}
@@ -29,7 +29,7 @@
                     </div>
                 {% endfor %}
             {% endif %}
-            
+
             <!-- Profile Edit Form -->
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
@@ -37,8 +37,8 @@
                     {% if request.user.avatar %}
                         <div class="text-center mb-4">
                             <div class="position-relative d-inline-block">
-                                <img src="{{ request.user.avatar.url }}" 
-                                     alt="{{ request.user.email }}" 
+                                <img src="{{ request.user.avatar.url }}"
+                                     alt="{{ request.user.email }}"
                                      class="rounded-circle border border-4 border-primary"
                                      style="width: 120px; height: 120px; object-fit: cover;">
                                 <div class="position-absolute bottom-0 end-0">
@@ -50,10 +50,10 @@
                             <p class="text-muted small mt-2">Current Avatar</p>
                         </div>
                     {% endif %}
-                    
+
                     <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
                         {% csrf_token %}
-                        
+
                         <div class="row g-4">
                             <!-- First Name -->
                             <div class="col-md-6">
@@ -68,7 +68,7 @@
                                     <div class="text-danger small mt-1">{{ form.first_name.errors }}</div>
                                 {% endif %}
                             </div>
-                            
+
                             <!-- Last Name -->
                             <div class="col-md-6">
                                 <label for="id_last_name" class="form-label fw-bold">Last Name</label>
@@ -82,7 +82,7 @@
                                     <div class="text-danger small mt-1">{{ form.last_name.errors }}</div>
                                 {% endif %}
                             </div>
-                            
+
                             <!-- Bio -->
                             <div class="col-12">
                                 <label for="id_bio" class="form-label fw-bold">Bio</label>
@@ -92,7 +92,7 @@
                                     <div class="text-danger small mt-1">{{ form.bio.errors }}</div>
                                 {% endif %}
                             </div>
-                            
+
                             <!-- Avatar -->
                             <div class="col-12">
                                 <label for="id_avatar" class="form-label fw-bold">Profile Picture</label>
@@ -107,7 +107,7 @@
                                     <div class="text-danger small mt-1">{{ form.avatar.errors }}</div>
                                 {% endif %}
                             </div>
-                            
+
                             <!-- Website -->
                             <div class="col-md-6">
                                 <label for="id_website" class="form-label fw-bold">Website</label>
@@ -121,7 +121,7 @@
                                     <div class="text-danger small mt-1">{{ form.website.errors }}</div>
                                 {% endif %}
                             </div>
-                            
+
                             <!-- Location -->
                             <div class="col-md-6">
                                 <label for="id_location" class="form-label fw-bold">Location</label>
@@ -136,9 +136,9 @@
                                 {% endif %}
                             </div>
                         </div>
-                        
+
                         <hr class="my-4">
-                        
+
                         <!-- Form Actions -->
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
@@ -156,7 +156,7 @@
                     </form>
                 </div>
             </div>
-            
+
             <!-- Account Information Card -->
             <div class="card border-0 shadow-sm mt-4">
                 <div class="card-header bg-white py-3">
@@ -196,7 +196,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Danger Zone (Optional) -->
             {% if request.user.is_staff %}
             <div class="card border-0 shadow-sm mt-4 border-danger">
@@ -226,26 +226,26 @@
         padding: 0.6rem 1rem;
         transition: all 0.2s ease;
     }
-    
+
     .form-control:focus, .form-select:focus {
         border-color: var(--primary);
         box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
     }
-    
+
     .input-group-text {
         border: 2px solid #e9ecef;
         border-right: none;
         background: #f8f9fa;
     }
-    
+
     .input-group .form-control {
         border-left: none;
     }
-    
+
     textarea.form-control {
         min-height: 120px;
     }
-    
+
     /* Custom file input styling */
     input[type="file"] {
         padding: 0.5rem;
@@ -254,7 +254,7 @@
         border-radius: 0.5rem;
         width: 100%;
     }
-    
+
     input[type="file"]:hover {
         border-color: var(--primary);
         background: #f8f9fa;

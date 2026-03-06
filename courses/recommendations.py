@@ -14,25 +14,25 @@ def get_course_recommendations(user, limit=3):
     if not user.is_authenticated:
         # For anonymous users, show popular courses
         return get_popular_courses(limit)
-    
+
     # Get courses user is already enrolled in or completed
     enrolled_course_ids = set(
         Enrollment.objects.filter(user=user)
         .values_list('course_id', flat=True)
     )
-    
+
     # Get categories user has shown interest in
     interested_categories = get_user_interested_categories(user)
-    
+
     # Get courses taken by similar users
     similar_users_courses = get_courses_from_similar_users(user, enrolled_course_ids)
-    
+
     # Get popular courses in interested categories
     category_courses = get_category_courses(interested_categories, enrolled_course_ids)
-    
+
     # Combine and score recommendations
     recommendations = []
-    
+
     # Add similar users courses (higher weight)
     for course in similar_users_courses:
         recommendations.append({
@@ -40,7 +40,7 @@ def get_course_recommendations(user, limit=3):
             'score': 3,
             'reason': f"Taken by learners like you"
         })
-    
+
     # Add category courses (medium weight)
     for course in category_courses:
         # Check if already added
@@ -50,17 +50,17 @@ def get_course_recommendations(user, limit=3):
                 'score': 2,
                 'reason': f"Popular in {course.categories.first().name if course.categories.exists() else 'your interests'}"
             })
-    
+
     # Sort by score and return top N
     recommendations.sort(key=lambda x: x['score'], reverse=True)
-    
+
     # If we don't have enough, add popular courses
     if len(recommendations) < limit:
         popular = get_popular_courses(limit * 2)
         for item in popular:
             if not any(r['course'].id == item['course'].id for r in recommendations):
                 recommendations.append(item)
-    
+
     return recommendations[:limit]
 
 def get_user_interested_categories(user):
@@ -75,14 +75,14 @@ def get_user_interested_categories(user):
     ).annotate(
         count=Count('courses')
     ).order_by('-count')
-    
+
     # Get categories from completed lessons
     completed_categories = Category.objects.filter(
         courses__modules__lessons__completions__user=user
     ).annotate(
         count=Count('courses')
     ).order_by('-count')
-    
+
     # Combine and return unique categories
     interested = list(enrolled_categories) + list(completed_categories)
     return list(set(interested))[:5]  # Top 5 categories
@@ -93,16 +93,16 @@ def get_courses_from_similar_users(user, exclude_course_ids):
     """
     # Find users who took at least one course this user took
     user_courses = Enrollment.objects.filter(user=user).values_list('course_id', flat=True)
-    
+
     if not user_courses:
         return []
-    
+
     similar_users = Enrollment.objects.filter(
         course_id__in=user_courses
     ).exclude(
         user=user
     ).values_list('user_id', flat=True).distinct()
-    
+
     # Get courses those similar users are taking
     recommended_courses = Course.objects.filter(
         enrollments__user__in=similar_users,
@@ -112,7 +112,7 @@ def get_courses_from_similar_users(user, exclude_course_ids):
     ).annotate(
         popularity=Count('enrollments')
     ).order_by('-popularity')[:10]
-    
+
     return list(recommended_courses)
 
 def get_category_courses(categories, exclude_course_ids):
@@ -121,7 +121,7 @@ def get_category_courses(categories, exclude_course_ids):
     """
     if not categories:
         return []
-    
+
     return Course.objects.filter(
         categories__in=categories,
         is_published=True
@@ -140,7 +140,7 @@ def get_popular_courses(limit=3):
     ).annotate(
         enrollment_count=Count('enrollments')
     ).order_by('-enrollment_count')[:limit * 2]
-    
+
     return [{
         'course': course,
         'score': 1,
@@ -155,7 +155,7 @@ def get_next_course_recommendation(user, current_course):
     users_completed = User.objects.filter(
         lessoncompletion__lesson__module__course=current_course
     ).distinct()
-    
+
     # See what courses they took next
     next_courses = Course.objects.filter(
         enrollments__user__in=users_completed,
@@ -165,5 +165,5 @@ def get_next_course_recommendation(user, current_course):
     ).annotate(
         count=Count('enrollments')
     ).order_by('-count')[:3]
-    
+
     return next_courses

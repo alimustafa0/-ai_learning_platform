@@ -46,7 +46,7 @@ def percentage(value, total):
         return 0
     except (ValueError, TypeError):
         return 0
-    
+
 @register.filter
 def helpful_button_class(review, user):
     """Return the appropriate button class for helpful vote"""

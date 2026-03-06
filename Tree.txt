@@ -10,7 +10,7 @@
 │   │   urls.py
 │   │   wsgi.py
 │   │   __init__.py
-│   
+│
 ├───courses
 │   │   admin.py
 │   │   admin.py
@@ -43,7 +43,7 @@
 │   │           lesson_detail.html
 │   │           level_locked.html
 │   │           not_enrolled.html
-│   
+│
 └───users
     │   admin.py
     │   apps.py

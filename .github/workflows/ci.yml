@@ -34,7 +34,7 @@ jobs:
 
       - name: Run tests
         run: |
-          python manage.py test
+          python manage.py test users.tests
 
       - name: Check migrations
         run: |

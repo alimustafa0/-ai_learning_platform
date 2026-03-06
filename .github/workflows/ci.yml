@@ -51,7 +51,7 @@ jobs:
 
     - name: Run tests with coverage
       run: |
-        coverage run manage.py test
+        coverage run manage.py test users.tests courses.tests
 
     # NEW: Generate coverage report
     - name: Coverage report

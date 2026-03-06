@@ -12,3 +12,6 @@ staticfiles/
 
 *.json
 database_backup.json
+
+htmlcov/
+.coverage

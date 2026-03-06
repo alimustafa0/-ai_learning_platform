@@ -1,51 +1,74 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.13'
+    - uses: actions/checkout@v3
 
-      - name: Install dependencies
-        run: |
-          pip install -r requirements/development.txt
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
 
-      - name: Set environment variables
-        run: |
-          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> $GITHUB_ENV
-          echo "DEBUG=${{ secrets.DEBUG }}" >> $GITHUB_ENV
-          echo "ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}" >> $GITHUB_ENV
-          echo "ENVIRONMENT=${{ secrets.ENVIRONMENT }}" >> $GITHUB_ENV
-          echo "STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY }}" >> $GITHUB_ENV
-          echo "STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}" >> $GITHUB_ENV
-          echo "SITE_URL=${{ secrets.SITE_URL }}" >> $GITHUB_ENV
+    - name: Install dependencies
+      run: |
+        pip install -r requirements/development.txt
+        pip install flake8 bandit  # Add linting and security tools
 
-      - name: Create logs directory
-        run: |
-          mkdir -p logs
-          touch logs/django.log logs/error.log
+    - name: Create logs directory
+      run: |
+        mkdir -p logs
+        touch logs/django.log logs/error.log
 
-      - name: Run tests
-        run: |
-          python manage.py test users.tests
+    - name: Set environment variables
+      run: |
+        echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> $GITHUB_ENV
+        echo "DEBUG=${{ secrets.DEBUG }}" >> $GITHUB_ENV
+        echo "ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}" >> $GITHUB_ENV
+        echo "ENVIRONMENT=${{ secrets.ENVIRONMENT }}" >> $GITHUB_ENV
+        echo "STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY }}" >> $GITHUB_ENV
+        echo "STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}" >> $GITHUB_ENV
+        echo "SITE_URL=${{ secrets.SITE_URL }}" >> $GITHUB_ENV
 
-      - name: Run tests with coverage
-        run: |
-          coverage run manage.py test users.tests
+    # NEW: Linting with flake8
+    - name: Lint with flake8
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: htmlcov/
+    # NEW: Security check with bandit
+    - name: Security check with bandit
+      run: |
+        bandit -r . -ll -f custom
 
-      - name: Check migrations
-        run: |
-          python manage.py makemigrations --check --dry-run
+    - name: Run tests with coverage
+      run: |
+        coverage run manage.py test
+
+    # NEW: Generate coverage report
+    - name: Coverage report
+      run: |
+        coverage report
+
+    - name: Check migrations
+      run: |
+        python manage.py makemigrations --check --dry-run
+
+    - name: Collect static files
+      run: |
+        python manage.py collectstatic --noinput
+
+    # NEW: Upload coverage report
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: htmlcov/

@@ -1,8 +1,11 @@
 # courses/recommendations.py
 from .models import Category, Course, Enrollment, LessonCompletion
+from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
 from collections import Counter
 import random
+
+User = get_user_model()
 
 def get_course_recommendations(user, limit=3):
     """

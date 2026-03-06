@@ -27,6 +27,11 @@ jobs:
           echo "STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}" >> $GITHUB_ENV
           echo "SITE_URL=${{ secrets.SITE_URL }}" >> $GITHUB_ENV
 
+      - name: Create logs directory
+        run: |
+          mkdir -p logs
+          touch logs/django.log logs/error.log
+
       - name: Run tests
         run: |
           python manage.py test

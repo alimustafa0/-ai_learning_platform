@@ -9,3 +9,6 @@ logs/
 *.log
 
 staticfiles/
+
+*.json
+database_backup.json

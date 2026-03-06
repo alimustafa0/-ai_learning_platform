@@ -3,17 +3,30 @@ from .models import Achievement, UserAchievement, XPEvent
 from django.contrib import messages
 from django.core.cache import cache
 from django.db.models import Sum
+from django.apps import apps
 
+# Helper functions to safely get models (prevents circular imports)
+def get_lesson_completion_model():
+    return apps.get_model('courses', 'LessonCompletion')
+
+def get_course_model():
+    return apps.get_model('courses', 'Course')
+
+def get_lesson_model():
+    return apps.get_model('courses', 'Lesson')
+
+def get_learning_streak_model():
+    return apps.get_model('courses', 'LearningStreak')
 
 class AchievementCode:
     # Lesson completion achievements
     FIRST_LESSON = 'first-lesson'
-    SECOND_LESSON = 'second-lesson'      # Add this
-    FIFTH_LESSON = 'fifth-lesson'        # Add this
-    TENTH_LESSON = 'tenth-lesson'        # Add this
-    TWENTY_FIFTH_LESSON = 'twenty-fifth-lesson'  # Add this
-    FIFTIETH_LESSON = 'fiftieth-lesson'  # Add this
-    HUNDREDTH_LESSON = 'hundredth-lesson'  # Add this
+    SECOND_LESSON = 'second-lesson'
+    FIFTH_LESSON = 'fifth-lesson'
+    TENTH_LESSON = 'tenth-lesson'
+    TWENTY_FIFTH_LESSON = 'twenty-fifth-lesson'
+    FIFTIETH_LESSON = 'fiftieth-lesson'
+    HUNDREDTH_LESSON = 'hundredth-lesson'
 
     # Course completion achievements
     FIRST_COURSE = 'first-course'
@@ -111,7 +124,9 @@ def check_course_completion_achievements(user, course, request=None):
     Check for achievements related to course completion.
     Now checks for multiple course milestones (1st, 3rd, 5th, 10th course).
     """
-    from .models import Course, LessonCompletion, Lesson
+    Lesson = get_lesson_model()
+    LessonCompletion = get_lesson_completion_model()
+    Course = get_course_model()
 
     # Get total lessons count for this course
     total_lessons = Lesson.objects.filter(module__course=course).count()
@@ -184,7 +199,7 @@ def check_lesson_count_achievements(user, new_count=None, request=None):
         new_count: Optional pre-calculated lesson count (for efficiency)
         request: Optional request object for displaying messages
     """
-    from .models import LessonCompletion
+    LessonCompletion = get_lesson_completion_model()
 
     # Use provided count or calculate from database
     if new_count is not None:
@@ -203,7 +218,7 @@ def check_lesson_count_achievements(user, new_count=None, request=None):
     # Map of thresholds to achievement codes
     threshold_map = [
         (1, AchievementCode.FIRST_LESSON),
-        (2, AchievementCode.SECOND_LESSON),      # Now this exists!
+        (2, AchievementCode.SECOND_LESSON),
         (5, AchievementCode.FIFTH_LESSON),
         (10, AchievementCode.TENTH_LESSON),
         (25, AchievementCode.TWENTY_FIFTH_LESSON),
@@ -256,7 +271,9 @@ def get_achievement_progress(user):
     Calculate progress for all achievements for a user.
     Returns list of achievements with current progress and status.
     """
-    from .models import LessonCompletion, Course, XPEvent, LearningStreak
+    LessonCompletion = get_lesson_completion_model()
+    Course = get_course_model()
+    LearningStreak = get_learning_streak_model()
 
     achievements = Achievement.objects.all().order_by('category', 'threshold')
     user_achievements = set(
@@ -287,7 +304,7 @@ def get_achievement_progress(user):
         elif achievement.category == 'xp':
             current = total_xp
         elif achievement.category == 'streak':
-            current = current_streak  # Use the streak value
+            current = current_streak
         else:
             current = 0
 
@@ -316,8 +333,7 @@ def check_streak_achievements(user, current_streak, request=None):
     """
     Check for achievements based on streak milestones.
     """
-    from .models import Achievement, UserAchievement, XPEvent
-
+    # Keep these prints for now - they're useful for debugging
     print(f"\n=== CHECKING STREAK ACHIEVEMENTS ===")
     print(f"User: {user.email}")
     print(f"Current streak: {current_streak}")
@@ -395,7 +411,7 @@ def check_early_bird_achievements(user, lesson_completed_at, request=None):
     """
     Check if user qualifies for Early Bird achievement.
     """
-    from .models import LessonCompletion
+    LessonCompletion = get_lesson_completion_model()
     from datetime import time
 
     # Check if lesson was completed before 9 AM
